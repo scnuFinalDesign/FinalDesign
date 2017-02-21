@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RadioGroup
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="240px"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal">
+
+    <RadioButton
+        android:id="@+id/radio_file"
+        android:layout_width="120px"
+        android:layout_height="wrap_content"
+        android:background="@drawable/bg_lswitch"
+        android:button="@null"
+        android:checked="true"
+        android:gravity="center"
+        android:padding="12px"
+        android:text="@string/file"
+        android:textColor="@color/switch_text_sel"
+        android:textSize="16sp"/>
+
+    <RadioButton
+        android:id="@+id/radio_translate"
+        android:layout_width="120px"
+        android:layout_height="wrap_content"
+        android:background="@drawable/bg_rswitch"
+        android:button="@null"
+        android:gravity="center"
+        android:padding="12px"
+        android:text="@string/translation"
+        android:textColor="@color/switch_text_sel"
+        android:textSize="16sp"/>
+</RadioGroup>

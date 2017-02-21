@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<com.example.asus88.finaldesgin.myViews.AutoCardView
+    android:id="@+id/application_adapter_cardView"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="220px"
+    android:layout_height="250px"
+    android:layout_marginBottom="30px"
+    android:layout_marginLeft="22px"
+    android:layout_marginTop="30px"
+    android:foreground="?android:attr/selectableItemBackground"
+    app:cardCornerRadius="30px"
+    app:cardElevation="16px"
+    app:contentPadding="10px"
+    >
+
+
+    <ImageView
+        android:id="@+id/application_adapter_image"
+        android:layout_width="100px"
+        android:layout_height="100px"
+        android:scaleType="fitXY"
+        android:layout_gravity="center_horizontal"/>
+
+
+    <com.example.asus88.finaldesgin.myViews.MarqueeTextView
+        android:id="@+id/application_adapter_name"
+        android:layout_width="match_parent"
+        android:layout_height="40px"
+        android:layout_gravity="bottom"
+        android:layout_marginBottom="95px"
+        android:ellipsize="marquee"
+        android:gravity="center"
+        android:marqueeRepeatLimit="marquee_forever"
+        android:singleLine="true"/>
+
+    <TextView
+        android:id="@+id/application_adapter_size"
+        android:layout_width="match_parent"
+        android:layout_height="40px"
+        android:layout_gravity="bottom"
+        android:layout_marginBottom="50px"
+        android:gravity="center"/>
+
+    <TextView
+        android:id="@+id/application_adapter_number"
+        android:layout_width="match_parent"
+        android:layout_height="40px"
+        android:layout_gravity="bottom"
+        android:layout_marginBottom="5px"
+        android:gravity="center"
+        android:maxLines="1"
+        />
+
+    <ImageView
+        android:id="@+id/application_adapter_delete"
+        android:layout_width="50px"
+        android:layout_height="50px"
+        android:layout_gravity="right|top"
+        android:src="@mipmap/delete"
+        android:visibility="gone"
+        />
+
+    <ImageView
+        android:id="@+id/application_adapter_selected"
+        android:layout_width="50px"
+        android:layout_height="50px"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="100px"
+        android:src="@mipmap/application_selected"
+        android:visibility="gone"/>
+</com.example.asus88.finaldesgin.myViews.AutoCardView>

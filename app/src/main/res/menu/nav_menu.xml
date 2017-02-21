@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item android:title="@string/type">
+        <menu>
+            <item
+                android:id="@+id/nav_file"
+                android:icon="@mipmap/ic_launcher"
+                android:title="@string/file"/>
+            <item
+                android:id="@+id/nav_photo"
+                android:icon="@mipmap/ic_launcher"
+                android:title="@string/photo"/>
+            <item
+                android:id="@+id/nav_music"
+                android:icon="@mipmap/ic_launcher"
+                android:title="@string/music"/>
+            <item
+                android:id="@+id/nav_video"
+                android:icon="@mipmap/ic_launcher"
+                android:title="@string/video"/>
+            <item
+                android:id="@+id/nav_application"
+                android:icon="@mipmap/ic_launcher"
+                android:title="@string/application"/>
+        </menu>
+    </item>
+</menu>

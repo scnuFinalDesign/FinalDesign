@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                android:layout_width="match_parent"
+                android:layout_height="140px"
+                android:padding="20px">
+
+    <FrameLayout
+        android:id="@+id/video_adapter_frame"
+        android:layout_width="140px"
+        android:layout_height="100px">
+
+
+        <ImageView
+            android:id="@+id/video_adapter_image"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scaleType="fitXY"/>
+
+        <TextView
+            android:id="@+id/video_adapter_duration"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="right|bottom"
+            android:padding="5px"
+            android:textColor="@color/white"
+            android:textSize="8sp"/>
+    </FrameLayout>
+
+
+    <TextView
+        android:id="@+id/video_adapter_name"
+        android:layout_width="450px"
+        android:layout_height="40px"
+        android:layout_alignParentTop="true"
+        android:layout_marginLeft="20px"
+        android:layout_toEndOf="@id/video_adapter_frame"
+        android:maxLines="1"
+        android:textSize="16sp"/>
+
+    <TextView
+        android:id="@+id/video_adapter_size"
+        android:layout_width="450px"
+        android:layout_height="40px"
+        android:layout_marginTop="60px"
+        android:layout_alignStart="@+id/video_adapter_name"
+        android:textSize="16sp"/>
+
+    <CheckBox
+        android:id="@+id/video_adapter_checkbox"
+        android:layout_width="50px"
+        android:layout_height="50px"
+        android:background="@drawable/radio_button_style"
+        android:button="@null"
+        android:layout_alignParentEnd="true"
+        android:layout_centerVertical="true"
+        android:layout_marginEnd="20px"/>
+</RelativeLayout>

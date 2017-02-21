@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@color/white">
+
+    <TextView
+        android:id="@+id/pop_open_wifi_text"
+        android:layout_marginTop="16dp"
+        android:layout_width="match_parent"
+        android:layout_height="80px"
+        android:gravity="center"
+        android:text="@string/ask_is_open_wifi"
+        android:textSize="16sp"/>
+
+    <Button
+        android:id="@+id/pop_open_wifi_create_hotspot"
+        android:layout_width="220px"
+        android:layout_height="100px"
+        android:layout_alignParentStart="true"
+        android:layout_below="@+id/pop_open_wifi_text"
+        android:layout_marginTop="16dp"
+        android:background="@drawable/bg_new_sure_btn"
+        android:text="@string/create_hotspot"/>
+
+    <Button
+        android:id="@+id/pop_open_wifi_open_wifi"
+        android:layout_width="220px"
+        android:layout_height="100px"
+        android:layout_below="@+id/pop_open_wifi_text"
+        android:layout_marginTop="16dp"
+        android:layout_toEndOf="@+id/pop_open_wifi_create_hotspot"
+        android:background="@drawable/bg_new_sure_btn"
+        android:textColor="@color/sure_text_color"
+        android:text="@string/open_wifi"/>
+
+    <Button
+        android:id="@+id/pop_open_wifi_cancel"
+        android:layout_width="220px"
+        android:layout_height="100px"
+        android:layout_below="@+id/pop_open_wifi_text"
+        android:layout_marginTop="16dp"
+        android:layout_toEndOf="@+id/pop_open_wifi_open_wifi"
+        android:background="@drawable/bg_new_sure_btn"
+        android:text="@string/cancel"
+        android:textColor="@color/gray"
+        />
+</RelativeLayout>

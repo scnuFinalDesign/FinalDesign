@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@color/white">
+
+    <TextView
+        android:id="@+id/pop_new_file_title"
+        android:layout_width="match_parent"
+        android:layout_height="80px"
+        android:layout_marginTop="20px"
+        android:gravity="center"
+        android:textSize="16sp"/>
+
+    <EditText
+        android:id="@+id/pop_new_file_name"
+        android:layout_width="wrap_content"
+        android:layout_height="90px"
+        android:layout_below="@+id/pop_new_file_title"
+        android:layout_marginLeft="40px"
+        android:layout_marginTop="20px"
+        android:textSize="16sp"/>
+
+    <ImageView
+        android:id="@+id/pop_new_file_point_image"
+        android:layout_width="10px"
+        android:layout_height="10px"
+        android:layout_below="@+id/pop_new_file_title"
+        android:layout_marginTop="90px"
+        android:layout_toEndOf="@id/pop_new_file_name"
+        android:src="@mipmap/suffix_point"
+        android:visibility="gone"/>
+
+    <EditText
+        android:id="@+id/pop_new_file_suffix"
+        android:layout_width="100px"
+        android:layout_height="90px"
+        android:layout_below="@+id/pop_new_file_title"
+        android:layout_marginRight="40px"
+        android:layout_marginTop="20px"
+        android:layout_toEndOf="@+id/pop_new_file_point_image"
+        android:textSize="16sp"
+        android:visibility="gone"
+        />
+
+    <Button
+        android:id="@+id/pop_new_file_cancel"
+        android:layout_width="330px"
+        android:layout_height="100px"
+        android:layout_alignParentStart="true"
+        android:layout_below="@+id/pop_new_file_name"
+        android:layout_marginTop="20px"
+        android:background="@drawable/bg_new_sure_btn"
+        android:text="@string/cancel"/>
+
+    <Button
+        android:id="@+id/pop_new_file_sure"
+        android:layout_width="330px"
+        android:layout_height="100px"
+        android:layout_alignParentEnd="true"
+        android:layout_below="@+id/pop_new_file_name"
+        android:layout_marginTop="20px"
+        android:text="@string/sure"
+        android:background="@drawable/bg_new_sure_btn"
+        android:textColor="@color/sure_text_color"/>
+</RelativeLayout>

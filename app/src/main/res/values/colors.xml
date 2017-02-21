@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorPrimary">#3F51B5</color>
+    <color name="colorPrimaryDark">#303F9F</color>
+    <color name="colorAccent">#FF4081</color>
+    <color name="white">#fff</color>
+    <color name="blue">#18B4ED</color>
+    <color name="white_blue">#D0EFFA</color>
+    <color name="fab_menu_color">#55000000</color>
+    <color name="gray">#9b9898</color>
+    <color name="black">#000000</color>
+    <color name="sure_text_color">#de8107</color>
+    <color name="ic_music_bg">#c309d1</color>
+</resources>

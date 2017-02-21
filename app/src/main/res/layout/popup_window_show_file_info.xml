@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:orientation="vertical">
+
+    <LinearLayout
+        android:layout_width="660px"
+        android:layout_height="wrap_content"
+        android:background="@color/white"
+        android:orientation="vertical"
+        android:padding="20px"
+        >
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="30px"
+            android:text="@string/info"
+            android:textSize="20sp"/>
+
+        <TextView
+            android:id="@+id/popup_name"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:lineSpacingExtra="6px"
+            android:padding="10px"
+            android:textSize="16sp"/>
+
+        <TextView
+            android:id="@+id/popup_type"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="10px"
+            android:textSize="16sp"/>
+
+        <TextView
+            android:id="@+id/popup_location"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:lineSpacingExtra="6px"
+            android:padding="10px"
+            android:textSize="16sp"/>
+
+        <TextView
+            android:id="@+id/popup_modify"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="10px"
+            android:textSize="16sp"/>
+
+        <TextView
+            android:id="@+id/popup_sure"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="right"
+            android:padding="20px"
+            android:text="@string/sure"
+            android:textSize="16sp"/>
+    </LinearLayout>
+</LinearLayout>
