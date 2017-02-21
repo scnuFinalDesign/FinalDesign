@@ -1,5 +1,6 @@
 package com.example.asus88.finaldesgin.connection;
 
+import android.provider.Settings;
 import android.util.Log;
 
 import com.example.asus88.finaldesgin.util.LogUtil;
@@ -13,6 +14,7 @@ import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
+import java.net.UnknownHostException;
 import java.nio.channels.SocketChannel;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -293,9 +295,8 @@ public class Manager {
 
         protected void onReceivePacket(DatagramPacket packet) {
             String str = new String(packet.getData(), 0, packet.getLength());
-            System.out.println("ip:" + packet.getAddress());
-
             Dev local = Dev.getLocalDev();
+            System.out.println("收到ip:" + packet.getAddress() + "本地ip:" + local.ip);
             //非ipv6 本地地址？
             if (!packet.getAddress().isAnyLocalAddress() && packet.getAddress().isSiteLocalAddress()
                     && !packet.getAddress().equals(local.ip)) {

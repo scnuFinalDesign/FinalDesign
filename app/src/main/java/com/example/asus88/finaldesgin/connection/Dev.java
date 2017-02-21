@@ -54,17 +54,39 @@ public class Dev {
         this.type = dev.type;
     }
 
-    public static byte[] getMac() {
+    public static NetworkInterface getWLAN(){
         try {
             Enumeration<NetworkInterface> a = NetworkInterface.getNetworkInterfaces();
             while (a.hasMoreElements()) {
                 NetworkInterface b = a.nextElement();
                 if (b.getName().contains("wlan") && b.isUp()) {
-                    return b.getHardwareAddress();
+                    return b;
                 }
             }
         } catch (SocketException e) {
             e.printStackTrace();
+        }
+        return null;
+    }
+
+    public static byte[] getMac() {
+        NetworkInterface i = getWLAN();
+        if(i != null) try {
+            return i.getHardwareAddress();
+        } catch (SocketException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public static InetAddress getIp(){
+        NetworkInterface i = getWLAN();
+        Enumeration<InetAddress> c = i.getInetAddresses();
+        while (c.hasMoreElements()) {
+            InetAddress d = c.nextElement();
+            if (d.isSiteLocalAddress()) {
+                return d;
+            }
         }
         return null;
     }
@@ -76,24 +98,12 @@ public class Dev {
 
         Dev localDev = new Dev();
         localDev.type = MOBILE_TYPE;
-        try {
-            localDev.name = Build.MODEL;
-            Log.i("debug", i.getName() + "_______________");
-            byte[] macByte = getMac();
-            localDev.mac = Utils.toHexString(macByte[0]) + ":" + Utils.toHexString(macByte[1]) + ":"
-                    + Utils.toHexString(macByte[2]) + ":" + Utils.toHexString(macByte[3]) + ":"
-                    + Utils.toHexString(macByte[4]) + ":" + Utils.toHexString(macByte[5]);
-            Enumeration<InetAddress> c = i.getInetAddresses();
-            while (c.hasMoreElements()) {
-                InetAddress d = c.nextElement();
-                if (d.isSiteLocalAddress()) {
-                    localDev.ip = d;
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            return null;
-        }
+        localDev.name = Build.MODEL;
+        localDev.ip = getIp();
+        byte[] macByte = getMac();
+        localDev.mac = Utils.toHexString(macByte[0]) + ":" + Utils.toHexString(macByte[1]) + ":"
+                + Utils.toHexString(macByte[2]) + ":" + Utils.toHexString(macByte[3]) + ":"
+                + Utils.toHexString(macByte[4]) + ":" + Utils.toHexString(macByte[5]);
         return localDev;
     }
 
