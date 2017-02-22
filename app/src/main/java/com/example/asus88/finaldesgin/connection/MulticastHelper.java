@@ -1,7 +1,5 @@
 package com.example.asus88.finaldesgin.connection;
 
-import android.util.Log;
-
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.InetSocketAddress;
@@ -51,7 +49,6 @@ public abstract class MulticastHelper {
     public boolean start() {
         if (isRunning())
             return false;
-        Log.d(TAG, "start: ");
 
         sendThread = new SendThread();
         receiveThread = new ReceiveThread();

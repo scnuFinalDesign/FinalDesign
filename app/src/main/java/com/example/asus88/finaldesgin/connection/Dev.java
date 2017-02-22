@@ -1,7 +1,6 @@
 package com.example.asus88.finaldesgin.connection;
 
 import android.os.Build;
-import android.util.Log;
 
 import com.example.asus88.finaldesgin.util.Utils;
 
@@ -69,9 +68,14 @@ public class Dev {
         return null;
     }
 
-    public static byte[] getMac() {
-        NetworkInterface i = getWLAN();
-        if(i != null) try {
+    public static byte[] getMac(NetworkInterface i) {
+        try {
+            if(i.getHardwareAddress() == null) {
+                System.out.println("网卡"+i.getName()+"无法获取mac");
+                i = getWLAN();
+            }
+
+            if(i != null)
             return i.getHardwareAddress();
         } catch (SocketException e) {
             e.printStackTrace();
@@ -79,12 +83,12 @@ public class Dev {
         return null;
     }
 
-    public static InetAddress getIp(){
-        NetworkInterface i = getWLAN();
+    public static InetAddress getIp(NetworkInterface i){
         Enumeration<InetAddress> c = i.getInetAddresses();
         while (c.hasMoreElements()) {
             InetAddress d = c.nextElement();
             if (d.isSiteLocalAddress()) {
+                System.out.println("getIp使用的网卡"+i.getName()+"，"+d);
                 return d;
             }
         }
@@ -99,8 +103,8 @@ public class Dev {
         Dev localDev = new Dev();
         localDev.type = MOBILE_TYPE;
         localDev.name = Build.MODEL;
-        localDev.ip = getIp();
-        byte[] macByte = getMac();
+        localDev.ip = getIp(i);
+        byte[] macByte = getMac(i);
         localDev.mac = Utils.toHexString(macByte[0]) + ":" + Utils.toHexString(macByte[1]) + ":"
                 + Utils.toHexString(macByte[2]) + ":" + Utils.toHexString(macByte[3]) + ":"
                 + Utils.toHexString(macByte[4]) + ":" + Utils.toHexString(macByte[5]);
@@ -112,8 +116,15 @@ public class Dev {
             Enumeration<NetworkInterface> a = NetworkInterface.getNetworkInterfaces();
             while (a.hasMoreElements()) {
                 NetworkInterface b = a.nextElement();
-                if ((b.getName().contains("ap") || b.getName().contains("wlan") || b.getName().contains("lo")) && b.isUp()) {
-                    return b;
+                if ((b.getName().contains("rmnet") || b.getName().contains("ap") || b.getName().contains("wlan") || b.getName().contains("lo")) && b.isUp()) {
+                    Enumeration<InetAddress> e = b.getInetAddresses();
+                    while (e.hasMoreElements()) {
+                        InetAddress ip = e.nextElement();
+                        if(ip.isSiteLocalAddress()){
+                            System.out.println("getLocalInterface获取的网卡"+b.getName());
+                            return b;
+                        }
+                    }
                 }
             }
         } catch (SocketException e) {

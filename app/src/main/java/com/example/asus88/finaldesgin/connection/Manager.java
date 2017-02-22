@@ -1,6 +1,5 @@
 package com.example.asus88.finaldesgin.connection;
 
-import android.provider.Settings;
 import android.util.Log;
 
 import com.example.asus88.finaldesgin.util.LogUtil;
@@ -14,7 +13,6 @@ import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
-import java.net.UnknownHostException;
 import java.nio.channels.SocketChannel;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -154,7 +152,6 @@ public class Manager {
         if (deviceDetector == null) {
             deviceDetector = new DeviceDetector();
         }
-        Log.d(TAG, "searchDevice: ");
         return deviceDetector.start();
     }
 
@@ -270,8 +267,11 @@ public class Manager {
         }
 
         private void onUpdate(Dev dev, boolean quit) {
+            Log.d(TAG, "onUpdate: ");
             if (!devMap.containsKey(dev)) {// map中不存在对应设备
+                Log.d(TAG, "onUpdate: llllll");
                 if (!quit) {
+                    Log.d(TAG, "onUpdate: add dev");
                     devMap.put(dev, null);
                     onUpdateDeviceMap(dev, true);// 搜索到新设备，刷新列表
                 }
@@ -296,11 +296,25 @@ public class Manager {
         protected void onReceivePacket(DatagramPacket packet) {
             String str = new String(packet.getData(), 0, packet.getLength());
             Dev local = Dev.getLocalDev();
-            System.out.println("收到ip:" + packet.getAddress() + "本地ip:" + local.ip);
+            System.out.println("收到ip:" + packet.getAddress() + "本地ip:" + local.ip+"数据包"+str);
+
+//            try {
+//                Enumeration<NetworkInterface> aa = NetworkInterface.getNetworkInterfaces();
+//                while (aa.hasMoreElements()){
+//                    NetworkInterface it = aa.nextElement();
+//                    System.out.println(it.getDisplayName()+"____"+it.isUp());
+//                    Enumeration<InetAddress> bb = it.getInetAddresses();
+//                    while(bb.hasMoreElements()){
+//                        InetAddress cc = bb.nextElement();
+//                        System.out.println(cc);
+//                    }
+//                }
+//            } catch (SocketException e) {
+//                e.printStackTrace();
+//            }
             //非ipv6 本地地址？
             if (!packet.getAddress().isAnyLocalAddress() && packet.getAddress().isSiteLocalAddress()
                     && !packet.getAddress().equals(local.ip)) {
-
                 try {
                     JSONObject obj = new JSONObject(str);
                     String mac = obj.getString("mac");
