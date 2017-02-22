@@ -28,4 +28,5 @@
     <string name="open_wifi">打开wifi</string>
     <string name="ask_is_open_wifi">该功能需要创建热点或开启wifi</string>
     <string name="create_hotspot_fail">创建失败，请手动创建</string>
+    <string name="reConnected_please_wit">重连中，请稍后</string>
 </resources>

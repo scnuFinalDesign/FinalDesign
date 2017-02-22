@@ -50,6 +50,7 @@ import com.example.asus88.finaldesgin.fragment.VideoFragment;
 import com.example.asus88.finaldesgin.util.AnimationManager;
 import com.example.asus88.finaldesgin.util.DimenUtil;
 import com.example.asus88.finaldesgin.util.FileUtil;
+import com.example.asus88.finaldesgin.util.WifiUitl;
 
 import java.io.File;
 import java.lang.reflect.Field;
@@ -202,7 +203,7 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
             @Override
             public void onClick(View v) {
                 removeButtonFromBg();
-                int state = isWifiApEnabled();
+                int state = WifiUitl.getWifiApState(mWifiManager);
                 if ((mWifiManager.getWifiState() == WIFI_STATE_DISABLING ||
                         mWifiManager.getWifiState() == WIFI_STATE_DISABLED) &&
                         (state == 10 || state == 11)) {
@@ -600,18 +601,6 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
         }
     }
 
-    /**
-     * @return
-     */
-    private int isWifiApEnabled() {
-        try {
-            Method method = mWifiManager.getClass().getMethod("getWifiApState");
-            int state = (int) method.invoke(mWifiManager);
-            return state;
-        } catch (Exception e) {
-            return 10;
-        }
-    }
 
     /**
      * 随机生成8位密码

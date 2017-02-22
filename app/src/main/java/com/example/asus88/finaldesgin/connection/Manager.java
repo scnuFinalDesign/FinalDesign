@@ -15,6 +15,7 @@ import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.nio.channels.SocketChannel;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Timer;
@@ -28,7 +29,6 @@ public class Manager {
     public void onTransferClosed(Transfer t) {
         devMap.remove(t.getRemoteDev());//删除设备列表中对应的项
         //刷新设备列表
-        //   onUpdateDeviceMap();
         onUpdateDevTransfer(t.getRemoteDev(), false);
     }
 
@@ -49,7 +49,6 @@ public class Manager {
         });
 
         //有连接断开，刷新设备列表
-        //   onUpdateDeviceMap();
         onUpdateDevTransfer(t.getRemoteDev(), false);
     }
 
@@ -63,12 +62,16 @@ public class Manager {
                 }
             }
         });
-        //   onUpdateDeviceMap();
         onUpdateDevTransfer(t.getRemoteDev(), true);
     }
 
     public void onTransferReconnectFailed(Transfer t) {
         //提醒用户检查网络
+        if (mOnDevMapChangeListener != null) {
+            mOnDevMapChangeListener.onNetWorkStateChange();
+        } else {
+            LogUtil.logd(TAG, "please implements onDevMapChangeListener");
+        }
     }
 
     public void onTransferReceiveListChanged(Transfer t) {
@@ -100,17 +103,18 @@ public class Manager {
 
     private void onCreatedTransfer(Dev t) {
         //提示用户成功创建与其他设备的连接
-        //    onUpdateDeviceMap();
         onUpdateDevTransfer(t, true);
     }
 
     private void onCreateTransferFailed(Dev d) {
         //提示用户，与dev的连接失败了
+        if (mOnDevMapChangeListener != null) {
+            mOnDevMapChangeListener.onCreateTransferFail(d);
+        }
     }
 
     private void onAcceptedTransfer(Dev t) {
         //提示用户收到其他设备的连接
-        //     onUpdateDeviceMap();
         onUpdateDevTransfer(t, true);
     }
 
@@ -296,7 +300,7 @@ public class Manager {
         protected void onReceivePacket(DatagramPacket packet) {
             String str = new String(packet.getData(), 0, packet.getLength());
             Dev local = Dev.getLocalDev();
-            System.out.println("收到ip:" + packet.getAddress() + "本地ip:" + local.ip+"数据包"+str);
+            System.out.println("收到ip:" + packet.getAddress() + "本地ip:" + local.ip + "数据包" + str);
 
 //            try {
 //                Enumeration<NetworkInterface> aa = NetworkInterface.getNetworkInterfaces();
@@ -330,7 +334,7 @@ public class Manager {
             }
         }
 
-        protected DatagramPacket getBroadcastPacket() throws Exception{
+        protected DatagramPacket getBroadcastPacket() throws Exception {
             Dev localDev = Dev.getLocalDev();
             DatagramPacket packet = new DatagramPacket(new byte[PACKET_LEN], PACKET_LEN, InetAddress.getByName(GROUP_IP),
                     DETECTOR_PORT);
@@ -348,7 +352,7 @@ public class Manager {
             return packet;
         }
 
-        protected DatagramPacket getQuitPacket() throws Exception{
+        protected DatagramPacket getQuitPacket() throws Exception {
             Dev localDev = Dev.getLocalDev();
             DatagramPacket packet = new DatagramPacket(new byte[PACKET_LEN], PACKET_LEN, InetAddress.getByName(GROUP_IP),
                     DETECTOR_PORT);
@@ -416,7 +420,7 @@ public class Manager {
             }
         }
 
-        protected DatagramPacket getBroadcastPacket() throws Exception{
+        protected DatagramPacket getBroadcastPacket() throws Exception {
             Dev localDev = Dev.getLocalDev();
             DatagramPacket packet = new DatagramPacket(new byte[PACKET_LEN], PACKET_LEN, InetAddress.getByName(GROUP_IP),
                     RECONNECT_PORT);
@@ -432,7 +436,7 @@ public class Manager {
             return packet;
         }
 
-        protected DatagramPacket getQuitPacket() throws Exception{
+        protected DatagramPacket getQuitPacket() throws Exception {
             return getBroadcastPacket();
         }
     }
@@ -445,9 +449,24 @@ public class Manager {
         return devMap;
     }
 
+    public Transfer getTransferFromMap(Dev dev) {
+        Iterator<Map.Entry<Dev, Transfer>> iterator = devMap.entrySet().iterator();
+        while (iterator.hasNext()) {
+            Map.Entry<Dev, Transfer> entry = iterator.next();
+            if (dev.equals(entry.getKey())) {
+                return entry.getValue();
+            }
+        }
+        return null;
+    }
+
     public interface onDevMapChangeListener {
         void onDevNumChange(Dev dev, boolean isAdd);
 
         void onTransferStateChange(Dev dev, boolean isEnabled);
+
+        void onNetWorkStateChange();
+
+        void onCreateTransferFail(Dev dev);
     }
 }
