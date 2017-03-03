@@ -1,10 +1,13 @@
 package com.example.asus88.finaldesgin.connection;
 
-public class Task {
+import com.example.asus88.finaldesgin.R;
+import com.example.asus88.finaldesgin.bean.SendTakBean;
+
+public class Task extends SendTakBean {
 
     public static int ID = 0;
-	public int mID;
-	public int remoteID;
+    public int mID;
+    public int remoteID;
 
     public static final int SEND_TASK_TYPE = 1;
     public static final int RECEIVE_TASK_TYPE = 2;
@@ -34,14 +37,14 @@ public class Task {
         this.totalCount = totalCount;
         this.state = WAIT;
     }
-    
+
     public static Task createReceiveTask(String name, String path, long totalCount) {
-    	return new Task(RECEIVE_TASK_TYPE, name, path, totalCount);
+        return new Task(RECEIVE_TASK_TYPE, name, path, totalCount);
     }
 
     public double getRate() {
         if (totalCount == 0) return 100d;
-        else return ((double) (transferedCount+offset) * 100d / (double) totalCount);
+        else return ((double) (transferedCount + offset) * 100d / (double) totalCount);
     }
 
     @Override
@@ -83,13 +86,19 @@ public class Task {
                 else
                     return "接收完毕";
             }
-            case FAILED:{
-            	if (type == SEND_TASK_TYPE)
+            case FAILED: {
+                if (type == SEND_TASK_TYPE)
                     return "发送失败";
                 else
                     return "接收失败";
             }
         }
         return null;
+    }
+
+
+    @Override
+    protected int initLayoutId() {
+        return R.layout.adapter_send_receive_task;
     }
 }

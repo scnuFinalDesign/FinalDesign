@@ -46,14 +46,14 @@ public class MusicAdapter extends RecyclerView.Adapter<MusicAdapter.MyViewHolder
             holder.itemView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    mOnItemClickListener.onItemClick(holder.itemView, holder.getLayoutPosition());
+                    mOnItemClickListener.onItemClick(holder.getLayoutPosition());
                 }
             });
 
             holder.itemView.setOnLongClickListener(new View.OnLongClickListener() {
                 @Override
                 public boolean onLongClick(View v) {
-                    mOnItemClickListener.onItemLongClick(holder.itemView, holder.getLayoutPosition());
+                    mOnItemClickListener.onItemLongClick(holder.getLayoutPosition());
                     return true;
                 }
             });
@@ -81,9 +81,9 @@ public class MusicAdapter extends RecyclerView.Adapter<MusicAdapter.MyViewHolder
     }
 
     public interface onItemClickListener {
-        void onItemClick(View view, int position);
+        void onItemClick(int position);
 
-        void onItemLongClick(View view, int position);
+        void onItemLongClick(int position);
     }
 
     class MyViewHolder extends RecyclerView.ViewHolder {

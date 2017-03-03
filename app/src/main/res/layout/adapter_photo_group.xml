@@ -19,6 +19,8 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:scaleType="fitXY"
+            android:layout_marginRight="5px"
+            android:layout_marginTop="5px"
             android:paddingBottom="30dip"
             android:paddingLeft="20dip"
             android:paddingRight="20dip"
@@ -33,6 +35,14 @@
             android:layout_marginBottom="20px"
             android:background="@mipmap/photo_number_bg"
             android:gravity="center"/>
+        <CheckBox
+            android:layout_width="50px"
+            android:layout_height="50px"
+            android:id="@+id/photo_group_adapter_checkbox"
+            android:layout_gravity="right"
+            android:layout_marginRight="5px"
+            android:background="@drawable/radio_button_style"
+            android:button="@null"/>
     </FrameLayout>
 
     <TextView
@@ -42,7 +52,6 @@
         android:layout_gravity="bottom"
         android:gravity="center"
         android:singleLine="true"
-        android:text="1213"
         android:textColor="@color/black"
         android:textSize="16sp"/>
 </LinearLayout>

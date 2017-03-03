@@ -29,4 +29,10 @@
     <string name="ask_is_open_wifi">该功能需要创建热点或开启wifi</string>
     <string name="create_hotspot_fail">创建失败，请手动创建</string>
     <string name="reConnected_please_wit">重连中，请稍后</string>
+    <string name="check_your_network_setting">请检查wifi和热点状态</string>
+    <string name="create_transfer_fail">创建链接失败</string>
+    <string name="is_close_link">是否要断开链接</string>
+    <string name="select_dev_to_send">将文件发送到</string>
+    <string name="no_link">当前没有链接中的设备</string>
+    <string name="no_dev_selected">当前未选择任何设备</string>
 </resources>

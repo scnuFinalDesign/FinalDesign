@@ -15,6 +15,7 @@ import android.view.ViewGroup;
 import com.example.asus88.finaldesgin.R;
 import com.example.asus88.finaldesgin.adapter.FileAdapter;
 import com.example.asus88.finaldesgin.adapter.LocationAdapter;
+import com.example.asus88.finaldesgin.bean.Bean;
 import com.example.asus88.finaldesgin.bean.FileBean;
 import com.example.asus88.finaldesgin.itemDecoration.FileItemDirection;
 import com.example.asus88.finaldesgin.itemDecoration.LineItemDecoration;
@@ -89,7 +90,7 @@ public class FileFragment extends BaseFragment implements FileAdapter.onItemClic
         }).start();
         mAdapter.setOnItemClickListener(this);
         mRecyclerView.setLayoutManager(new LinearLayoutManager(mView.getContext()));
-        mRecyclerView.addItemDecoration(new LineItemDecoration(getContext(),250,20,R.drawable.line_item_decoration));
+        mRecyclerView.addItemDecoration(new LineItemDecoration(getContext(), 250, 20, R.drawable.line_item_decoration));
         mRecyclerView.setAdapter(mAdapter);
 
 
@@ -104,6 +105,19 @@ public class FileFragment extends BaseFragment implements FileAdapter.onItemClic
         locationRecycler.addItemDecoration(new FileItemDirection(getContext(), 10));
 
         return mView;
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        if(mFileList!=null){
+            mFileList.clear();
+            mFileList=null;
+        }
+        if(locationList!=null){
+            locationList.clear();
+            locationList=null;
+        }
     }
 
     private void getFileData(String path) {
@@ -181,7 +195,7 @@ public class FileFragment extends BaseFragment implements FileAdapter.onItemClic
             locationList.add(bean.getPath());
             mLocationAdapter.notifyItemInserted(locationList.size() - 1);
         } else {
-            //// TODO: 2017/1/15  open file
+            FileUtil.showOpenTypeWindow(bean.getPath(),getContext());
         }
     }
 
@@ -211,10 +225,31 @@ public class FileFragment extends BaseFragment implements FileAdapter.onItemClic
     public List getDataList() {
         return mFileList;
     }
-    public int getFabButtonNum(){return 5;}
+
+    public int getFabButtonNum() {
+        return 5;
+    }
+
     @Override
-    public void notifyRecyclerView() {
+    public void notifyRecyclerView(List<Bean> list) {
+        mFileList.removeAll(list);
         mAdapter.notifyDataSetChanged();
+    }
+
+    @Override
+    public void updateMediaDataBase(List<Bean> list) {
+
+    }
+
+    @Override
+    public void setAllUnSelected() {
+        for(int i=0;i<mFileList.size();i++){
+            FileBean bean=mFileList.get(i);
+            if(bean.isSelected()) {
+                bean.setSelected(false);
+                mAdapter.notifyItemChanged(i);
+            }
+        }
     }
 
 }

@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                android:layout_width="match_parent"
+                android:layout_height="120px"
+                android:padding="20px">
+
+    <ImageView
+        android:id="@+id/task_adapter_icon"
+        android:layout_width="80px"
+        android:layout_height="80px"
+        android:background="@drawable/bg_ic_file"
+        android:scaleType="centerInside"
+       />
+
+    <TextView
+        android:id="@+id/task_adapter_name"
+        android:layout_width="400px"
+        android:layout_height="40px"
+        android:layout_marginLeft="20px"
+        android:layout_toEndOf="@+id/task_adapter_icon"
+        android:layout_toRightOf="@+id/task_adapter_icon"/>
+
+    <ImageView
+        android:id="@+id/task_adapter_status"
+        android:layout_width="80px"
+        android:layout_height="80px"
+        android:layout_alignParentRight="true"/>
+
+    <com.example.asus88.finaldesgin.myViews.DigitalProgressBar
+        android:id="@+id/task_adapter_progressBar"
+        android:layout_width="500px"
+        android:layout_height="40px"
+        android:layout_alignLeft="@+id/task_adapter_name"
+        android:layout_alignParentBottom="true"
+        android:layout_alignStart="@+id/task_adapter_name"/>
+</RelativeLayout>

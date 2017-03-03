@@ -27,7 +27,7 @@ public class ApplicationAdapter extends RecyclerView.Adapter<ApplicationAdapter.
     private Context mContext;
     private List<ApplicationBean> list;
     private onItemClickListener mOnItemClickListener;
-    private Boolean deleteMode;
+    private boolean deleteMode;
 
     public ApplicationAdapter(Context context, List<ApplicationBean> list) {
         mContext = context;
@@ -35,12 +35,12 @@ public class ApplicationAdapter extends RecyclerView.Adapter<ApplicationAdapter.
         deleteMode = false;
     }
 
-    public void setDeleteMode(Boolean deleteMode) {
+    public void setDeleteMode(boolean deleteMode) {
         this.deleteMode = deleteMode;
         notifyDataSetChanged();
     }
 
-    public Boolean getDeleteMode() {
+    public boolean getDeleteMode() {
         return deleteMode;
     }
 
@@ -55,7 +55,9 @@ public class ApplicationAdapter extends RecyclerView.Adapter<ApplicationAdapter.
             holder.delete.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    mOnItemClickListener.onDeleteClick(holder.itemView, holder.getLayoutPosition());
+                    if (!deleteMode) {
+                        mOnItemClickListener.onDeleteClick(holder.getLayoutPosition());
+                    }
                 }
             });
 
@@ -65,7 +67,7 @@ public class ApplicationAdapter extends RecyclerView.Adapter<ApplicationAdapter.
                     if (!deleteMode) {
                         deleteMode = true;
                         notifyDataSetChanged();
-                        mOnItemClickListener.onItemLongClick();
+                        mOnItemClickListener.onLongClick();
                     }
                     return true;
                 }
@@ -74,12 +76,22 @@ public class ApplicationAdapter extends RecyclerView.Adapter<ApplicationAdapter.
         } else {
             LogUtil.logd(TAG, "please implements onItemClickListener");
         }
+
+        holder.itemView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                holder.bean.setSelected(!holder.bean.isSelected());
+                notifyItemChanged(holder.getLayoutPosition());
+            }
+        });
+
         return holder;
     }
 
     @Override
     public void onBindViewHolder(final MyViewHolder holder, final int position) {
         final ApplicationBean bean = list.get(position);
+        holder.bean = bean;
         holder.number.setText("版本:" + bean.getNumber());
         holder.name.setText(bean.getName());
         holder.size.setText(bean.getSize());
@@ -98,14 +110,6 @@ public class ApplicationAdapter extends RecyclerView.Adapter<ApplicationAdapter.
         } else {
             holder.delete.setVisibility(View.GONE);
         }
-
-        holder.itemView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                bean.setSelected(!isSelected);
-                notifyItemChanged(holder.getLayoutPosition());
-            }
-        });
     }
 
     @Override
@@ -115,9 +119,9 @@ public class ApplicationAdapter extends RecyclerView.Adapter<ApplicationAdapter.
 
     public interface onItemClickListener {
 
-        void onDeleteClick(View view, int position);
+        void onDeleteClick(int position);
 
-        void onItemLongClick();
+        void onLongClick();
 
     }
 

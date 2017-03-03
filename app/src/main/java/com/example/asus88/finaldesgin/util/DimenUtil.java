@@ -12,6 +12,11 @@ public class DimenUtil {
         return (int) (dpValue * scale + 0.5f);
     }
 
+    public static int spTopx(Context context, float spValue){
+        final float fontScale = context.getResources().getDisplayMetrics().scaledDensity;
+        return (int) (spValue * fontScale + 0.5f);
+    }
+
     public static int getDeviceHeight(Context context) {
         return context.getResources().getDisplayMetrics().heightPixels;
     }

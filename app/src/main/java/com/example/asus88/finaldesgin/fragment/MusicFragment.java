@@ -2,6 +2,7 @@ package com.example.asus88.finaldesgin.fragment;
 
 import android.content.ContentResolver;
 import android.database.Cursor;
+import android.media.MediaScannerConnection;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -15,8 +16,10 @@ import android.view.ViewGroup;
 
 import com.example.asus88.finaldesgin.R;
 import com.example.asus88.finaldesgin.adapter.MusicAdapter;
+import com.example.asus88.finaldesgin.bean.Bean;
 import com.example.asus88.finaldesgin.bean.MusicBean;
 import com.example.asus88.finaldesgin.itemDecoration.LineItemDecoration;
+import com.example.asus88.finaldesgin.util.FileUtil;
 import com.example.asus88.finaldesgin.util.LogUtil;
 import com.example.asus88.finaldesgin.util.TimeUtil;
 import com.example.asus88.finaldesgin.util.Utils;
@@ -51,14 +54,14 @@ public class MusicFragment extends BaseFragment implements MusicAdapter.onItemCl
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-       LogUtil.logd(TAG,"create");
+        LogUtil.logd(TAG, "create");
         mView = inflater.inflate(R.layout.fragment_content, container, false);
         mRecyclerView = (RecyclerView) mView.findViewById(R.id.recyclerView);
         mMusicBeanList = new ArrayList<>();
         mAdapter = new MusicAdapter(mView.getContext(), mMusicBeanList);
         mAdapter.setOnItemClickListener(this);
         mRecyclerView.setLayoutManager(new LinearLayoutManager(mView.getContext()));
-        mRecyclerView.addItemDecoration(new LineItemDecoration(getContext(),250,20,R.drawable.line_item_decoration));
+        mRecyclerView.addItemDecoration(new LineItemDecoration(getContext(), 250, 20, R.drawable.line_item_decoration));
         mRecyclerView.setAdapter(mAdapter);
         new Thread(new Runnable() {
             @Override
@@ -96,12 +99,12 @@ public class MusicFragment extends BaseFragment implements MusicAdapter.onItemCl
     }
 
     @Override
-    public void onItemClick(View view, int position) {
-        //play the music
+    public void onItemClick(int position) {
+        FileUtil.showOpenTypeWindow(mMusicBeanList.get(position).getPath(), getContext());
     }
 
     @Override
-    public void onItemLongClick(View view, int position) {
+    public void onItemLongClick(int position) {
         showFileInfo(mMusicBeanList.get(position), mView);
     }
 
@@ -109,11 +112,41 @@ public class MusicFragment extends BaseFragment implements MusicAdapter.onItemCl
     public List getDataList() {
         return mMusicBeanList;
     }
-    public int getFabButtonNum(){return 3;}
+
+    public int getFabButtonNum() {
+        return 3;
+    }
 
     @Override
-    public void notifyRecyclerView() {
+    public void notifyRecyclerView(List<Bean> list) {
+        mMusicBeanList.removeAll(list);
         mAdapter.notifyDataSetChanged();
     }
 
+    @Override
+    public void updateMediaDataBase(List<Bean> list) {
+        List<String> strList = new ArrayList<>();
+        for (int i = 0; i < list.size(); i++) {
+            if (!strList.contains(list.get(i).getPath())) {
+                strList.add(list.get(i).getPath());
+            }
+        }
+        MediaScannerConnection.scanFile((getActivity()).getApplicationContext(), strList.toArray(new String[strList.size()]), null, null);
+    }
+
+    @Override
+    public void setAllUnSelected() {
+        for (int i = 0; i < mMusicBeanList.size(); i++) {
+            mMusicBeanList.get(i).setSelected(false);
+        }
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        if(mMusicBeanList!=null){
+            mMusicBeanList.clear();
+            mMusicBeanList=null;
+        }
+    }
 }

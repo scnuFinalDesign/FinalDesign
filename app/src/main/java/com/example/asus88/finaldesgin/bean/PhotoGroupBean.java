@@ -9,6 +9,15 @@ import java.util.List;
 public class PhotoGroupBean {
     private List<PhotoBean> photoPath;
     private String path;
+    private boolean isSelected;
+
+    public boolean isSelected() {
+        return isSelected;
+    }
+
+    public void setSelected(boolean selected) {
+        isSelected = selected;
+    }
 
     public List<PhotoBean> getPhotoPath() {
         return photoPath;

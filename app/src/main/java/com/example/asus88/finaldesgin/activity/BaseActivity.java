@@ -39,10 +39,4 @@ public class BaseActivity extends AutoLayoutActivity {
             e.printStackTrace();
         }
     }
-
-    public void changeBgAlpha(float f) {
-        WindowManager.LayoutParams lp = getWindow().getAttributes();
-        lp.alpha = f;
-        getWindow().setAttributes(lp);
-    }
 }

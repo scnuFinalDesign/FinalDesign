@@ -5,6 +5,8 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -38,7 +40,7 @@ public class PhotoGroupAdapter extends RecyclerView.Adapter<PhotoGroupAdapter.My
 
     @Override
     public MyViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        final MyViewHolder holder=new MyViewHolder(LayoutInflater.from(mContext).inflate(R.layout.adapter_photo_group, parent, false));
+        final MyViewHolder holder = new MyViewHolder(LayoutInflater.from(mContext).inflate(R.layout.adapter_photo_group, parent, false));
         if (mOnItemClickListener != null) {
             holder.itemView.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -49,15 +51,23 @@ public class PhotoGroupAdapter extends RecyclerView.Adapter<PhotoGroupAdapter.My
         } else {
             LogUtil.logd(TAG, "please implements onItemClickListener");
         }
+        holder.mCheckBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                holder.bean.setSelected(isChecked);
+            }
+        });
         return holder;
     }
 
     @Override
     public void onBindViewHolder(MyViewHolder holder, final int position) {
         PhotoGroupBean bean = list.get(position);
+        holder.bean=bean;
         holder.path.setText(bean.getPath());
         Glide.with(mContext).load(bean.getPhotoPath().get(0).getPath()).error(R.drawable.ic_menu_camera).into(holder.image);
         holder.number.setText(String.valueOf(bean.getPhotoPath().size()));
+        holder.mCheckBox.setChecked(bean.isSelected());
     }
 
     @Override
@@ -73,13 +83,16 @@ public class PhotoGroupAdapter extends RecyclerView.Adapter<PhotoGroupAdapter.My
         ImageView image;
         TextView number;
         TextView path;
+        CheckBox mCheckBox;
+        PhotoGroupBean bean;
 
         public MyViewHolder(View itemView) {
             super(itemView);
+            AutoUtils.autoSize(itemView);
             image = (ImageView) itemView.findViewById(R.id.photo_group_adapter_image);
             number = (TextView) itemView.findViewById(R.id.photo_group_adapter_number);
             path = (TextView) itemView.findViewById(R.id.photo_group_adapter_path);
-            AutoUtils.autoSize(itemView);
+            mCheckBox = (CheckBox) itemView.findViewById(R.id.photo_group_adapter_checkbox);
         }
     }
 }

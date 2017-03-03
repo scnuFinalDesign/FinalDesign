@@ -89,4 +89,13 @@ public class PhotoActivity extends BaseActivity implements PhotoAdapter.onItemCl
                 break;
         }
     }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if(mPhotoBeanList!=null){
+            mPhotoBeanList.clear();
+            mPhotoBeanList=null;
+        }
+    }
 }

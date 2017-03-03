@@ -8,11 +8,16 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.PopupWindow;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.example.asus88.finaldesgin.R;
 import com.example.asus88.finaldesgin.bean.Bean;
+import com.example.asus88.finaldesgin.bean.DevBean;
+import com.example.asus88.finaldesgin.connection.Transfer;
 import com.example.asus88.finaldesgin.util.FileUtil;
+import com.example.asus88.finaldesgin.util.ListUtil;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -21,27 +26,7 @@ import java.util.List;
  */
 
 public abstract class BaseFragment extends Fragment {
-
-    private int selectedNum = 0;
-
-    public int getSelectedNum() {
-        return selectedNum;
-    }
-
-    public void selectedNumChange(boolean flag, int max) {
-        if (flag) {
-            selectedNum++;
-            if (selectedNum > max) {
-                selectedNum = max;
-            }
-        } else {
-            selectedNum--;
-            if (selectedNum < 0) {
-                selectedNum = 0;
-            }
-        }
-    }
-
+    private static final String TAG = "BaseFragment";
 
     public void showFileInfo(Bean bean, View view) {
         View window = LayoutInflater.from(view.getContext()).inflate(R.layout.popup_window_show_file_info, null);
@@ -69,7 +54,38 @@ public abstract class BaseFragment extends Fragment {
         });
     }
 
-    public List getSelectedList(List<Bean> list) {
+    public void deleteFile() {
+        List<Bean> sList = getSelectedList(getDataList());
+        if (sList == null || sList.size() <= 0) {
+            Toast.makeText(getActivity(), getString(R.string.no_selected), Toast.LENGTH_SHORT).show();
+        } else {
+            for (int i = 0; i < sList.size(); i++) {
+                FileUtil.deleteFile(new File(sList.get(i).getPath()));
+            }
+            updateMediaDataBase(sList);
+            notifyRecyclerView(sList);
+        }
+    }
+
+    public void sendFile(List<DevBean> devList) {
+        List<Bean> sList = getSelectedList(getDataList());
+        for (int i = 0; i < devList.size(); i++) {
+            DevBean bean = devList.get(i);
+            if (bean.isSelected()) {
+                Transfer transfer=bean.getTransfer();
+                for (int j = 0; j < sList.size(); j++) {
+                    try {
+                        transfer.addTask(sList.get(j).getPath());
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        }
+        setAllUnSelected();
+    }
+
+    private List getSelectedList(List<Bean> list) {
         List<Bean> mList = new ArrayList<>();
         for (int i = 0; i < list.size(); i++) {
             if (list.get(i).isSelected()) {
@@ -79,7 +95,17 @@ public abstract class BaseFragment extends Fragment {
         return mList;
     }
 
+    public int getSelectedNum() {
+        return ListUtil.getSize(getSelectedList(getDataList()));
+    }
+
     public abstract List getDataList();
+
     public abstract int getFabButtonNum();
-    public abstract void notifyRecyclerView();
+
+    public abstract void notifyRecyclerView(List<Bean> list);
+
+    public abstract void updateMediaDataBase(List<Bean> list);
+
+    public abstract void setAllUnSelected();
 }

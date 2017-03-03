@@ -116,7 +116,7 @@ public class Dev {
             Enumeration<NetworkInterface> a = NetworkInterface.getNetworkInterfaces();
             while (a.hasMoreElements()) {
                 NetworkInterface b = a.nextElement();
-                if ((b.getName().contains("rmnet") || b.getName().contains("ap") || b.getName().contains("wlan") || b.getName().contains("lo")) && b.isUp()) {
+                if (( b.getName().contains("ap") || b.getName().contains("wlan") || b.getName().contains("lo")) && b.isUp()) {
                     Enumeration<InetAddress> e = b.getInetAddresses();
                     while (e.hasMoreElements()) {
                         InetAddress ip = e.nextElement();

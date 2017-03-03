@@ -64,4 +64,17 @@ public class ScanPhotoActivity extends BaseActivity {
             }
         });
     }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if(photoList!=null){
+            photoList.clear();
+            photoList=null;
+        }
+        if(list!=null){
+            list.clear();
+            list=null;
+        }
+    }
 }

@@ -1,8 +1,11 @@
 package com.example.asus88.finaldesgin.fragment;
 
+import android.app.Activity;
+import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -14,8 +17,10 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.example.asus88.finaldesgin.R;
+import com.example.asus88.finaldesgin.activity.MainActivity;
 import com.example.asus88.finaldesgin.adapter.ApplicationAdapter;
 import com.example.asus88.finaldesgin.bean.ApplicationBean;
+import com.example.asus88.finaldesgin.bean.Bean;
 import com.example.asus88.finaldesgin.util.FileUtil;
 
 import java.util.ArrayList;
@@ -27,6 +32,7 @@ import java.util.List;
 
 public class ApplicationFragment extends BaseFragment implements ApplicationAdapter.onItemClickListener {
     private static final String TAG = "ApplicationFragment";
+    private static final int REQUEST_UNINSTALL = 101;
     private View mView;
     private RecyclerView mRecyclerView;
     private ApplicationAdapter mAdapter;
@@ -34,8 +40,8 @@ public class ApplicationFragment extends BaseFragment implements ApplicationAdap
     private PackageManager mManager;
     private ApplicationBean bean;
     private String path;
-    private boolean isSelected;
-    private int mBgColor;
+    private int uninstallPosition;
+
     private Handler mHandler = new Handler() {
         public void handleMessage(Message msg) {
             switch (msg.what) {
@@ -56,7 +62,6 @@ public class ApplicationFragment extends BaseFragment implements ApplicationAdap
         mAdapter.setOnItemClickListener(this);
         mRecyclerView.setLayoutManager(new GridLayoutManager(mView.getContext(), 3));
         mRecyclerView.setAdapter(mAdapter);
-        mBgColor = getResources().getColor(R.color.fab_menu_color);
         new Thread(new Runnable() {
             @Override
             public void run() {
@@ -67,6 +72,15 @@ public class ApplicationFragment extends BaseFragment implements ApplicationAdap
             }
         }).start();
         return mView;
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        if(mApplicationBeanList!=null){
+            mApplicationBeanList.clear();
+            mApplicationBeanList=null;
+        }
     }
 
     private void getApplicationData() {
@@ -90,15 +104,28 @@ public class ApplicationFragment extends BaseFragment implements ApplicationAdap
 
 
     @Override
-    public void onDeleteClick(View view, int position) {
-
+    public void onDeleteClick(int position) {
+        uninstallPosition = position;
+        Uri uri = Uri.parse("package:" + mApplicationBeanList.get(position).getPackName());
+        Intent intent = new Intent(Intent.ACTION_DELETE, uri);
+        intent.putExtra(Intent.EXTRA_RETURN_RESULT, true);
+        startActivityForResult(intent, REQUEST_UNINSTALL);
     }
 
     @Override
-    public void onItemLongClick() {
-
+    public void onLongClick() {
+        ((MainActivity) getActivity()).changeFabBtnImage(false);
     }
 
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == REQUEST_UNINSTALL && resultCode == Activity.RESULT_OK) {
+            mApplicationBeanList.remove(uninstallPosition);
+            mAdapter.notifyItemRemoved(uninstallPosition);
+        }
+    }
 
     @Override
     public List getDataList() {
@@ -108,9 +135,39 @@ public class ApplicationFragment extends BaseFragment implements ApplicationAdap
     public int getFabButtonNum() {
         return 2;
     }
-    @Override
-    public void notifyRecyclerView() {
+
+    public boolean getFabBtnMode() {
+        if (mAdapter == null) {
+            return false;
+        }
+        return mAdapter.getDeleteMode();
+
+    }
+
+    /**
+     * 删除模式完成
+     */
+    public void finishDelMode() {
+        mAdapter.setDeleteMode(false);
         mAdapter.notifyDataSetChanged();
     }
+
+    @Override
+    public void notifyRecyclerView(List<Bean> list) {
+        mApplicationBeanList.removeAll(list);
+        mAdapter.notifyDataSetChanged();
+    }
+
+    @Override
+    public void updateMediaDataBase(List<Bean> list) {
+    }
+
+    @Override
+    public void setAllUnSelected() {
+        for (int i = 0 ;i < mApplicationBeanList.size(); i++) {
+            mApplicationBeanList.get(i).setSelected(false);
+        }
+    }
+
 
 }

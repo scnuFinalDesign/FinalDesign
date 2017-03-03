@@ -7,6 +7,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
 import android.media.MediaMetadataRetriever;
+import android.media.MediaScannerConnection;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -20,8 +21,10 @@ import android.view.ViewGroup;
 
 import com.example.asus88.finaldesgin.R;
 import com.example.asus88.finaldesgin.adapter.VideoAdapter;
+import com.example.asus88.finaldesgin.bean.Bean;
 import com.example.asus88.finaldesgin.bean.VideoBean;
 import com.example.asus88.finaldesgin.itemDecoration.LineItemDecoration;
+import com.example.asus88.finaldesgin.util.FileUtil;
 import com.example.asus88.finaldesgin.util.LogUtil;
 import com.example.asus88.finaldesgin.util.TimeUtil;
 import com.example.asus88.finaldesgin.util.Utils;
@@ -56,7 +59,7 @@ public class VideoFragment extends BaseFragment implements VideoAdapter.onItemCl
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-       LogUtil.logd(TAG,"create");
+        LogUtil.logd(TAG, "create");
         mView = inflater.inflate(R.layout.fragment_content, container, false);
         mRecyclerView = (RecyclerView) mView.findViewById(R.id.recyclerView);
         mVideoBeanList = new ArrayList<>();
@@ -64,7 +67,7 @@ public class VideoFragment extends BaseFragment implements VideoAdapter.onItemCl
         mAdapter = new VideoAdapter(mView.getContext(), mVideoBeanList);
         mAdapter.setOnItemClickListener(this);
         mRecyclerView.setLayoutManager(new LinearLayoutManager(mView.getContext()));
-        mRecyclerView.addItemDecoration(new LineItemDecoration(getContext(),280,20,R.drawable.line_item_decoration));
+        mRecyclerView.addItemDecoration(new LineItemDecoration(getContext(), 280, 20, R.drawable.line_item_decoration));
         mRecyclerView.setAdapter(mAdapter);
         new Thread(new Runnable() {
             @Override
@@ -76,6 +79,15 @@ public class VideoFragment extends BaseFragment implements VideoAdapter.onItemCl
             }
         }).start();
         return mView;
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        if (mVideoBeanList != null) {
+            mVideoBeanList.clear();
+            mVideoBeanList = null;
+        }
     }
 
     private void getVideoData() {
@@ -144,23 +156,46 @@ public class VideoFragment extends BaseFragment implements VideoAdapter.onItemCl
     }
 
     @Override
-    public void onItemClick(View view, int position) {
-
+    public void onItemClick(int position) {
+        FileUtil.showOpenTypeWindow(mVideoBeanList.get(position).getPath(), getContext());
     }
 
     @Override
-    public void onItemLongClick(View view, int position) {
-        showFileInfo(mVideoBeanList.get(position),mView);
+    public void onItemLongClick(int position) {
+        showFileInfo(mVideoBeanList.get(position), mView);
     }
 
     @Override
     public List getDataList() {
         return mVideoBeanList;
     }
-    public int getFabButtonNum(){return 3;}
+
+    public int getFabButtonNum() {
+        return 3;
+    }
+
     @Override
-    public void notifyRecyclerView() {
+    public void notifyRecyclerView(List<Bean> list) {
+        mVideoBeanList.removeAll(list);
         mAdapter.notifyDataSetChanged();
+    }
+
+    @Override
+    public void updateMediaDataBase(List<Bean> list) {
+        List<String> strList = new ArrayList<>();
+        for (int i = 0; i < list.size(); i++) {
+            if (!strList.contains(list.get(i).getPath())) {
+                strList.add(list.get(i).getPath());
+            }
+        }
+        MediaScannerConnection.scanFile((getActivity()).getApplicationContext(), strList.toArray(new String[strList.size()]), null, null);
+    }
+
+    @Override
+    public void setAllUnSelected() {
+        for (int i = 0; i < mVideoBeanList.size(); i++) {
+            mVideoBeanList.get(i).setSelected(false);
+        }
     }
 
 }

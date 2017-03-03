@@ -3,6 +3,7 @@ package com.example.asus88.finaldesgin.fragment;
 import android.content.ContentResolver;
 import android.content.Intent;
 import android.database.Cursor;
+import android.media.MediaScannerConnection;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -17,6 +18,7 @@ import android.view.ViewGroup;
 import com.example.asus88.finaldesgin.R;
 import com.example.asus88.finaldesgin.activity.PhotoActivity;
 import com.example.asus88.finaldesgin.adapter.PhotoGroupAdapter;
+import com.example.asus88.finaldesgin.bean.Bean;
 import com.example.asus88.finaldesgin.bean.PhotoBean;
 import com.example.asus88.finaldesgin.bean.PhotoGroupBean;
 
@@ -74,6 +76,15 @@ public class PhotoFragment extends BaseFragment implements PhotoGroupAdapter.onI
         return mView;
     }
 
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        if(mPhotoBeanList!=null){
+            mPhotoBeanList.clear();
+            mPhotoBeanList=null;
+        }
+    }
+
     private void getPhotoData() {
         mResolver = mView.getContext().getContentResolver();
         Cursor cursor = mResolver.query(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, null, null, null, MediaStore.Images.Media.DATE_MODIFIED);
@@ -102,8 +113,8 @@ public class PhotoFragment extends BaseFragment implements PhotoGroupAdapter.onI
     @Override
     public void onItemClick(int position) {
         Intent intent = new Intent(getActivity(), PhotoActivity.class);
-        intent.putExtra("path",mPhotoBeanList.get(position).getPath());
-        intent.putParcelableArrayListExtra("photo",(ArrayList) mPhotoBeanList.get(position).getPhotoPath());
+        intent.putExtra("path", mPhotoBeanList.get(position).getPath());
+        intent.putParcelableArrayListExtra("photo", (ArrayList) mPhotoBeanList.get(position).getPhotoPath());
         startActivity(intent);
     }
 
@@ -111,10 +122,33 @@ public class PhotoFragment extends BaseFragment implements PhotoGroupAdapter.onI
     public List getDataList() {
         return mPhotoBeanList;
     }
-    public int getFabButtonNum(){return 3;}
+
+    public int getFabButtonNum() {
+        return 3;
+    }
+
     @Override
-    public void notifyRecyclerView() {
+    public void notifyRecyclerView(List<Bean> list) {
+        mPhotoBeanList.removeAll(list);
         mAdapter.notifyDataSetChanged();
+    }
+
+    @Override
+    public void updateMediaDataBase(List<Bean> list) {
+        List<String> strList = new ArrayList<>();
+        for (int i = 0; i < list.size(); i++) {
+            if (!strList.contains(list.get(i).getPath())) {
+                strList.add(list.get(i).getPath());
+            }
+        }
+        MediaScannerConnection.scanFile((getActivity()).getApplicationContext(), strList.toArray(new String[strList.size()]), null, null);
+    }
+
+    @Override
+    public void setAllUnSelected() {
+        for(int i=0;i<mPhotoBeanList.size();i++){
+            mPhotoBeanList.get(i).setSelected(false);
+        }
     }
 
 }

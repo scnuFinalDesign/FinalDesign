@@ -1,9 +1,12 @@
 package com.example.asus88.finaldesgin.connection;
 
+import android.os.Environment;
 import android.util.Log;
 
+import com.example.asus88.finaldesgin.bean.DevBean;
+import com.example.asus88.finaldesgin.bean.ReceiverBean;
+import com.example.asus88.finaldesgin.bean.SendTakBean;
 import com.example.asus88.finaldesgin.util.LogUtil;
-import com.example.asus88.finaldesgin.util.Utils;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -14,9 +17,11 @@ import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.nio.channels.SocketChannel;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -27,6 +32,18 @@ public class Manager {
     private static final String TAG = "Manager";
 
     public void onTransferClosed(Transfer t) {
+        if (t.isDisconnected()) {
+            mainPool.execute(new Runnable() {
+                public void run() {
+                    disconnectedTransferCount--;
+                    if (disconnectedTransferCount == 0) {
+                        // 不需要重连探测
+                        stopReconnectDetect();
+                    }
+                }
+            });
+        }
+
         devMap.remove(t.getRemoteDev());//删除设备列表中对应的项
         //刷新设备列表
         onUpdateDevTransfer(t.getRemoteDev(), false);
@@ -74,14 +91,20 @@ public class Manager {
         }
     }
 
-    public void onTransferReceiveListChanged(Transfer t) {
+    public void onTransferReceiveListChanged(Transfer t, Task task, int action) {
         //刷新接收列表
-        t.getReceiveTaskList();
+        Log.d(TAG, "onTransferReceiveListChanged: ");
+        if (mOnReceiveTaskListChangeListener != null) {
+            mOnReceiveTaskListChangeListener.onReceiveTaskChange(t, task, action);
+        }
     }
 
-    public void onTransferSendListChanged(Transfer t) {
+    public void onTransferSendListChanged(Transfer t, Task task, int action) {
         //刷新发送列表
-        t.getSendTaskList();
+        Log.d(TAG, "onTransferSendListChanged: ");
+        if (mOnSendTaskListChangeListener != null) {
+            mOnSendTaskListChangeListener.onSendTaskChane(t, task, action);
+        }
     }
 
     private void onUpdateDevTransfer(Dev dev, boolean isEnabled) {
@@ -126,6 +149,9 @@ public class Manager {
     private volatile ReconnectDetector reconnectDetector;
     private volatile Timer networkDetector;
     private onDevMapChangeListener mOnDevMapChangeListener;
+    private onSendTaskListChangeListener mOnSendTaskListChangeListener;
+    private onReceiveTaskListChangeListener mOnReceiveTaskListChangeListener;
+
 
     public static Manager getManager() {
         if (ref != null) {
@@ -166,6 +192,11 @@ public class Manager {
         }
     }
 
+    public void resumeSearch() {
+        Log.d(TAG, "resumeSearch: ");
+        if (deviceDetector != null) deviceDetector.onResume();
+    }
+
     // dev参数应从设备列表获取
     public boolean createTransfer(final Dev dev) {
         if (devMap.get(dev) != null)
@@ -190,9 +221,14 @@ public class Manager {
     }
 
     public String getStorePath() throws Exception {
-        if (!new File(Utils.getDefaultStorePath()).exists())
+        File file = Environment.getExternalStorageDirectory();
+        Log.i("tag", file.getAbsolutePath() + " " + file.exists());
+        if (!file.exists()) {
             throw new Exception("默认存储路径有误！");
-        return Utils.getDefaultStorePath();
+        }
+        String path = file.getAbsolutePath() + "/dd/";
+        Log.i("tag", "路径" + path);
+        return path;
     }
 
     private void detectNetwork() {
@@ -275,6 +311,7 @@ public class Manager {
             if (!devMap.containsKey(dev)) {// map中不存在对应设备
                 Log.d(TAG, "onUpdate: llllll");
                 if (!quit) {
+                    Log.d(TAG, "onUpdate: " + dev.mac);
                     Log.d(TAG, "onUpdate: add dev");
                     devMap.put(dev, null);
                     onUpdateDeviceMap(dev, true);// 搜索到新设备，刷新列表
@@ -445,8 +482,33 @@ public class Manager {
         mOnDevMapChangeListener = onDevMapChangeListener;
     }
 
+    public void setOnSendTaskListChangeListener(onSendTaskListChangeListener onSendTaskListChangeListener) {
+        mOnSendTaskListChangeListener = onSendTaskListChangeListener;
+    }
+
+    public void setOnReceiveTaskListChangeListener(onReceiveTaskListChangeListener onReceiveTaskListChangeListener) {
+        mOnReceiveTaskListChangeListener = onReceiveTaskListChangeListener;
+    }
+
     public Map<Dev, Transfer> getDevMap() {
         return devMap;
+    }
+
+    public List<DevBean> getLinkingDev() {
+        List<DevBean> list = new ArrayList<>();
+        Iterator<Map.Entry<Dev, Transfer>> iterator = devMap.entrySet().iterator();
+        while (iterator.hasNext()) {
+            Map.Entry<Dev, Transfer> entry = iterator.next();
+            Transfer t = entry.getValue();
+            if (t.isEnable()) {
+                DevBean bean = new DevBean();
+                bean.setName(entry.getKey().getName());
+                bean.setTransfer(t);
+                bean.setSelected(false);
+                list.add(bean);
+            }
+        }
+        return list;
     }
 
     public Transfer getTransferFromMap(Dev dev) {
@@ -460,6 +522,48 @@ public class Manager {
         return null;
     }
 
+    /**
+     * 返回当前设备接收列表
+     *
+     * @return
+     */
+    public List<Task> getReceiveTaskList() {
+        List<Task> taskList = new ArrayList<>();
+        Iterator<Map.Entry<Dev, Transfer>> iterator = devMap.entrySet().iterator();
+        while (iterator.hasNext()) {
+            Map.Entry<Dev, Transfer> entry = iterator.next();
+            Transfer t = entry.getValue();
+            if (t != null && t.isEnable()) {
+                Log.d(TAG, "getReceiveTaskList: " + t.getReceiveTaskList().size());
+                taskList.addAll(t.getReceiveTaskList());
+            }
+        }
+        return taskList;
+    }
+
+    /**
+     * 返回当前设备发送列表
+     *
+     * @return
+     */
+    public List<SendTakBean> getSendTaskList() {
+        List<SendTakBean> list = new ArrayList<>();
+        Iterator<Map.Entry<Dev, Transfer>> iterator = devMap.entrySet().iterator();
+        while (iterator.hasNext()) {
+            Map.Entry<Dev, Transfer> entry = iterator.next();
+            Transfer t = entry.getValue();
+            if (t != null & t.isEnable() && t.getSendTaskList().size() > 0) {
+                ReceiverBean rBean = new ReceiverBean();
+                rBean.setName(t.getRemoteDev().getName());
+                rBean.setMac(t.getRemoteDev().mac);
+                rBean.setSendList(t.getSendTaskList());
+                list.add(rBean);
+            }
+        }
+        return list;
+    }
+
+
     public interface onDevMapChangeListener {
         void onDevNumChange(Dev dev, boolean isAdd);
 
@@ -468,5 +572,15 @@ public class Manager {
         void onNetWorkStateChange();
 
         void onCreateTransferFail(Dev dev);
+    }
+
+    public interface onSendTaskListChangeListener {
+        void onSendTaskChane(Transfer transfer, Task task, int action);
+
+    }
+
+    public interface onReceiveTaskListChangeListener {
+        void onReceiveTaskChange(Transfer transfer, Task task, int action);
+
     }
 }

@@ -45,14 +45,14 @@ public class VideoAdapter extends RecyclerView.Adapter<VideoAdapter.MyViewHolder
             holder.itemView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    mOnItemClickListener.onItemClick(v, holder.getLayoutPosition());
+                    mOnItemClickListener.onItemClick(holder.getLayoutPosition());
                 }
             });
 
             holder.itemView.setOnLongClickListener(new View.OnLongClickListener() {
                 @Override
                 public boolean onLongClick(View v) {
-                    mOnItemClickListener.onItemLongClick(v, holder.getLayoutPosition());
+                    mOnItemClickListener.onItemLongClick(holder.getLayoutPosition());
                     return true;
                 }
             });
@@ -80,9 +80,9 @@ public class VideoAdapter extends RecyclerView.Adapter<VideoAdapter.MyViewHolder
     }
 
     public interface onItemClickListener {
-        void onItemClick(View view, int position);
+        void onItemClick(int position);
 
-        void onItemLongClick(View view, int position);
+        void onItemLongClick(int position);
     }
 
     class MyViewHolder extends RecyclerView.ViewHolder {

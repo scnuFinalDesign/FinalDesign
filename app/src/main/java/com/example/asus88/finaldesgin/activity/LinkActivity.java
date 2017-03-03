@@ -1,16 +1,24 @@
 package com.example.asus88.finaldesgin.activity;
 
 import android.content.Context;
+import android.graphics.drawable.ColorDrawable;
 import android.net.wifi.WifiConfiguration;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.WindowManager;
+import android.widget.Button;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
+import android.widget.PopupWindow;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.example.asus88.finaldesgin.R;
 import com.example.asus88.finaldesgin.adapter.LinkAdapter;
@@ -18,6 +26,7 @@ import com.example.asus88.finaldesgin.connection.Dev;
 import com.example.asus88.finaldesgin.connection.Manager;
 import com.example.asus88.finaldesgin.connection.Transfer;
 import com.example.asus88.finaldesgin.itemDecoration.LineItemDecoration;
+import com.example.asus88.finaldesgin.util.DimenUtil;
 import com.example.asus88.finaldesgin.util.WifiUitl;
 
 import java.lang.reflect.InvocationTargetException;
@@ -45,6 +54,8 @@ public class LinkActivity extends BaseActivity implements LinkAdapter.onItemClic
     private List<Dev> mDevList;
     private LinkAdapter mAdapter;
 
+    private FrameLayout background;
+
     private Manager conManager;
     private WifiManager mWifiManager;
 
@@ -63,13 +74,13 @@ public class LinkActivity extends BaseActivity implements LinkAdapter.onItemClic
     private void initData() {
         conManager = Manager.getManager();
         conManager.setOnDevMapChangeListener(this);
+        conManager.searchDevice();
         mDevList = new ArrayList<>();
         getDevDataFromMap();
         mAdapter = new LinkAdapter(this, mDevList);
         mRecycler.setLayoutManager(new LinearLayoutManager(this));
         mRecycler.addItemDecoration(new LineItemDecoration(this, 0, 0, R.drawable.line_item_decoration));
         mRecycler.setAdapter(mAdapter);
-        conManager.searchDevice();
         mWifiManager = (WifiManager) getSystemService(Context.WIFI_SERVICE);
         int state = WifiUitl.getWifiApState(mWifiManager);
         if (state == 12 || state == 13) {
@@ -93,12 +104,12 @@ public class LinkActivity extends BaseActivity implements LinkAdapter.onItemClic
         while (iterator.hasNext()) {
             Map.Entry<Dev, Transfer> entry = iterator.next();
             Dev dev = entry.getKey();
-            Transfer transfer=entry.getValue();
-            if(transfer==null){
+            Transfer transfer = entry.getValue();
+            if (transfer == null) {
                 dev.setTransferState(0);
-            }else if(transfer.isEnable()){
+            } else if (transfer.isEnable()) {
                 dev.setTransferState(1);
-            }else{
+            } else {
                 dev.setTransferState(2);
             }
             mDevList.add(dev);
@@ -126,24 +137,67 @@ public class LinkActivity extends BaseActivity implements LinkAdapter.onItemClic
     @Override
     public void onItemClick(int position) {
         Dev dev = mDevList.get(position);
-        int state=dev.getTransferState();
-        if (state==1) {
+        int state = dev.getTransferState();
+        if (state == 1) {
             //todo break link
-            conManager.getTransferFromMap(dev).close();
+            showBreakLinkWindow(dev);
         } else {
             conManager.createTransfer(dev);
         }
     }
 
     @Override
-    protected void onStop() {
-        super.onStop();
+    protected void onDestroy() {
+        super.onDestroy();
         conManager.stopSearchDevice();
+        if(mDevList!=null){
+            mDevList.clear();
+            mDevList=null;
+        }
     }
 
-    private void showBreakLinkWindow() {
+    @Override
+    protected void onResume() {
+        super.onResume();
+        conManager.resumeSearch();
+    }
+
+    private void showBreakLinkWindow(final Dev dev) {
+        changeBgAlpha(0.4f);
         View window = LayoutInflater.from(this).inflate(R.layout.popup_window_ask, null);
         TextView title = (TextView) window.findViewById(R.id.pop_ask_title);
+        Button sure = (Button) window.findViewById(R.id.pop_ask_sure);
+        Button cancel = (Button) window.findViewById(R.id.pop_ask_cancel);
+        title.setText(getString(R.string.is_close_link));
+
+        final PopupWindow popupWindow = new PopupWindow(window, DimenUtil.getRealWidth(LinkActivity.this, 768, 660),
+                RelativeLayout.LayoutParams.WRAP_CONTENT);
+        popupWindow.setBackgroundDrawable(new ColorDrawable(0x000000));
+        popupWindow.setFocusable(true);
+        popupWindow.setOnDismissListener(new PopupWindow.OnDismissListener() {
+            @Override
+            public void onDismiss() {
+                changeBgAlpha(1f);
+            }
+        });
+        popupWindow.showAtLocation(LinkActivity.this.getWindow().getDecorView(), Gravity.CENTER, 0, 0);
+        cancel.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                popupWindow.dismiss();
+            }
+        });
+
+        sure.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Transfer transfer = conManager.getTransferFromMap(dev);
+                if (transfer != null) {
+                    transfer.close();
+                }
+                popupWindow.dismiss();
+            }
+        });
     }
 
     /**
@@ -200,12 +254,14 @@ public class LinkActivity extends BaseActivity implements LinkAdapter.onItemClic
 
     @Override
     public void onNetWorkStateChange() {
-// todo toast check network
+        Toast.makeText(LinkActivity.this, getString(R.string.check_your_network_setting), Toast.LENGTH_SHORT).show();
     }
 
     @Override
     public void onCreateTransferFail(Dev dev) {
-//todo create transfer fail
+        StringBuilder builder = new StringBuilder("与" + dev.getName());
+        builder.append(getString(R.string.create_transfer_fail));
+        Toast.makeText(LinkActivity.this, builder.toString(), Toast.LENGTH_SHORT).show();
     }
 
     @Override
@@ -216,5 +272,11 @@ public class LinkActivity extends BaseActivity implements LinkAdapter.onItemClic
                 finish();
                 break;
         }
+    }
+
+    private void changeBgAlpha(float f) {
+        WindowManager.LayoutParams lp = getWindow().getAttributes();
+        lp.alpha = f;
+        getWindow().setAttributes(lp);
     }
 }

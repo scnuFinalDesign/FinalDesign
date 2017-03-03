@@ -19,6 +19,8 @@ import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v4.widget.ViewDragHelper;
 import android.support.v7.app.ActionBarDrawerToggle;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
 import android.view.Gravity;
@@ -28,6 +30,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
@@ -39,14 +42,18 @@ import android.widget.Toast;
 
 import com.example.asus88.finaldesgin.R;
 import com.example.asus88.finaldesgin.TextViewFactory;
-import com.example.asus88.finaldesgin.bean.Bean;
+import com.example.asus88.finaldesgin.adapter.SelectDevAdapter;
+import com.example.asus88.finaldesgin.bean.DevBean;
 import com.example.asus88.finaldesgin.bean.FabMenuButtonBean;
+import com.example.asus88.finaldesgin.connection.Manager;
 import com.example.asus88.finaldesgin.fragment.ApplicationFragment;
 import com.example.asus88.finaldesgin.fragment.BaseFragment;
 import com.example.asus88.finaldesgin.fragment.FileFragment;
 import com.example.asus88.finaldesgin.fragment.MusicFragment;
 import com.example.asus88.finaldesgin.fragment.PhotoFragment;
+import com.example.asus88.finaldesgin.fragment.TranslationFragment;
 import com.example.asus88.finaldesgin.fragment.VideoFragment;
+import com.example.asus88.finaldesgin.itemDecoration.LineItemDecoration;
 import com.example.asus88.finaldesgin.util.AnimationManager;
 import com.example.asus88.finaldesgin.util.DimenUtil;
 import com.example.asus88.finaldesgin.util.FileUtil;
@@ -89,6 +96,7 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
     DrawerLayout mDrawer;
 
 
+    private static final int DEFAULT_FILE_FRAGMENT_ID = R.id.nav_file;
     private ActionBarDrawerToggle toggle;
 
 
@@ -107,7 +115,7 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
     private FileFragment mFileFragment;
     private FragmentTransaction transaction;
     private FragmentManager mManager;
-    private int curFragmentNavId = R.id.nav_file;
+    private int curFragmentNavId = DEFAULT_FILE_FRAGMENT_ID;
 
     //new pop window
     private String fileName;
@@ -115,7 +123,26 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
     private String fileSuffix;
     private boolean result;
 
+    private PopupWindow isOpenWifi;
+
+    private PopupWindow createFile;
+    private TextView newTitle;
+    private EditText suffix;
+    private EditText newName;
+    private ImageView point;
+    private int type;
+
+    private PopupWindow selectDev;
+    private List<DevBean> devList;
+    private SelectDevAdapter mSelectDevAdapter;
+    private Manager conManager;
+    private RecyclerView devRecycler;
+
+
     private WifiManager mWifiManager;
+
+    private TranslationFragment traFragment;
+
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -153,12 +180,31 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
         initFabMenuBtnData();
 
         mWifiManager = (WifiManager) getSystemService(Context.WIFI_SERVICE);
-
+        devList = new ArrayList<>();
     }
 
     private void initEvents() {
         mNav.setNavigationItemSelectedListener(this);
         mFab.setOnClickListener(this);
+        mRadioFile.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if (isChecked) {
+                    replaceFragment(traFragment, getCurFragmentByNavId(curFragmentNavId));
+                }
+            }
+        });
+        mRadioTranslate.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if (isChecked) {
+                    if (traFragment == null) {
+                        traFragment = new TranslationFragment();
+                    }
+                    replaceFragment(getCurFragmentByNavId(curFragmentNavId), traFragment);
+                }
+            }
+        });
     }
 
     private void initFabMenuBtnData() {
@@ -168,7 +214,8 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
             @Override
             public void onClick(View v) {
                 removeButtonFromBg();
-                showFileWindow(1);
+                type = 1;
+                showFileWindow();
             }
         });
         FabMenuButtonBean newFile = new FabMenuButtonBean("newFile", R.drawable.bg_fab_new_file_btn);
@@ -176,23 +223,17 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
             @Override
             public void onClick(View v) {
                 removeButtonFromBg();
-                showFileWindow(0);
+                type = 0;
+                showFileWindow();
             }
         });
         FabMenuButtonBean delete = new FabMenuButtonBean("delete", R.drawable.bg_fab_delete_btn);
         delete.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                BaseFragment baseFragment = (BaseFragment) getCurFragmentByNavId(curFragmentNavId);
-                List<Bean> sList = baseFragment.getSelectedList(baseFragment.getDataList());
-                if (sList == null || sList.size() <= 0) {
-                    Toast.makeText(MainActivity.this, getString(R.string.no_selected), Toast.LENGTH_SHORT).show();
-                } else {
-                    for (int i = 0; i < sList.size(); i++) {
-                        FileUtil.deleteFile(new File(sList.get(i).getPath()));
-                    }
-                    (baseFragment.getDataList()).removeAll(sList);
-                    baseFragment.notifyRecyclerView();
+                BaseFragment baseFragment = getCurFragmentByNavId(curFragmentNavId);
+                if (baseFragment != null) {
+                     baseFragment.deleteFile();
                 }
                 removeButtonFromBg();
                 hideBackground();
@@ -220,7 +261,19 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
             @Override
             public void onClick(View v) {
                 removeButtonFromBg();
-                hideBackground();
+                BaseFragment baseFragment = getCurFragmentByNavId(curFragmentNavId);
+                if (baseFragment != null && baseFragment.getSelectedNum() > 0) {
+                    devList = getDevList();
+                    if (devList.size() > 0) {
+                        showSelectDevWindow();
+                    } else {
+                        Toast.makeText(MainActivity.this, getString(R.string.no_link), Toast.LENGTH_SHORT).show();
+                        hideBackground();
+                    }
+                } else {
+                    Toast.makeText(MainActivity.this, getString(R.string.no_selected), Toast.LENGTH_SHORT).show();
+                    hideBackground();
+                }
             }
         });
 
@@ -313,7 +366,13 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
     @Override
     public boolean onNavigationItemSelected(MenuItem item) {
         int id = item.getItemId();
-        Fragment fragment = getCurFragmentByNavId(curFragmentNavId);
+        Fragment fragment;
+        if (mRadioTranslate.isChecked()) {
+            fragment = traFragment;
+            mRadioFile.setChecked(true);
+        } else {
+            fragment = getCurFragmentByNavId(curFragmentNavId);
+        }
         switch (id) {
             case R.id.nav_file:
                 replaceFragment(fragment, mFileFragment);
@@ -345,11 +404,18 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
         }
         curFragmentNavId = id;
         mDrawer.closeDrawer(GravityCompat.START);
+        if (mAppFragment != null && mAppFragment.getFabBtnMode()) {
+            if (R.id.nav_application == id) {
+                changeFabBtnImage(false);
+            } else {
+                changeFabBtnImage(true);
+            }
+        }
         return true;
     }
 
     /**
-     * \算出第一个按钮的marginTop
+     * 算出第一个按钮的marginTop
      *
      * @param btnNum
      * @param btnHeight
@@ -365,7 +431,7 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
     }
 
     private void showFabMenu() {
-        BaseFragment fragment = (BaseFragment) getCurFragmentByNavId(curFragmentNavId);
+        BaseFragment fragment = getCurFragmentByNavId(curFragmentNavId);
         int num = fragment.getFabButtonNum();
         int start = 5 - fragment.getFabButtonNum();
         int firMargin = getFirstBtnMarTop(num, 70, 20);
@@ -381,7 +447,7 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
     }
 
     private void removeButtonFromBg() {
-        BaseFragment fragment = (BaseFragment) getCurFragmentByNavId(curFragmentNavId);
+        BaseFragment fragment = getCurFragmentByNavId(curFragmentNavId);
         int start = 5 - fragment.getFabButtonNum();
         for (int i = start; i < 5; i++) {
             background.removeView(fabButton[i]);
@@ -445,109 +511,89 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
 
     /**
      * 显示新建文件夹窗口 type=1
-     *
-     * @param type
      */
-    private void showFileWindow(final int type) {
-        View window = LayoutInflater.from(this).inflate(R.layout.popup_window_new_file, null);
-        TextView title = (TextView) window.findViewById(R.id.pop_new_file_title);
-        final EditText name = (EditText) window.findViewById(R.id.pop_new_file_name);
-        final EditText suffix = (EditText) window.findViewById(R.id.pop_new_file_suffix);
-        Button sure = (Button) window.findViewById(R.id.pop_new_file_sure);
-        Button cancel = (Button) window.findViewById(R.id.pop_new_file_cancel);
+    private void showFileWindow() {
+        if (createFile == null) {
+            View window = LayoutInflater.from(this).inflate(R.layout.popup_window_new_file, null);
+            newTitle = (TextView) window.findViewById(R.id.pop_new_file_title);
+            newName = (EditText) window.findViewById(R.id.pop_new_file_name);
+            suffix = (EditText) window.findViewById(R.id.pop_new_file_suffix);
+            point = (ImageView) window.findViewById(R.id.pop_new_file_point_image);
+            Button sure = (Button) window.findViewById(R.id.pop_new_file_sure);
+            Button cancel = (Button) window.findViewById(R.id.pop_new_file_cancel);
+
+            createFile = new PopupWindow(window, DimenUtil.getRealWidth(this, 768, 660),
+                    ViewGroup.LayoutParams.WRAP_CONTENT);
+            createFile.setFocusable(true);
+            createFile.setBackgroundDrawable(new ColorDrawable(0x000000));
+            createFile.setOnDismissListener(new popOnDismissListener());
+            cancel.setOnClickListener(this);
+            sure.setOnClickListener(this);
+        }
         if (type == 1) {
-            title.setText(getString(newDirectory));
-            name.setWidth(DimenUtil.getRealWidth(this, 768, 580));
+            newTitle.setText(getString(newDirectory));
+            newName.setWidth(DimenUtil.getRealWidth(this, 768, 580));
+            suffix.setVisibility(View.GONE);
+            point.setVisibility(View.GONE);
         } else {
-            title.setText(getString(newFile));
-            name.setWidth(DimenUtil.getRealWidth(this, 768, 470));
+            newTitle.setText(getString(newFile));
+            newName.setWidth(DimenUtil.getRealWidth(this, 768, 470));
             suffix.setVisibility(View.VISIBLE);
-            ImageView point = (ImageView) window.findViewById(R.id.pop_new_file_point_image);
             point.setVisibility(View.VISIBLE);
         }
-
-        final PopupWindow popupWindow = new PopupWindow(window, DimenUtil.getRealWidth(this, 768, 660),
-                ViewGroup.LayoutParams.WRAP_CONTENT);
-        popupWindow.setFocusable(true);
-        popupWindow.setBackgroundDrawable(new ColorDrawable(0x000000));
-        popupWindow.showAtLocation(mContent, Gravity.CENTER, 0, 0);
-        popupWindow.setOnDismissListener(new popOnDismissListener());
-        cancel.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                popupWindow.dismiss();
-                hideBackground();
-            }
-        });
-        sure.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                fileName = name.getText().toString();
-                if (TextUtils.isEmpty(fileName)) {
-                    Toast.makeText(MainActivity.this, getResources().getString(R.string.file_name_can_not_empty), Toast.LENGTH_SHORT).show();
-                } else {
-                    filePath = mFileFragment.getCurrentPath();
-                    if (type == 1) {
-                        result = FileUtil.newDirectory(fileName, filePath);
-                    } else {
-                        fileSuffix = suffix.getText().toString();
-                        if (TextUtils.isEmpty(fileSuffix)) {
-                            Toast.makeText(MainActivity.this, getResources().getString(R.string.file_suffix_can_not_empty), Toast.LENGTH_SHORT).show();
-                        } else {
-                            result = FileUtil.newFile(fileName, filePath, fileSuffix);
-                        }
-                    }
-                    if (result) {
-                        mFileFragment.addFileBean(mFileFragment.newFileBean(
-                                new File(filePath, fileName), System.currentTimeMillis()));
-                    } else {
-                        Toast.makeText(MainActivity.this, getResources().getString(R.string.new_file_fail), Toast.LENGTH_SHORT).show();
-                    }
-                    popupWindow.dismiss();
-                    hideBackground();
-                }
-            }
-        });
+        createFile.showAtLocation(mContent, Gravity.CENTER, 0, 0);
     }
 
+    /**
+     * 显示是否开启热点窗口
+     */
     private void showIsOpenWifiWindow() {
-        View window = LayoutInflater.from(MainActivity.this).inflate(R.layout.popup_window_is_open_wifi, null);
-        Button createHotspot = (Button) window.findViewById(R.id.pop_open_wifi_create_hotspot);
-        Button openWifi = (Button) window.findViewById(R.id.pop_open_wifi_open_wifi);
-        Button cancel = (Button) window.findViewById(R.id.pop_open_wifi_cancel);
-        final PopupWindow popupWindow = new PopupWindow(window, DimenUtil.getRealWidth(MainActivity.this, 768, 660),
+        if (isOpenWifi == null) {
+            View window = LayoutInflater.from(MainActivity.this).inflate(R.layout.popup_window_is_open_wifi, null);
+            Button createHotspot = (Button) window.findViewById(R.id.pop_open_wifi_create_hotspot);
+            Button openWifi = (Button) window.findViewById(R.id.pop_open_wifi_open_wifi);
+            Button cancel = (Button) window.findViewById(R.id.pop_open_wifi_cancel);
+            isOpenWifi = new PopupWindow(window, DimenUtil.getRealWidth(MainActivity.this, 768, 660),
+                    RelativeLayout.LayoutParams.WRAP_CONTENT);
+            isOpenWifi.setFocusable(true);
+            isOpenWifi.setBackgroundDrawable(new ColorDrawable(0x000000));
+            isOpenWifi.setOnDismissListener(new popOnDismissListener());
+            createHotspot.setOnClickListener(this);
+            openWifi.setOnClickListener(this);
+            cancel.setOnClickListener(this);
+        }
+        isOpenWifi.showAtLocation(mContent, Gravity.CENTER, 0, 0);
+    }
+
+    private void showSelectDevWindow() {
+//        if (selectDev == null) {
+        View window = LayoutInflater.from(MainActivity.this).inflate(R.layout.popup_window_select_dev_to_send, null);
+        devRecycler = (RecyclerView) window.findViewById(R.id.pop_select_dev_recyclerView);
+        mSelectDevAdapter = new SelectDevAdapter(MainActivity.this, devList);
+        devRecycler.setLayoutManager(new LinearLayoutManager(MainActivity.this));
+        devRecycler.setAdapter(mSelectDevAdapter);
+        devRecycler.addItemDecoration(new LineItemDecoration(MainActivity.this, 20, 20, R.drawable.line_item_decoration));
+
+        Button cancel = (Button) window.findViewById(R.id.pop_select_dev_cancel);
+        Button sure = (Button) window.findViewById(R.id.pop_select_dev_sure);
+        cancel.setOnClickListener(this);
+        sure.setOnClickListener(this);
+        selectDev = new PopupWindow(window, DimenUtil.getRealWidth(MainActivity.this, 768, 600),
                 RelativeLayout.LayoutParams.WRAP_CONTENT);
-        popupWindow.setFocusable(true);
-        popupWindow.setBackgroundDrawable(new ColorDrawable(0x000000));
-        popupWindow.showAtLocation(mContent, Gravity.CENTER, 0, 0);
-        popupWindow.setOnDismissListener(new popOnDismissListener());
-        createHotspot.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                //todo create hotspot
-                popupWindow.dismiss();
-                boolean flag = createHotspot();
-                if (!flag) {
-                    Toast.makeText(MainActivity.this, getString(R.string.create_hotspot_fail), Toast.LENGTH_SHORT).show();
-                } else {
-                    Intent intent = new Intent(MainActivity.this, LinkActivity.class);
-                    startActivity(intent);
-                }
-            }
-        });
-        openWifi.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                mWifiManager.setWifiEnabled(true);
-                popupWindow.dismiss();
-            }
-        });
-        cancel.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                popupWindow.dismiss();
-            }
-        });
+        selectDev.setFocusable(true);
+        selectDev.setBackgroundDrawable(new ColorDrawable(0x000000));
+        selectDev.setOnDismissListener(new popOnDismissListener());
+//        } else {
+//            mSelectDevAdapter.notifyDataSetChanged();
+//        }
+        selectDev.showAtLocation(mContent, Gravity.CENTER, 0, 0);
+    }
+
+    private List<DevBean> getDevList() {
+        if (conManager == null) {
+            conManager = Manager.getManager();
+        }
+        return conManager.getLinkingDev();
     }
 
     @Override
@@ -555,14 +601,107 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
         int id = v.getId();
         switch (id) {
             case R.id.main_fab:
-                showBackground();
-                showFabMenu();
+                if (R.id.nav_application == curFragmentNavId && mAppFragment.getFabBtnMode()) {
+                    mAppFragment.finishDelMode();
+                    changeFabBtnImage(true);
+                } else {
+                    showBackground();
+                    showFabMenu();
+                }
                 break;
-
+            case R.id.pop_open_wifi_create_hotspot:
+                isOpenWifi.dismiss();
+                boolean flag = createHotspot();
+                if (!flag) {
+                    Toast.makeText(MainActivity.this, getString(R.string.create_hotspot_fail), Toast.LENGTH_SHORT).show();
+                } else {
+                    Intent intent = new Intent(MainActivity.this, LinkActivity.class);
+                    startActivity(intent);
+                }
+                break;
+            case R.id.pop_open_wifi_open_wifi:
+                mWifiManager.setWifiEnabled(true);
+                isOpenWifi.dismiss();
+                break;
+            case R.id.pop_open_wifi_cancel:
+                isOpenWifi.dismiss();
+                break;
+            case R.id.pop_new_file_cancel:
+                createFile.dismiss();
+                hideBackground();
+                break;
+            case R.id.pop_new_file_sure:
+                newFile();
+                break;
+            case R.id.pop_select_dev_cancel:
+                selectDev.dismiss();
+                break;
+            case R.id.pop_select_dev_sure:
+                boolean isSelectDev = false;
+                for (int i = 0; i < devList.size(); i++) {
+                    if (devList.get(i).isSelected()) {
+                        isSelectDev = true;
+                        break;
+                    }
+                }
+                if (isSelectDev) {
+                    BaseFragment baseFragment = getCurFragmentByNavId(curFragmentNavId);
+                    baseFragment.sendFile(devList);
+                } else {
+                    Toast.makeText(MainActivity.this, getString(R.string.no_dev_selected), Toast.LENGTH_SHORT).show();
+                }
+                selectDev.dismiss();
+                break;
         }
     }
 
-    private Fragment getCurFragmentByNavId(int position) {
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (fabBtnList != null) {
+            fabBtnList.clear();
+            fabBtnList = null;
+        }
+        if (devList != null) {
+            devList.clear();
+            devList = null;
+        }
+        if (fabButton != null) {
+            fabButton = null;
+        }
+    }
+
+    /**
+     * 新建文件/文件夹
+     */
+    private void newFile() {
+        fileName = newName.getText().toString();
+        if (TextUtils.isEmpty(fileName)) {
+            Toast.makeText(MainActivity.this, getResources().getString(R.string.file_name_can_not_empty), Toast.LENGTH_SHORT).show();
+        } else {
+            filePath = mFileFragment.getCurrentPath();
+            if (type == 1) {
+                result = FileUtil.newDirectory(fileName, filePath);
+            } else {
+                fileSuffix = suffix.getText().toString();
+                if (TextUtils.isEmpty(fileSuffix)) {
+                    Toast.makeText(MainActivity.this, getResources().getString(R.string.file_suffix_can_not_empty), Toast.LENGTH_SHORT).show();
+                } else {
+                    result = FileUtil.newFile(fileName, filePath, fileSuffix);
+                }
+            }
+            if (result) {
+                mFileFragment.addFileBean(mFileFragment.newFileBean(
+                        new File(filePath, fileName), System.currentTimeMillis()));
+            } else {
+                Toast.makeText(MainActivity.this, getResources().getString(R.string.new_file_fail), Toast.LENGTH_SHORT).show();
+            }
+            createFile.dismiss();
+            hideBackground();
+        }
+    }
+
+    private BaseFragment getCurFragmentByNavId(int position) {
         switch (position) {
             case R.id.nav_file:
                 return mFileFragment;
@@ -575,7 +714,7 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
             case R.id.nav_application:
                 return mAppFragment;
             default:
-                return new Fragment();
+                return null;
         }
     }
 
@@ -601,6 +740,13 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
         }
     }
 
+    public void changeFabBtnImage(boolean flag) {
+        if (flag) {
+            mFab.setImageResource(R.mipmap.fab_more);
+        } else {
+            mFab.setImageResource(R.mipmap.fab_finish);
+        }
+    }
 
     /**
      * 随机生成8位密码
@@ -627,7 +773,7 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
     /**
      * 监听popWindow dismiss
      */
-    class popOnDismissListener implements PopupWindow.OnDismissListener {
+    private class popOnDismissListener implements PopupWindow.OnDismissListener {
 
         @Override
         public void onDismiss() {

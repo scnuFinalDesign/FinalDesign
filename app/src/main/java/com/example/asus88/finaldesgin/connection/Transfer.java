@@ -1,5 +1,7 @@
 package com.example.asus88.finaldesgin.connection;
 
+import android.util.Log;
+
 import com.example.asus88.finaldesgin.util.Utils;
 
 import org.json.JSONException;
@@ -30,6 +32,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class Transfer {
+    private static final String TAG = "Transfer";
 
     private class ReceiveDataRunnable implements Runnable {
         private String destPath;
@@ -324,7 +327,19 @@ public class Transfer {
             return;
 
         isClosed = true;
-        synClose();
+
+        if (isDisconnected) {
+            // 用户关闭
+            mainPool.shutdown();
+            sendThreadPool.shutdown();
+            receiveThreadPool.shutdown();
+            keepAliveTimer.cancel();
+            clearAllTasks();
+            // 通知管理类链接已经关闭
+            Manager.getManager().onTransferClosed(Transfer.this);
+        } else {
+            synClose();
+        }
     }
 
     private void shutdown() {
@@ -390,8 +405,8 @@ public class Transfer {
         receiveTaskList.clear();
         sendTaskList.clear();
 
-        Manager.getManager().onTransferSendListChanged(Transfer.this);
-        Manager.getManager().onTransferReceiveListChanged(Transfer.this);
+        Manager.getManager().onTransferSendListChanged(Transfer.this,null, ACTION_CLEAR);
+        Manager.getManager().onTransferReceiveListChanged(Transfer.this,null, ACTION_CLEAR);
     }
 
     private void pauseAllTasks() {
@@ -407,8 +422,8 @@ public class Transfer {
             }
         }
 
-        Manager.getManager().onTransferSendListChanged(Transfer.this);
-        Manager.getManager().onTransferReceiveListChanged(Transfer.this);
+        Manager.getManager().onTransferSendListChanged(Transfer.this,null, ACTION_CHANGE);
+        Manager.getManager().onTransferReceiveListChanged(Transfer.this,null, ACTION_CHANGE);
     }
 
     /**
@@ -418,6 +433,7 @@ public class Transfer {
      * @throws Exception
      */
     public void addTask(String path) throws Exception {
+        Log.d(TAG, "addTask: "+path);
         if (isClosed)
             throw new Exception("链接已关闭");
         if (!isEnable)
@@ -449,7 +465,7 @@ public class Transfer {
             case Task.WAIT: {
                 t.state = Task.PAUSE;
 
-                Manager.getManager().onTransferSendListChanged(Transfer.this);
+                Manager.getManager().onTransferSendListChanged(Transfer.this,t,ACTION_CHANGE);
             }
             break;
             case Task.RUN: {
@@ -458,7 +474,7 @@ public class Transfer {
             break;
             case Task.PAUSE: {
                 t.state = Task.WAIT;
-                Manager.getManager().onTransferSendListChanged(Transfer.this);
+                Manager.getManager().onTransferSendListChanged(Transfer.this,t,ACTION_CHANGE);
                 dispatch();
             }
             break;
@@ -470,7 +486,7 @@ public class Transfer {
         switch (t.state) {
             case Task.WAIT: {
                 t.state = Task.PAUSE;
-                Manager.getManager().onTransferReceiveListChanged(Transfer.this);
+                Manager.getManager().onTransferReceiveListChanged(Transfer.this,t,ACTION_CHANGE);
             }
             break;
             case Task.RUN: {
@@ -479,7 +495,7 @@ public class Transfer {
             break;
             case Task.PAUSE: {
                 t.state = Task.WAIT;
-                Manager.getManager().onTransferReceiveListChanged(Transfer.this);
+                Manager.getManager().onTransferReceiveListChanged(Transfer.this,t,ACTION_CHANGE);
                 dispatch();
             }
             break;
@@ -542,6 +558,7 @@ public class Transfer {
                     return;
 
                 int state = sendTaskRef.state;
+                Manager.getManager().onTransferSendListChanged(Transfer.this,sendTaskRef,ACTION_CHANGE);
                 switch (state) {
                     case Task.RUN: {
                         File f = ((SendTask) sendTaskRef).getFocusFile();
@@ -653,6 +670,7 @@ public class Transfer {
     private void sendMsg(final String msg) {// 在mainPool线程池中执行保证消息发送顺序
         mainPool.execute(new Runnable() {
             public void run() {
+                Log.i("tag","发送:"+msg);
                 try {
                     msgOut.write(msg);
                     msgOut.newLine();
@@ -697,7 +715,11 @@ public class Transfer {
             tempTask.remoteID = mID;
             receiveTaskList.add(tempTask);
             ackNewReceiveTask(tempTask.mID, true);
+            //通知Manager新增了任务
+            Manager.getManager().onTransferReceiveListChanged(Transfer.this,tempTask,ACTION_ADD);
         } catch (Exception e) {
+            e.printStackTrace();
+            Log.i("tag","异常");
             ackNewReceiveTask(-1, false);
         }
     }
@@ -707,6 +729,8 @@ public class Transfer {
         if (isCreated) {
             initTaskRef.remoteID = mID;
             sendTaskList.add(initTaskRef);
+            //通知Manager新增了任务
+            Manager.getManager().onTransferReceiveListChanged(Transfer.this,initTaskRef,ACTION_ADD);
         } else {
             // 对方创建任务失败，应进行提示
         }
@@ -720,6 +744,8 @@ public class Transfer {
             if (t.type == Task.RECEIVE_TASK_TYPE && t.mID == remoteID) {
                 t.state = Task.RUN;
                 receiveTaskRef = t;
+                //通知任务已开始
+                Manager.getManager().onTransferReceiveListChanged(Transfer.this,receiveTaskRef,ACTION_CHANGE);
                 break;
             }
         }
@@ -739,13 +765,11 @@ public class Transfer {
                     ((SendTask) sendTaskRef).nextFile();
                 }
             }
-            handle();
         } else {
             // 开始任务失败
             sendTaskRef.state = Task.FAILED;
-            sendTaskRef = null;
-            dispatch();
         }
+        handle();
     }
 
     private void onSynCreateDirectory(String srcPath) {
@@ -784,7 +808,7 @@ public class Transfer {
         double preRate = receiveTaskRef.getRate();
         receiveTaskRef.offset += size;
         if (((int) preRate != (int) receiveTaskRef.getRate() || receiveTaskRef.getRate() == 100d)) {
-            Manager.getManager().onTransferReceiveListChanged(Transfer.this);
+            Manager.getManager().onTransferReceiveListChanged(Transfer.this,receiveTaskRef,ACTION_CHANGE);
         }
     }
 
@@ -797,7 +821,7 @@ public class Transfer {
         double preRate = sendTaskRef.getRate();
         sendTaskRef.offset += size;
         if (((int) preRate != (int) sendTaskRef.getRate() || sendTaskRef.getRate() == 100d)) {
-            Manager.getManager().onTransferSendListChanged(Transfer.this);
+            Manager.getManager().onTransferSendListChanged(Transfer.this,sendTaskRef,ACTION_CHANGE);
         }
     }
 
@@ -815,6 +839,7 @@ public class Transfer {
 
     private void onSynTaskResult(int state) {
         receiveTaskRef.state = state;
+        Manager.getManager().onTransferReceiveListChanged(Transfer.this,receiveTaskRef,ACTION_CHANGE);
         receiveTaskRef = null;
         ackTaskResult();
     }
@@ -1004,4 +1029,8 @@ public class Transfer {
     private static final int REQUEST_STOP_SEND_TASK_TYPE = 18;
     private static int RECEIVE_BUFFER_SIZE = 8688;
     private static int SEND_BUFFER_SIZE = 7240;
+
+    public static int ACTION_CLEAR = 0;
+    public static int ACTION_ADD = 1;
+    public static int ACTION_CHANGE = 2;
 }
