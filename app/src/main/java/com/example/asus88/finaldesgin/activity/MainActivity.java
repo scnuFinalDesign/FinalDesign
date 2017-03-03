@@ -233,7 +233,7 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
             public void onClick(View v) {
                 BaseFragment baseFragment = getCurFragmentByNavId(curFragmentNavId);
                 if (baseFragment != null) {
-                     baseFragment.deleteFile();
+                    baseFragment.deleteFile();
                 }
                 removeButtonFromBg();
                 hideBackground();
@@ -566,25 +566,25 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
     }
 
     private void showSelectDevWindow() {
-//        if (selectDev == null) {
-        View window = LayoutInflater.from(MainActivity.this).inflate(R.layout.popup_window_select_dev_to_send, null);
-        devRecycler = (RecyclerView) window.findViewById(R.id.pop_select_dev_recyclerView);
-        mSelectDevAdapter = new SelectDevAdapter(MainActivity.this, devList);
-        devRecycler.setLayoutManager(new LinearLayoutManager(MainActivity.this));
-        devRecycler.setAdapter(mSelectDevAdapter);
-        devRecycler.addItemDecoration(new LineItemDecoration(MainActivity.this, 20, 20, R.drawable.line_item_decoration));
-
-        Button cancel = (Button) window.findViewById(R.id.pop_select_dev_cancel);
-        Button sure = (Button) window.findViewById(R.id.pop_select_dev_sure);
-        cancel.setOnClickListener(this);
-        sure.setOnClickListener(this);
-        selectDev = new PopupWindow(window, DimenUtil.getRealWidth(MainActivity.this, 768, 600),
-                RelativeLayout.LayoutParams.WRAP_CONTENT);
-        selectDev.setFocusable(true);
-        selectDev.setBackgroundDrawable(new ColorDrawable(0x000000));
-        selectDev.setOnDismissListener(new popOnDismissListener());
+  //      if (selectDev == null) {
+            View window = LayoutInflater.from(MainActivity.this).inflate(R.layout.popup_window_select_dev_to_send, null);
+            devRecycler = (RecyclerView) window.findViewById(R.id.pop_select_dev_recyclerView);
+            mSelectDevAdapter = new SelectDevAdapter(MainActivity.this, devList);
+            devRecycler.setLayoutManager(new LinearLayoutManager(MainActivity.this));
+            devRecycler.setAdapter(mSelectDevAdapter);
+            devRecycler.addItemDecoration(new LineItemDecoration(MainActivity.this, 20, 20, R.drawable.line_item_decoration));
+            Button cancel = (Button) window.findViewById(R.id.pop_select_dev_cancel);
+            Button sure = (Button) window.findViewById(R.id.pop_select_dev_sure);
+            cancel.setOnClickListener(this);
+            sure.setOnClickListener(this);
+            selectDev = new PopupWindow(window, DimenUtil.getRealWidth(MainActivity.this, 768, 600),
+                    RelativeLayout.LayoutParams.WRAP_CONTENT);
+            selectDev.setFocusable(true);
+            selectDev.setBackgroundDrawable(new ColorDrawable(0x000000));
+            selectDev.setOnDismissListener(new popOnDismissListener());
 //        } else {
 //            mSelectDevAdapter.notifyDataSetChanged();
+//            Log.d(TAG, "showSelectDevWindow: " + devList.get(0).isSelected());
 //        }
         selectDev.showAtLocation(mContent, Gravity.CENTER, 0, 0);
     }

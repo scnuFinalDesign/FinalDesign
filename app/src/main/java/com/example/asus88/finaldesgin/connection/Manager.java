@@ -117,6 +117,7 @@ public class Manager {
 
     private void onUpdateDeviceMap(Dev dev, boolean isAdd) {
         //如果正在显示设备列表则刷新设备列表
+        Log.d(TAG, "onUpdateDeviceMap: "+dev.mac+isAdd);
         if (mOnDevMapChangeListener != null) {
             mOnDevMapChangeListener.onDevNumChange(dev, isAdd);
         } else {
@@ -534,7 +535,6 @@ public class Manager {
             Map.Entry<Dev, Transfer> entry = iterator.next();
             Transfer t = entry.getValue();
             if (t != null && t.isEnable()) {
-                Log.d(TAG, "getReceiveTaskList: " + t.getReceiveTaskList().size());
                 taskList.addAll(t.getReceiveTaskList());
             }
         }
@@ -554,8 +554,7 @@ public class Manager {
             Transfer t = entry.getValue();
             if (t != null & t.isEnable() && t.getSendTaskList().size() > 0) {
                 ReceiverBean rBean = new ReceiverBean();
-                rBean.setName(t.getRemoteDev().getName());
-                rBean.setMac(t.getRemoteDev().mac);
+                rBean.setDev(t.getRemoteDev());
                 rBean.setSendList(t.getSendTaskList());
                 list.add(rBean);
             }

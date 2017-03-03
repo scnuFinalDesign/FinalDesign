@@ -50,15 +50,23 @@ public class SendTaskAdapter<T extends SendTakBean> extends RecyclerView.Adapter
             holder.itemView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                   if(mOnReceiverItemClickListener!=null){
-                       mOnReceiverItemClickListener.onReceiverItemClick(holder.getLayoutPosition());
-                   }
+                    if (mOnReceiverItemClickListener != null) {
+                        mOnReceiverItemClickListener.onReceiverItemClick(holder.getLayoutPosition());
+                    }
                 }
             });
             return holder;
         } else {
-            TaskViewHolder holder = new TaskViewHolder(LayoutInflater.from(mContext).inflate(viewType,
+            final TaskViewHolder holder = new TaskViewHolder(LayoutInflater.from(mContext).inflate(viewType,
                     parent, false));
+            holder.status.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if (mOnReceiverItemClickListener != null) {
+                        mOnReceiverItemClickListener.onTaskStateChange(holder.getLayoutPosition());
+                    }
+                }
+            });
             return holder;
         }
     }
@@ -68,12 +76,18 @@ public class SendTaskAdapter<T extends SendTakBean> extends RecyclerView.Adapter
         if (holder instanceof ReceiverViewHolder) {
             ((ReceiverViewHolder) holder).bean = (ReceiverBean) mList.get(position);
             ((ReceiverViewHolder) holder).name.setText(((ReceiverBean) mList.get(position)).getName());
-            ((ReceiverViewHolder) holder).isExpand.setImageResource(R.mipmap.ic_launcher);
+            if (((ReceiverViewHolder) holder).bean.isExpand()) {
+                ((ReceiverViewHolder) holder).isExpand.setImageResource(R.mipmap.icon_up);
+            } else {
+                ((ReceiverViewHolder) holder).isExpand.setImageResource(R.mipmap.icon_down);
+            }
         } else if (holder instanceof TaskViewHolder) {
             Task bean = (Task) mList.get(position);
+            ((TaskViewHolder) holder).bean = bean;
             ((TaskViewHolder) holder).fileName.setText(bean.name);
             ((TaskViewHolder) holder).progressBar.setProgress((int) bean.getRate());
             ((TaskViewHolder) holder).icon.setImageResource(FileUtil.getImageId(FileUtil.getFileSuffix(bean.name)));
+            ((TaskViewHolder) holder).status.setImageResource(bean.getStateIconId());
         }
     }
 
@@ -87,9 +101,12 @@ public class SendTaskAdapter<T extends SendTakBean> extends RecyclerView.Adapter
         return mList.get(position).getLayoutId();
     }
 
-    public interface onReceiverItemClickListener{
+    public interface onReceiverItemClickListener {
         void onReceiverItemClick(int position);
+
+        void onTaskStateChange(int position);
     }
+
     private static class ReceiverViewHolder extends RecyclerView.ViewHolder {
         TextView name;
         ImageView isExpand;
@@ -108,6 +125,7 @@ public class SendTaskAdapter<T extends SendTakBean> extends RecyclerView.Adapter
         ImageView icon;
         ImageView status;
         DigitalProgressBar progressBar;
+        Task bean;
 
         public TaskViewHolder(View itemView) {
             super(itemView);

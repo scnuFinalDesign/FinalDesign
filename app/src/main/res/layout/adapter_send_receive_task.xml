@@ -10,7 +10,7 @@
         android:layout_height="80px"
         android:background="@drawable/bg_ic_file"
         android:scaleType="centerInside"
-       />
+        />
 
     <TextView
         android:id="@+id/task_adapter_name"
@@ -24,7 +24,8 @@
         android:id="@+id/task_adapter_status"
         android:layout_width="80px"
         android:layout_height="80px"
-        android:layout_alignParentRight="true"/>
+        android:layout_alignParentRight="true"
+        android:scaleType="centerInside"/>
 
     <com.example.asus88.finaldesgin.myViews.DigitalProgressBar
         android:id="@+id/task_adapter_progressBar"

@@ -26,6 +26,7 @@ public class ReceiveTaskAdapter extends RecyclerView.Adapter<ReceiveTaskAdapter.
 
     private Context mContext;
     private List<Task> list;
+    private onItemStateClickListener mOnItemStateClickListener;
 
     public ReceiveTaskAdapter(Context context, List<Task> list) {
         mContext = context;
@@ -34,17 +35,27 @@ public class ReceiveTaskAdapter extends RecyclerView.Adapter<ReceiveTaskAdapter.
 
     @Override
     public TaskViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        TaskViewHolder holder = new TaskViewHolder(LayoutInflater.from(mContext).inflate(R.layout.adapter_send_receive_task
+        final TaskViewHolder holder = new TaskViewHolder(LayoutInflater.from(mContext).inflate(R.layout.adapter_send_receive_task
                 , parent, false));
+        holder.status.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (mOnItemStateClickListener != null) {
+                    mOnItemStateClickListener.onItemStateChangeListener(holder.getLayoutPosition());
+                }
+            }
+        });
         return holder;
     }
 
     @Override
     public void onBindViewHolder(TaskViewHolder holder, int position) {
         Task task = list.get(position);
+        holder.bean = task;
         holder.fileName.setText(task.name);
         holder.progressBar.setProgress((int) task.getRate());
-        holder.icon.setImageResource( FileUtil.getImageId(FileUtil.getFileSuffix(task.name)));
+        holder.icon.setImageResource(FileUtil.getImageId(FileUtil.getFileSuffix(task.name)));
+        holder.status.setImageResource(task.getStateIconId());
     }
 
     @Override
@@ -52,11 +63,20 @@ public class ReceiveTaskAdapter extends RecyclerView.Adapter<ReceiveTaskAdapter.
         return ListUtil.getSize(list);
     }
 
+    public void setOnItemStateClickListener(onItemStateClickListener onItemStateClickListener) {
+        mOnItemStateClickListener = onItemStateClickListener;
+    }
+
+    public interface onItemStateClickListener {
+        void onItemStateChangeListener(int position);
+    }
+
     class TaskViewHolder extends RecyclerView.ViewHolder {
         TextView fileName;
         ImageView icon;
         ImageView status;
         DigitalProgressBar progressBar;
+        Task bean;
 
         public TaskViewHolder(View itemView) {
             super(itemView);

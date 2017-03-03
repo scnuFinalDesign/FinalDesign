@@ -10,8 +10,6 @@ import java.util.List;
  */
 
 public class ReceiverBean extends SendTakBean {
-    private String name;
-    private String mac;
     private List<Task> sendList;
     private boolean isExpand;  //是否展开
 
@@ -32,20 +30,14 @@ public class ReceiverBean extends SendTakBean {
     }
 
     public String getMac() {
-        return mac;
+        return getDev().mac;
     }
 
-    public void setMac(String mac) {
-        this.mac = mac;
-    }
 
     public String getName() {
-        return name;
+        return getDev().getName();
     }
 
-    public void setName(String name) {
-        this.name = name;
-    }
 
     @Override
     protected int initLayoutId() {
@@ -63,6 +55,6 @@ public class ReceiverBean extends SendTakBean {
         if (!(o instanceof ReceiverBean)) {
             return false;
         }
-        return this.mac == ((ReceiverBean) o).mac;
+        return this.getMac() == ((ReceiverBean) o).getMac();
     }
 }

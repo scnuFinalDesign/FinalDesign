@@ -1,6 +1,7 @@
 package com.example.asus88.finaldesgin.activity;
 
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.graphics.drawable.ColorDrawable;
 import android.net.wifi.WifiConfiguration;
 import android.net.wifi.WifiManager;
@@ -28,10 +29,16 @@ import com.example.asus88.finaldesgin.connection.Transfer;
 import com.example.asus88.finaldesgin.itemDecoration.LineItemDecoration;
 import com.example.asus88.finaldesgin.util.DimenUtil;
 import com.example.asus88.finaldesgin.util.WifiUitl;
+import com.google.zxing.BarcodeFormat;
+import com.google.zxing.EncodeHintType;
+import com.google.zxing.WriterException;
+import com.google.zxing.common.BitMatrix;
+import com.google.zxing.qrcode.QRCodeWriter;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -46,10 +53,10 @@ public class LinkActivity extends BaseActivity implements LinkAdapter.onItemClic
     ImageView mBack;
     @BindView(R.id.link_act_title)
     TextView mTitle;
-    @BindView(R.id.link_act_refresh)
-    ImageView mRefresh;
     @BindView(R.id.link_act_recycler)
     RecyclerView mRecycler;
+    @BindView(R.id.link_act_image)
+    ImageView mImage;
 
     private List<Dev> mDevList;
     private LinkAdapter mAdapter;
@@ -59,8 +66,11 @@ public class LinkActivity extends BaseActivity implements LinkAdapter.onItemClic
     private Manager conManager;
     private WifiManager mWifiManager;
 
+    private boolean isCreater;
     private String wifiName;
     private String wifiPassWord;
+    private String wifiType;
+    private Bitmap qrCode;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -86,16 +96,23 @@ public class LinkActivity extends BaseActivity implements LinkAdapter.onItemClic
         if (state == 12 || state == 13) {
             //state create hotspot
             //todo show hotspot message
+            isCreater = true;
+            mImage.setImageResource(R.mipmap.icon_qrcode);
             getWifiApNameAndPassWord();
+            //// TODO: 2017/3/3 new thread to load
+            qrCode = createQrCode(wifiName, wifiPassWord, wifiType, 500, 500);
         } else {
             // state link wifi
             // todo scan qrCode to link wifi
+            isCreater = false;
+            mImage.setImageResource(R.mipmap.icon_scan);
         }
     }
 
     private void initEvents() {
         mAdapter.setOnItemClickListener(this);
         mBack.setOnClickListener(this);
+        mImage.setOnClickListener(this);
     }
 
     private void getDevDataFromMap() {
@@ -134,12 +151,48 @@ public class LinkActivity extends BaseActivity implements LinkAdapter.onItemClic
         }
     }
 
+    /**
+     * @param name     wifi name
+     * @param passWord
+     * @param type     wifi 加密类型
+     * @return
+     */
+    private Bitmap createQrCode(String name, String passWord, String type, int w, int h) {
+        StringBuilder builder = new StringBuilder("S:");
+        builder.append(name);
+        builder.append("P:");
+        builder.append(passWord);
+        builder.append("T:");
+        builder.append(type);
+        int width = DimenUtil.getRealWidth(LinkActivity.this, 768, w);
+        int height = DimenUtil.getRealHeight(LinkActivity.this, 1280, h);
+        try {
+            QRCodeWriter writer = new QRCodeWriter();
+            Map<EncodeHintType, String> hints = new HashMap<>();
+            hints.put(EncodeHintType.CHARACTER_SET, "utf-8");
+            BitMatrix matrix = writer.encode(builder.toString(), BarcodeFormat.QR_CODE, width, height, hints);
+            int[] pixels = new int[width * height];
+            for (int i = 0; i < height; i++) {
+                for (int j = 0; j < width; j++) {
+                    if (matrix.get(j, i)) {
+                        pixels[i * width + j] = 0x000000;
+                    } else {
+                        pixels[i * width + j] = 0xffffff;
+                    }
+                }
+            }
+            return Bitmap.createBitmap(pixels, 0, width, width, height, Bitmap.Config.RGB_565);
+        } catch (WriterException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
     @Override
     public void onItemClick(int position) {
         Dev dev = mDevList.get(position);
         int state = dev.getTransferState();
         if (state == 1) {
-            //todo break link
             showBreakLinkWindow(dev);
         } else {
             conManager.createTransfer(dev);
@@ -150,9 +203,13 @@ public class LinkActivity extends BaseActivity implements LinkAdapter.onItemClic
     protected void onDestroy() {
         super.onDestroy();
         conManager.stopSearchDevice();
-        if(mDevList!=null){
+        if (mDevList != null) {
             mDevList.clear();
-            mDevList=null;
+            mDevList = null;
+        }
+        if (qrCode != null) {
+            qrCode.recycle();
+            qrCode = null;
         }
     }
 
@@ -228,6 +285,7 @@ public class LinkActivity extends BaseActivity implements LinkAdapter.onItemClic
                 }
             });
         }
+        Log.d(TAG, "onDevNumChange: size" + mDevList.size());
     }
 
     /**
@@ -241,15 +299,23 @@ public class LinkActivity extends BaseActivity implements LinkAdapter.onItemClic
         final int position = mDevList.indexOf(dev);
         if (isEnabled) {
             mDevList.get(position).setTransferState(1);
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    mAdapter.notifyItemChanged(position);
+                }
+            });
         } else {
             mDevList.get(position).setTransferState(2);
+            mDevList.remove(position);
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    mAdapter.notifyItemRemoved(position);
+                }
+            });
         }
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                mAdapter.notifyItemChanged(position);
-            }
-        });
+        Log.d(TAG, "onTransferStateChange: size:" + mDevList.size());
     }
 
     @Override
@@ -270,6 +336,8 @@ public class LinkActivity extends BaseActivity implements LinkAdapter.onItemClic
         switch (id) {
             case R.id.link_act_back:
                 finish();
+                break;
+            case R.id.link_act_image:
                 break;
         }
     }

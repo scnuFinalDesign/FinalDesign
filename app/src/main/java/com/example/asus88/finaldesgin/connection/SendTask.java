@@ -11,13 +11,13 @@ public class SendTask extends Task {
     private File[] files;
     private int focus;
 
-    private SendTask(String name, String path, File[] files, long totalCount) {
-        super(SEND_TASK_TYPE, name, path, totalCount);
+    private SendTask(String name, String path, File[] files, long totalCount, Dev dev) {
+        super(SEND_TASK_TYPE, name, path, totalCount, dev);
         this.files = files;
         this.focus = 0;
     }
 
-    public static SendTask createSendTask(String path) throws Exception {
+    public static SendTask createSendTask(String path, Dev dev) throws Exception {
         File file = new File(path);
         if (!file.exists()) throw new Exception("路径不存在");
         long totalCount = 0;
@@ -38,7 +38,7 @@ public class SendTask extends Task {
         }
         File[] arr = new File[children.size()];
         children.toArray(arr);
-        return new SendTask(file.getName(), file.getPath(), arr, totalCount);
+        return new SendTask(file.getName(), file.getPath(), arr, totalCount, dev);
     }
 
     public File getFocusFile() {

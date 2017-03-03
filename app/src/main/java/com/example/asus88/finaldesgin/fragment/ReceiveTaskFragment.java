@@ -25,7 +25,7 @@ import java.util.List;
  * Created by asus88 on 2017/2/27.
  */
 
-public class ReceiveTaskFragment extends Fragment implements Manager.onReceiveTaskListChangeListener {
+public class ReceiveTaskFragment extends Fragment implements Manager.onReceiveTaskListChangeListener, ReceiveTaskAdapter.onItemStateClickListener {
     private static final String TAG = "ReceiveTaskFragment";
 
     private List<Task> taskList;
@@ -57,17 +57,17 @@ public class ReceiveTaskFragment extends Fragment implements Manager.onReceiveTa
         new Thread(new Runnable() {
             @Override
             public void run() {
-                taskList=conManager.getReceiveTaskList();
-                Message message=Message.obtain();
-                message.what=1;
+                taskList = conManager.getReceiveTaskList();
+                Message message = Message.obtain();
+                message.what = 1;
                 mHandler.sendMessage(message);
             }
         }).start();
-         taskList = conManager.getReceiveTaskList();
+        taskList = conManager.getReceiveTaskList();
         mAdapter = new ReceiveTaskAdapter(mView.getContext(), taskList);
+        mAdapter.setOnItemStateClickListener(this);
         mRecyclerView.setLayoutManager(new LinearLayoutManager(mView.getContext()));
         mRecyclerView.setAdapter(mAdapter);
-        Log.d(TAG, "onCreateView: "+mAdapter.getItemCount());
         return mView;
     }
 
@@ -111,6 +111,19 @@ public class ReceiveTaskFragment extends Fragment implements Manager.onReceiveTa
                     }
                 });
                 break;
+        }
+    }
+
+    @Override
+    public void onItemStateChangeListener(int position) {
+        Task task = taskList.get(position);
+        if (conManager == null) {
+            conManager = Manager.getManager();
+        }
+        Log.d(TAG, "onItemStateChangeListener: "+task.getDev());
+        Transfer t = conManager.getTransferFromMap(task.getDev());
+        if (t != null) {
+            t.clickReceiveTaskListItem(task);
         }
     }
 }

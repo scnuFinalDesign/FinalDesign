@@ -100,8 +100,7 @@ public class SendTaskFragment extends Fragment implements Manager.onSendTaskList
             }
             if (flag) {
                 rBean = new ReceiverBean();
-                rBean.setMac(transfer.getRemoteDev().mac);
-                rBean.setName(transfer.getRemoteDev().getName());
+                rBean.setDev(transfer.getRemoteDev());
                 taskList.add(rBean);
             }
             switch (action) {
@@ -138,8 +137,26 @@ public class SendTaskFragment extends Fragment implements Manager.onSendTaskList
                 taskList.removeAll(tList);
             }
             mAdapter.notifyDataSetChanged();
-        } else if (taskList.get(position) instanceof Task) {
+        }
+    }
 
+    /**
+     * 改变任务状态
+     *
+     * @param position
+     */
+    @Override
+    public void onTaskStateChange(int position) {
+        if (taskList.get(position) instanceof Task) {
+            if (conManager == null) {
+                conManager = Manager.getManager();
+            }
+            Task task = (Task) taskList.get(position);
+            Log.d(TAG, "onTaskStateChange: "+task.getDev());
+            Transfer t = conManager.getTransferFromMap(task.getDev());
+            if (t != null) {
+                t.clickSendTaskListItem(task);
+            }
         }
     }
 }

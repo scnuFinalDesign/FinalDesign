@@ -3,7 +3,7 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:padding="10px"
+    android:padding="20px"
     >
 
     <TextView
@@ -15,7 +15,8 @@
 
     <ImageView
         android:id="@+id/receiver_adapter_image"
-        android:layout_width="50px"
-        android:layout_height="50px"
+        android:layout_width="30px"
+        android:layout_height="30px"
+        android:layout_marginRight="20px"
         android:layout_gravity="right|center_vertical"/>
 </FrameLayout>

@@ -38,7 +38,7 @@ public class SelectDevAdapter extends RecyclerView.Adapter<SelectDevAdapter.MyVi
         viewHolder.isSelected.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                Log.d(TAG, "onCheckedChanged: " + viewHolder.bean.getName());
+                Log.d(TAG, "onCheckedChanged: " + viewHolder.bean.getName()+isChecked);
                 viewHolder.bean.setSelected(isChecked);
             }
         });
@@ -51,7 +51,6 @@ public class SelectDevAdapter extends RecyclerView.Adapter<SelectDevAdapter.MyVi
         holder.bean = dev;
         holder.name.setText(dev.getName());
         holder.isSelected.setChecked(dev.isSelected());
-        Log.d(TAG, "onBindViewHolder: "+dev.isSelected());
     }
 
     @Override

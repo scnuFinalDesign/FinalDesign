@@ -29,17 +29,18 @@ public class Task extends SendTakBean {
 
     public boolean isBackup;//是否需要获取备份，用于网络中断的情况
 
-    protected Task(int type, String name, String path, long totalCount) {
+    protected Task(int type, String name, String path, long totalCount, Dev dev) {
         this.mID = ID++;
         this.type = type;
         this.name = name;
         this.path = path;
         this.totalCount = totalCount;
         this.state = WAIT;
+        this.setDev(dev);
     }
 
-    public static Task createReceiveTask(String name, String path, long totalCount) {
-        return new Task(RECEIVE_TASK_TYPE, name, path, totalCount);
+    public static Task createReceiveTask(String name, String path, long totalCount, Dev dev) {
+        return new Task(RECEIVE_TASK_TYPE, name, path, totalCount, dev);
     }
 
     public double getRate() {
@@ -61,6 +62,23 @@ public class Task extends SendTakBean {
 
         if (path.equals(((Task) o).path) && type == ((Task) o).type) return true;
         else return false;
+    }
+
+    public int getStateIconId() {
+        switch (state) {
+            case WAIT:
+                return R.mipmap.state_icon_wait;
+            case RUN:
+                return R.mipmap.state_icon_stop;
+            case PAUSE:
+                return R.mipmap.state_icon_start;
+            case FAILED:
+                return R.mipmap.state_icon_restart;
+            case OVER:
+                return R.mipmap.state_icon_finish;
+            default:
+                return R.mipmap.state_icon_restart;
+        }
     }
 
     public String getStateString() {

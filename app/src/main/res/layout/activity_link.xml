@@ -30,9 +30,11 @@
             android:textSize="16sp"/>
 
         <ImageView
-            android:id="@+id/link_act_refresh"
+            android:id="@+id/link_act_image"
             android:layout_width="60px"
-            android:layout_height="60px"/>
+            android:layout_height="60px"
+            android:layout_gravity="right|center_vertical"
+            android:layout_marginRight="20px"/>
     </FrameLayout>
 
     <android.support.v7.widget.RecyclerView
