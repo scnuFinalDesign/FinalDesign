@@ -1,17 +1,21 @@
 package com.example.asus88.finaldesgin.activity;
 
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.drawable.ColorDrawable;
 import android.net.wifi.WifiConfiguration;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
+import android.support.annotation.Nullable;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.FrameLayout;
@@ -58,6 +62,7 @@ public class LinkActivity extends BaseActivity implements LinkAdapter.onItemClic
     @BindView(R.id.link_act_image)
     ImageView mImage;
 
+    private static final int SACN_QR_CODE_REQUSET = 1;
     private List<Dev> mDevList;
     private LinkAdapter mAdapter;
 
@@ -66,11 +71,14 @@ public class LinkActivity extends BaseActivity implements LinkAdapter.onItemClic
     private Manager conManager;
     private WifiManager mWifiManager;
 
-    private boolean isCreater;
+    private boolean isCreate;
     private String wifiName;
     private String wifiPassWord;
-    private String wifiType;
+    private String encodeType;
     private Bitmap qrCode;
+    private ImageView qrImage;
+    private int qrWidth;
+    private int qrHeight;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -94,19 +102,18 @@ public class LinkActivity extends BaseActivity implements LinkAdapter.onItemClic
         mWifiManager = (WifiManager) getSystemService(Context.WIFI_SERVICE);
         int state = WifiUitl.getWifiApState(mWifiManager);
         if (state == 12 || state == 13) {
-            //state create hotspot
-            //todo show hotspot message
-            isCreater = true;
+            isCreate = true;
             mImage.setImageResource(R.mipmap.icon_qrcode);
-            getWifiApNameAndPassWord();
-            //// TODO: 2017/3/3 new thread to load
-            qrCode = createQrCode(wifiName, wifiPassWord, wifiType, 500, 500);
         } else {
             // state link wifi
             // todo scan qrCode to link wifi
-            isCreater = false;
+            isCreate = false;
             mImage.setImageResource(R.mipmap.icon_scan);
         }
+
+        qrHeight = DimenUtil.getRealHeight(this, 1280, 500);
+        qrWidth = DimenUtil.getRealWidth(this, 768, 500);
+        mTitle.setText(getString(R.string.device));
     }
 
     private void initEvents() {
@@ -134,14 +141,24 @@ public class LinkActivity extends BaseActivity implements LinkAdapter.onItemClic
 
     }
 
-    private void getWifiApNameAndPassWord() {
+    private void getWifiApInfo() {
         try {
             Method method = mWifiManager.getClass().getDeclaredMethod("getWifiApConfiguration");
             WifiConfiguration configuration = (WifiConfiguration) method.invoke(mWifiManager);
             wifiName = configuration.SSID;
             wifiPassWord = configuration.preSharedKey;
-            Log.d(TAG, "getWifiApNameAndPassWord: name:" + wifiName);
-            Log.d(TAG, "getWifiApNameAndPassWord: pass:" + wifiPassWord);
+            if (configuration.allowedKeyManagement.get(WifiConfiguration.KeyMgmt.WPA_PSK)
+                    || configuration.allowedKeyManagement.get(WifiConfiguration.KeyMgmt.WPA_EAP)
+                    || configuration.allowedKeyManagement.get(WifiConfiguration.KeyMgmt.IEEE8021X)) {
+                encodeType = "WPA";
+            } else if (configuration.wepKeys[0] != null) {
+                encodeType = "WEP";
+            } else {
+                encodeType = "NONE";
+            }
+            Log.d(TAG, "getWifiApInfo: name:" + wifiName);
+            Log.d(TAG, "getWifiApInfo: pass:" + wifiPassWord);
+            Log.d(TAG, "getWifiApInfo: type" + encodeType);
         } catch (NoSuchMethodException e) {
             e.printStackTrace();
         } catch (IllegalAccessException e) {
@@ -151,26 +168,65 @@ public class LinkActivity extends BaseActivity implements LinkAdapter.onItemClic
         }
     }
 
+    private String getQrCodeContent() {
+        StringBuilder builder = new StringBuilder("WIFI:S:");
+        builder.append(wifiName);
+        builder.append(";P:" + "\"");
+        builder.append(wifiPassWord);
+        builder.append("\";T:");
+        builder.append(encodeType);
+        builder.append(";");
+        return builder.toString();
+    }
+
+    private void showQrCode() {
+        ViewGroup rootView = (ViewGroup) getWindow().getDecorView();
+        if (background == null) {
+            background = new FrameLayout(this);
+            FrameLayout.LayoutParams layoutParams = new FrameLayout.LayoutParams(rootView.getWidth(), rootView.getHeight());
+            background.setLayoutParams(layoutParams);
+            background.setBackgroundColor(getResources().getColor(R.color.fab_menu_color));
+            background.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    hideQrCode();
+                }
+            });
+            if (qrImage == null) {
+                qrImage = new ImageView(this);
+                FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(qrWidth, qrHeight);
+                params.gravity = Gravity.CENTER;
+                qrImage.setLayoutParams(params);
+                if (qrCode == null) {
+                    getWifiApInfo();
+                    qrCode = createQrCode(getQrCodeContent(), qrWidth, qrHeight);
+                }
+                qrImage.setImageBitmap(qrCode);
+            }
+            background.addView(qrImage);
+        }
+        rootView.addView(background);
+    }
+
+    private void hideQrCode() {
+        ViewGroup rootView = (ViewGroup) getWindow().getDecorView();
+        rootView.removeView(background);
+    }
+
     /**
-     * @param name     wifi name
-     * @param passWord
-     * @param type     wifi 加密类型
+     * @param content
+     * @param w
+     * @param h
      * @return
      */
-    private Bitmap createQrCode(String name, String passWord, String type, int w, int h) {
-        StringBuilder builder = new StringBuilder("S:");
-        builder.append(name);
-        builder.append("P:");
-        builder.append(passWord);
-        builder.append("T:");
-        builder.append(type);
+    private Bitmap createQrCode(String content, int w, int h) {
         int width = DimenUtil.getRealWidth(LinkActivity.this, 768, w);
         int height = DimenUtil.getRealHeight(LinkActivity.this, 1280, h);
         try {
             QRCodeWriter writer = new QRCodeWriter();
             Map<EncodeHintType, String> hints = new HashMap<>();
             hints.put(EncodeHintType.CHARACTER_SET, "utf-8");
-            BitMatrix matrix = writer.encode(builder.toString(), BarcodeFormat.QR_CODE, width, height, hints);
+            BitMatrix matrix = writer.encode(content, BarcodeFormat.QR_CODE, width, height, hints);
             int[] pixels = new int[width * height];
             for (int i = 0; i < height; i++) {
                 for (int j = 0; j < width; j++) {
@@ -216,6 +272,7 @@ public class LinkActivity extends BaseActivity implements LinkAdapter.onItemClic
     @Override
     protected void onResume() {
         super.onResume();
+        Log.d(TAG, "onResume: ");
         conManager.resumeSearch();
     }
 
@@ -338,6 +395,12 @@ public class LinkActivity extends BaseActivity implements LinkAdapter.onItemClic
                 finish();
                 break;
             case R.id.link_act_image:
+                if (isCreate) {
+                    showQrCode();
+                } else {
+                    Intent intent = new Intent(LinkActivity.this, CaptureActivity.class);
+                    startActivityForResult(intent, SACN_QR_CODE_REQUSET);
+                }
                 break;
         }
     }
@@ -346,5 +409,102 @@ public class LinkActivity extends BaseActivity implements LinkAdapter.onItemClic
         WindowManager.LayoutParams lp = getWindow().getAttributes();
         lp.alpha = f;
         getWindow().setAttributes(lp);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == SACN_QR_CODE_REQUSET && resultCode == RESULT_OK) {
+            Bundle bundle = data.getExtras();
+            if (bundle != null) {
+                String result = bundle.getString("result");
+                Log.d(TAG, "onActivityResult: " + result);
+                if (!TextUtils.isEmpty(result) && result.contains("WIFI") && result.contains("S:")
+                        && result.contains("P")) {
+                    getWifiInfoFromQrCode(result);
+                    linkWifi(wifiName, wifiPassWord, encodeType);
+                }
+            }
+        }
+    }
+
+    private void getWifiInfoFromQrCode(String str) {
+        String pTemp = str.substring(str.indexOf("P:"));
+        wifiPassWord = pTemp.substring(2, pTemp.indexOf(";"));
+        String sTemp = str.substring(str.indexOf("S:"));
+        wifiName = sTemp.substring(2, sTemp.indexOf(";"));
+        String eTemp = str.substring(str.indexOf("T:"));
+        encodeType = eTemp.substring(2, eTemp.indexOf(";"));
+    }
+
+    private void linkWifi(String ssid, String password, String type) {
+        if (TextUtils.isEmpty(ssid) || TextUtils.isEmpty(password)) {
+            return;
+        }
+
+        if (!mWifiManager.isWifiEnabled()) {
+            mWifiManager.setWifiEnabled(true);
+        }
+        WifiConfiguration config = new WifiConfiguration();
+        config.allowedAuthAlgorithms.clear();
+        config.allowedGroupCiphers.clear();
+        config.allowedKeyManagement.clear();
+        config.allowedPairwiseCiphers.clear();
+        config.allowedProtocols.clear();
+        config.SSID = "\"" + ssid + "\"" ;
+        WifiConfiguration temp = isWifiExist(ssid);
+        if (temp != null) {
+            mWifiManager.removeNetwork(temp.networkId);
+        }
+        switch (type.toLowerCase()) {
+            case "wep":
+                config.hiddenSSID = true;
+                config.wepKeys[0] = "\"" + password + "\"";
+                config.allowedAuthAlgorithms
+                        .set(WifiConfiguration.AuthAlgorithm.SHARED);
+                config.allowedGroupCiphers.set(WifiConfiguration.GroupCipher.CCMP);
+                config.allowedGroupCiphers.set(WifiConfiguration.GroupCipher.TKIP);
+                config.allowedGroupCiphers.set(WifiConfiguration.GroupCipher.WEP40);
+                config.allowedGroupCiphers
+                        .set(WifiConfiguration.GroupCipher.WEP104);
+                config.allowedKeyManagement.set(WifiConfiguration.KeyMgmt.NONE);
+                config.wepTxKeyIndex = 0;
+                break;
+            case "wpa":
+                Log.d(TAG, "linkWifi: ");
+                config.preSharedKey =  "\""+password +"\"";
+                config.allowedAuthAlgorithms
+                        .set(WifiConfiguration.AuthAlgorithm.OPEN);
+                config.allowedGroupCiphers.set(WifiConfiguration.GroupCipher.TKIP);
+                config.allowedKeyManagement.set(WifiConfiguration.KeyMgmt.WPA_PSK);
+                config.allowedPairwiseCiphers
+                        .set(WifiConfiguration.PairwiseCipher.TKIP);
+                // config.allowedProtocols.set(WifiConfiguration.Protocol.WPA);
+                config.allowedGroupCiphers.set(WifiConfiguration.GroupCipher.CCMP);
+                config.allowedPairwiseCiphers
+                        .set(WifiConfiguration.PairwiseCipher.CCMP);
+                config.status = WifiConfiguration.Status.ENABLED;
+                break;
+            default:
+                Log.d(TAG, "linkWifi: no password");
+                config.wepKeys[0] = "";
+                config.allowedKeyManagement.set(WifiConfiguration.KeyMgmt.NONE);
+                config.wepTxKeyIndex = 0;
+                break;
+        }
+        Log.d(TAG, "linkWifi: "+config);
+        int id = mWifiManager.addNetwork(config);
+        boolean f = mWifiManager.enableNetwork(id, true);
+        Log.d(TAG, "linkWifi: " + id+f + config.SSID + ":" + config.preSharedKey);
+    }
+
+    @Nullable
+    private WifiConfiguration isWifiExist(String SSID) {
+        List<WifiConfiguration> cList = mWifiManager.getConfiguredNetworks();
+        for (WifiConfiguration configuration : cList) {
+            Log.d(TAG, "isWifiExist: "+configuration.BSSID);
+            if (configuration.SSID.equals("\""+SSID+"\""))
+                return configuration;
+        }
+        return null;
     }
 }

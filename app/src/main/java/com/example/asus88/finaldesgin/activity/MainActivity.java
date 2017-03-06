@@ -622,6 +622,8 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
             case R.id.pop_open_wifi_open_wifi:
                 mWifiManager.setWifiEnabled(true);
                 isOpenWifi.dismiss();
+                Intent intent = new Intent(MainActivity.this, LinkActivity.class);
+                startActivity(intent);
                 break;
             case R.id.pop_open_wifi_cancel:
                 isOpenWifi.dismiss();

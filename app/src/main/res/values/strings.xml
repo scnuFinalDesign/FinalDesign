@@ -35,4 +35,6 @@
     <string name="select_dev_to_send">将文件发送到</string>
     <string name="no_link">当前没有链接中的设备</string>
     <string name="no_dev_selected">当前未选择任何设备</string>
+    <string name="device">设备</string>
+    <string name="scan_tips">请把二维码放进方框中</string>
 </resources>
