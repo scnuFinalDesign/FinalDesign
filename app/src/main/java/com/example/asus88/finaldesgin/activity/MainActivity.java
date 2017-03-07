@@ -25,7 +25,6 @@ import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
 import android.view.Gravity;
 import android.view.LayoutInflater;
-import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
@@ -97,6 +96,8 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
 
 
     private static final int DEFAULT_FILE_FRAGMENT_ID = R.id.nav_file;
+    @BindView(R.id.main_search)
+    ImageView mSearch;
     private ActionBarDrawerToggle toggle;
 
 
@@ -186,6 +187,7 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
     private void initEvents() {
         mNav.setNavigationItemSelectedListener(this);
         mFab.setOnClickListener(this);
+        mSearch.setOnClickListener(this);
         mRadioFile.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
@@ -493,21 +495,22 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
                 Color.TRANSPARENT);
     }
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.search, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        int id = item.getItemId();
-        if (id == R.id.toolbar_search) {
-            //共享动画，弹出搜索页面
-            return true;
-        }
-        return super.onOptionsItemSelected(item);
-    }
+//    @Override
+//    public boolean onCreateOptionsMenu(Menu menu) {
+//        getMenuInflater().inflate(R.menu.search, menu);
+//        return true;
+//    }
+//
+//    @Override
+//    public boolean onOptionsItemSelected(MenuItem item) {
+//        int id = item.getItemId();
+//        if (id == R.id.toolbar_search) {
+//            //共享动画，弹出搜索页面
+//            Intent intent=new Intent(this,SearchActivity.class);
+//            return true;
+//        }
+//        return super.onOptionsItemSelected(item);
+//    }
 
     /**
      * 显示新建文件夹窗口 type=1
@@ -566,22 +569,22 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
     }
 
     private void showSelectDevWindow() {
-  //      if (selectDev == null) {
-            View window = LayoutInflater.from(MainActivity.this).inflate(R.layout.popup_window_select_dev_to_send, null);
-            devRecycler = (RecyclerView) window.findViewById(R.id.pop_select_dev_recyclerView);
-            mSelectDevAdapter = new SelectDevAdapter(MainActivity.this, devList);
-            devRecycler.setLayoutManager(new LinearLayoutManager(MainActivity.this));
-            devRecycler.setAdapter(mSelectDevAdapter);
-            devRecycler.addItemDecoration(new LineItemDecoration(MainActivity.this, 20, 20, R.drawable.line_item_decoration));
-            Button cancel = (Button) window.findViewById(R.id.pop_select_dev_cancel);
-            Button sure = (Button) window.findViewById(R.id.pop_select_dev_sure);
-            cancel.setOnClickListener(this);
-            sure.setOnClickListener(this);
-            selectDev = new PopupWindow(window, DimenUtil.getRealWidth(MainActivity.this, 768, 600),
-                    RelativeLayout.LayoutParams.WRAP_CONTENT);
-            selectDev.setFocusable(true);
-            selectDev.setBackgroundDrawable(new ColorDrawable(0x000000));
-            selectDev.setOnDismissListener(new popOnDismissListener());
+        //      if (selectDev == null) {
+        View window = LayoutInflater.from(MainActivity.this).inflate(R.layout.popup_window_select_dev_to_send, null);
+        devRecycler = (RecyclerView) window.findViewById(R.id.pop_select_dev_recyclerView);
+        mSelectDevAdapter = new SelectDevAdapter(MainActivity.this, devList);
+        devRecycler.setLayoutManager(new LinearLayoutManager(MainActivity.this));
+        devRecycler.setAdapter(mSelectDevAdapter);
+        devRecycler.addItemDecoration(new LineItemDecoration(MainActivity.this, 20, 20, R.drawable.line_item_decoration));
+        Button cancel = (Button) window.findViewById(R.id.pop_select_dev_cancel);
+        Button sure = (Button) window.findViewById(R.id.pop_select_dev_sure);
+        cancel.setOnClickListener(this);
+        sure.setOnClickListener(this);
+        selectDev = new PopupWindow(window, DimenUtil.getRealWidth(MainActivity.this, 768, 600),
+                RelativeLayout.LayoutParams.WRAP_CONTENT);
+        selectDev.setFocusable(true);
+        selectDev.setBackgroundDrawable(new ColorDrawable(0x000000));
+        selectDev.setOnDismissListener(new popOnDismissListener());
 //        } else {
 //            mSelectDevAdapter.notifyDataSetChanged();
 //            Log.d(TAG, "showSelectDevWindow: " + devList.get(0).isSelected());
@@ -653,6 +656,9 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
                     Toast.makeText(MainActivity.this, getString(R.string.no_dev_selected), Toast.LENGTH_SHORT).show();
                 }
                 selectDev.dismiss();
+                break;
+            case R.id.main_search:
+                //todo to search act 共享动画
                 break;
         }
     }

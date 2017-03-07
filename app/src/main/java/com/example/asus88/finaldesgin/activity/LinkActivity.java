@@ -7,7 +7,6 @@ import android.graphics.drawable.ColorDrawable;
 import android.net.wifi.WifiConfiguration;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
-import android.support.annotation.Nullable;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
@@ -49,6 +48,8 @@ import java.util.Map;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+
+import static android.net.wifi.WifiConfiguration.Protocol.WPA;
 
 public class LinkActivity extends BaseActivity implements LinkAdapter.onItemClickListener, Manager.onDevMapChangeListener, View.OnClickListener {
     private static final String TAG = "LinkActivity";
@@ -153,8 +154,11 @@ public class LinkActivity extends BaseActivity implements LinkAdapter.onItemClic
                 encodeType = "WPA";
             } else if (configuration.wepKeys[0] != null) {
                 encodeType = "WEP";
+            } else if (configuration.allowedKeyManagement.get(4)) {
+                encodeType = "WPA2";
             } else {
                 encodeType = "NONE";
+
             }
             Log.d(TAG, "getWifiApInfo: name:" + wifiName);
             Log.d(TAG, "getWifiApInfo: pass:" + wifiPassWord);
@@ -171,9 +175,9 @@ public class LinkActivity extends BaseActivity implements LinkAdapter.onItemClic
     private String getQrCodeContent() {
         StringBuilder builder = new StringBuilder("WIFI:S:");
         builder.append(wifiName);
-        builder.append(";P:" + "\"");
+        builder.append(";P:");
         builder.append(wifiPassWord);
-        builder.append("\";T:");
+        builder.append(";T:");
         builder.append(encodeType);
         builder.append(";");
         return builder.toString();
@@ -450,59 +454,68 @@ public class LinkActivity extends BaseActivity implements LinkAdapter.onItemClic
         config.allowedKeyManagement.clear();
         config.allowedPairwiseCiphers.clear();
         config.allowedProtocols.clear();
-        config.SSID = "\"" + ssid + "\"" ;
+        config.SSID = "\"" + ssid + "\"";
         WifiConfiguration temp = isWifiExist(ssid);
         if (temp != null) {
+            Log.d(TAG, "linkWifi: exit");
             mWifiManager.removeNetwork(temp.networkId);
         }
-        switch (type.toLowerCase()) {
-            case "wep":
-                config.hiddenSSID = true;
-                config.wepKeys[0] = "\"" + password + "\"";
-                config.allowedAuthAlgorithms
-                        .set(WifiConfiguration.AuthAlgorithm.SHARED);
-                config.allowedGroupCiphers.set(WifiConfiguration.GroupCipher.CCMP);
-                config.allowedGroupCiphers.set(WifiConfiguration.GroupCipher.TKIP);
-                config.allowedGroupCiphers.set(WifiConfiguration.GroupCipher.WEP40);
-                config.allowedGroupCiphers
-                        .set(WifiConfiguration.GroupCipher.WEP104);
+        switch (type) {
+            case "NONE":
+                Log.d(TAG, "linkWifi: none");
+                //  config.hiddenSSID = true;
                 config.allowedKeyManagement.set(WifiConfiguration.KeyMgmt.NONE);
-                config.wepTxKeyIndex = 0;
                 break;
-            case "wpa":
-                Log.d(TAG, "linkWifi: ");
-                config.preSharedKey =  "\""+password +"\"";
-                config.allowedAuthAlgorithms
-                        .set(WifiConfiguration.AuthAlgorithm.OPEN);
+            case "IEEE8021XEAP":
+                break;
+            case "WEP":
+                break;
+            case "WPA":
+                Log.d(TAG, "linkWifi: wpa");
+                config.preSharedKey = "\"" + password + "\"";
+                config.hiddenSSID = true;
+                config.allowedAuthAlgorithms.set(WifiConfiguration.AuthAlgorithm.OPEN);
                 config.allowedGroupCiphers.set(WifiConfiguration.GroupCipher.TKIP);
                 config.allowedKeyManagement.set(WifiConfiguration.KeyMgmt.WPA_PSK);
-                config.allowedPairwiseCiphers
-                        .set(WifiConfiguration.PairwiseCipher.TKIP);
-                // config.allowedProtocols.set(WifiConfiguration.Protocol.WPA);
+                config.allowedPairwiseCiphers.set(WifiConfiguration.PairwiseCipher.TKIP);
+                config.allowedProtocols.set(WPA);
+                config.status = WifiConfiguration.Status.ENABLED;
+                break;
+            case "WPA2":
+                Log.d(TAG, "linkWifi: wpa2");
+                config.preSharedKey = "\"" + password + "\"";
+                config.allowedAuthAlgorithms.set(WifiConfiguration.AuthAlgorithm.OPEN);
+                config.allowedGroupCiphers.set(WifiConfiguration.GroupCipher.TKIP);
                 config.allowedGroupCiphers.set(WifiConfiguration.GroupCipher.CCMP);
-                config.allowedPairwiseCiphers
-                        .set(WifiConfiguration.PairwiseCipher.CCMP);
+                config.allowedKeyManagement.set(WifiConfiguration.KeyMgmt.WPA_PSK);
+                config.allowedPairwiseCiphers.set(WifiConfiguration.PairwiseCipher.TKIP);
+                config.allowedPairwiseCiphers.set(WifiConfiguration.PairwiseCipher.CCMP);
+                config.allowedProtocols.set(WifiConfiguration.Protocol.RSN);
                 config.status = WifiConfiguration.Status.ENABLED;
                 break;
             default:
-                Log.d(TAG, "linkWifi: no password");
-                config.wepKeys[0] = "";
-                config.allowedKeyManagement.set(WifiConfiguration.KeyMgmt.NONE);
-                config.wepTxKeyIndex = 0;
                 break;
         }
-        Log.d(TAG, "linkWifi: "+config);
-        int id = mWifiManager.addNetwork(config);
-        boolean f = mWifiManager.enableNetwork(id, true);
-        Log.d(TAG, "linkWifi: " + id+f + config.SSID + ":" + config.preSharedKey);
+        final int id = mWifiManager.addNetwork(config);
+        if (id != -1) {
+            boolean f = mWifiManager.enableNetwork(id, true);
+            Log.d(TAG, "linkWifi: id" + id + "state:" + f + config.SSID + ":" + config.preSharedKey);
+        
+        }
+//        new Thread(new Runnable() {
+//            @Override
+//            public void run() {
+//                while (true) {
+//                    Log.d(TAG, "run: " + mWifiManager.getConfiguredNetworks().get(id-1).status);
+//                }
+//            }
+//        }).start();
     }
 
-    @Nullable
     private WifiConfiguration isWifiExist(String SSID) {
         List<WifiConfiguration> cList = mWifiManager.getConfiguredNetworks();
         for (WifiConfiguration configuration : cList) {
-            Log.d(TAG, "isWifiExist: "+configuration.BSSID);
-            if (configuration.SSID.equals("\""+SSID+"\""))
+            if (configuration.SSID.equals("\"" + SSID + "\""))
                 return configuration;
         }
         return null;

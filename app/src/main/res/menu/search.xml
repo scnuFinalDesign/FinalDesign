@@ -6,5 +6,6 @@
         android:id="@+id/toolbar_search"
         android:icon="@mipmap/search"
         android:orderInCategory="100"
+        android:transitionName="searchImg"
         app:showAsAction="always"/>
 </menu>

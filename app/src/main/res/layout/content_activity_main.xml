@@ -25,6 +25,13 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_horizontal"
                 />
+            <ImageView
+                android:layout_width="60px"
+                android:id="@+id/main_search"
+                android:layout_height="60px"
+                android:layout_marginRight="30px"
+                android:src="@mipmap/search"
+                android:layout_gravity="right"/>
         </android.support.v7.widget.Toolbar>
 
     </android.support.design.widget.AppBarLayout>
