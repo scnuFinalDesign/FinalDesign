@@ -1,16 +1,23 @@
 package com.example.asus88.finaldesgin.util;
 
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
+import android.database.Cursor;
 import android.net.Uri;
+import android.provider.MediaStore;
 import android.text.TextUtils;
+import android.util.Log;
 
 import com.example.asus88.finaldesgin.R;
+import com.example.asus88.finaldesgin.bean.FileBean;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.text.DecimalFormat;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by asus88 on 2017/1/9.
@@ -18,6 +25,31 @@ import java.text.DecimalFormat;
 
 public class FileUtil {
     private static final String TAG = "FileUtil";
+
+    public static List<FileBean> searchFile(Context context, String keyword) {
+        List<FileBean> fileList = new ArrayList<>();
+        ContentResolver resolver = context.getContentResolver();
+        Cursor cursor = resolver.query(MediaStore.Files.getContentUri("external"),
+                new String[]{MediaStore.Files.FileColumns.TITLE, MediaStore.Files.FileColumns.DATA,
+                        MediaStore.Files.FileColumns.DATE_MODIFIED, MediaStore.Files.FileColumns.SIZE},
+                MediaStore.Files.FileColumns.TITLE + " LIKE '%" + keyword + "%'",
+                null, null);
+        if (cursor != null) {
+            while (cursor.moveToNext()) {
+                FileBean bean = new FileBean();
+                String path = cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Files.FileColumns.DATA));
+                bean.setPath(path);
+                bean.setName(path.substring(path.lastIndexOf("/") + 1));
+                bean.setModify(TimeUtil.ms2Modify(cursor.getLong(
+                        cursor.getColumnIndexOrThrow(MediaStore.Files.FileColumns.DATE_MODIFIED)) * 1000));
+                bean.setSize(exchangeFileSize(cursor.getLong(cursor.getColumnIndexOrThrow(
+                        MediaStore.Files.FileColumns.SIZE))));
+                bean.setType(getFileSuffix(path));
+                fileList.add(bean);
+            }
+        }
+        return fileList;
+    }
 
     public static String getFileType(String filePath) {
         File file = new File(filePath);
@@ -110,6 +142,8 @@ public class FileUtil {
     public static String getFileSuffix(String filePath) {
         File file = new File(filePath);
         String fileName = file.getName();
+        if (file.isDirectory())
+            return "directory";
         int dot = fileName.lastIndexOf(".");
         if (dot > 0) {
             String type = fileName.substring(dot + 1);
@@ -123,8 +157,6 @@ public class FileUtil {
         File file = new File(path);
         if (!file.exists())
             return "0 B";
-        DecimalFormat df = new DecimalFormat("#.00");
-        String sizeStr = "";
         long size = 0;
         FileInputStream fis = null;
         try {
@@ -141,6 +173,12 @@ public class FileUtil {
                 e.printStackTrace();
             }
         }
+        return exchangeFileSize(size);
+    }
+
+    public static String exchangeFileSize(long size) {
+        String sizeStr;
+        DecimalFormat df = new DecimalFormat("#.00");
         if (size < 1024) {
             sizeStr = size + "B";
         } else if (size < 1048576) {

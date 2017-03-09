@@ -1,11 +1,11 @@
 package com.example.asus88.finaldesgin.activity;
 
 import android.animation.ArgbEvaluator;
+import android.app.ActivityOptions;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
-import android.net.wifi.WifiConfiguration;
 import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.os.Bundle;
@@ -19,7 +19,6 @@ import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v4.widget.ViewDragHelper;
 import android.support.v7.app.ActionBarDrawerToggle;
-import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
@@ -35,7 +34,6 @@ import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.PopupWindow;
 import android.widget.RadioButton;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -52,18 +50,15 @@ import com.example.asus88.finaldesgin.fragment.MusicFragment;
 import com.example.asus88.finaldesgin.fragment.PhotoFragment;
 import com.example.asus88.finaldesgin.fragment.TranslationFragment;
 import com.example.asus88.finaldesgin.fragment.VideoFragment;
-import com.example.asus88.finaldesgin.itemDecoration.LineItemDecoration;
 import com.example.asus88.finaldesgin.util.AnimationManager;
 import com.example.asus88.finaldesgin.util.DimenUtil;
 import com.example.asus88.finaldesgin.util.FileUtil;
-import com.example.asus88.finaldesgin.util.WifiUitl;
+import com.example.asus88.finaldesgin.util.WifiUtil;
 
 import java.io.File;
 import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -93,11 +88,10 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
     NavigationView mNav;
     @BindView(R.id.main_drawer)
     DrawerLayout mDrawer;
-
-
-    private static final int DEFAULT_FILE_FRAGMENT_ID = R.id.nav_file;
     @BindView(R.id.main_search)
     ImageView mSearch;
+
+    private static final int DEFAULT_FILE_FRAGMENT_ID = R.id.nav_file;
     private ActionBarDrawerToggle toggle;
 
 
@@ -124,7 +118,6 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
     private String fileSuffix;
     private boolean result;
 
-    private PopupWindow isOpenWifi;
 
     private PopupWindow createFile;
     private TextView newTitle;
@@ -138,6 +131,7 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
     private SelectDevAdapter mSelectDevAdapter;
     private Manager conManager;
     private RecyclerView devRecycler;
+    private popOnDismissListener mOnDismissListener;
 
 
     private WifiManager mWifiManager;
@@ -182,6 +176,8 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
 
         mWifiManager = (WifiManager) getSystemService(Context.WIFI_SERVICE);
         devList = new ArrayList<>();
+
+        mOnDismissListener=new popOnDismissListener();
     }
 
     private void initEvents() {
@@ -246,11 +242,11 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
             @Override
             public void onClick(View v) {
                 removeButtonFromBg();
-                int state = WifiUitl.getWifiApState(mWifiManager);
+                int state = WifiUtil.getWifiApState(mWifiManager);
                 if ((mWifiManager.getWifiState() == WIFI_STATE_DISABLING ||
                         mWifiManager.getWifiState() == WIFI_STATE_DISABLED) &&
                         (state == 10 || state == 11)) {
-                    showIsOpenWifiWindow();
+                    showIsOpenWifiWindow(MainActivity.this, mContent, mWifiManager,mOnDismissListener);
                 } else {
                     Intent intent = new Intent(MainActivity.this, LinkActivity.class);
                     startActivity(intent);
@@ -265,9 +261,11 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
                 removeButtonFromBg();
                 BaseFragment baseFragment = getCurFragmentByNavId(curFragmentNavId);
                 if (baseFragment != null && baseFragment.getSelectedNum() > 0) {
-                    devList = getDevList();
+                    devList.clear();
+                    devList.addAll(getDevList());
                     if (devList.size() > 0) {
-                        showSelectDevWindow();
+                        //  showSelectDevWindow();
+                        showSelectDevWindow(MainActivity.this, mContent, devList,mOnDismissListener );
                     } else {
                         Toast.makeText(MainActivity.this, getString(R.string.no_link), Toast.LENGTH_SHORT).show();
                         hideBackground();
@@ -495,23 +493,6 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
                 Color.TRANSPARENT);
     }
 
-//    @Override
-//    public boolean onCreateOptionsMenu(Menu menu) {
-//        getMenuInflater().inflate(R.menu.search, menu);
-//        return true;
-//    }
-//
-//    @Override
-//    public boolean onOptionsItemSelected(MenuItem item) {
-//        int id = item.getItemId();
-//        if (id == R.id.toolbar_search) {
-//            //共享动画，弹出搜索页面
-//            Intent intent=new Intent(this,SearchActivity.class);
-//            return true;
-//        }
-//        return super.onOptionsItemSelected(item);
-//    }
-
     /**
      * 显示新建文件夹窗口 type=1
      */
@@ -547,50 +528,29 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
         createFile.showAtLocation(mContent, Gravity.CENTER, 0, 0);
     }
 
-    /**
-     * 显示是否开启热点窗口
-     */
-    private void showIsOpenWifiWindow() {
-        if (isOpenWifi == null) {
-            View window = LayoutInflater.from(MainActivity.this).inflate(R.layout.popup_window_is_open_wifi, null);
-            Button createHotspot = (Button) window.findViewById(R.id.pop_open_wifi_create_hotspot);
-            Button openWifi = (Button) window.findViewById(R.id.pop_open_wifi_open_wifi);
-            Button cancel = (Button) window.findViewById(R.id.pop_open_wifi_cancel);
-            isOpenWifi = new PopupWindow(window, DimenUtil.getRealWidth(MainActivity.this, 768, 660),
-                    RelativeLayout.LayoutParams.WRAP_CONTENT);
-            isOpenWifi.setFocusable(true);
-            isOpenWifi.setBackgroundDrawable(new ColorDrawable(0x000000));
-            isOpenWifi.setOnDismissListener(new popOnDismissListener());
-            createHotspot.setOnClickListener(this);
-            openWifi.setOnClickListener(this);
-            cancel.setOnClickListener(this);
-        }
-        isOpenWifi.showAtLocation(mContent, Gravity.CENTER, 0, 0);
-    }
 
-    private void showSelectDevWindow() {
-        //      if (selectDev == null) {
-        View window = LayoutInflater.from(MainActivity.this).inflate(R.layout.popup_window_select_dev_to_send, null);
-        devRecycler = (RecyclerView) window.findViewById(R.id.pop_select_dev_recyclerView);
-        mSelectDevAdapter = new SelectDevAdapter(MainActivity.this, devList);
-        devRecycler.setLayoutManager(new LinearLayoutManager(MainActivity.this));
-        devRecycler.setAdapter(mSelectDevAdapter);
-        devRecycler.addItemDecoration(new LineItemDecoration(MainActivity.this, 20, 20, R.drawable.line_item_decoration));
-        Button cancel = (Button) window.findViewById(R.id.pop_select_dev_cancel);
-        Button sure = (Button) window.findViewById(R.id.pop_select_dev_sure);
-        cancel.setOnClickListener(this);
-        sure.setOnClickListener(this);
-        selectDev = new PopupWindow(window, DimenUtil.getRealWidth(MainActivity.this, 768, 600),
-                RelativeLayout.LayoutParams.WRAP_CONTENT);
-        selectDev.setFocusable(true);
-        selectDev.setBackgroundDrawable(new ColorDrawable(0x000000));
-        selectDev.setOnDismissListener(new popOnDismissListener());
+//    private void showSelectDevWindow() {
+//        if (selectDev == null) {
+//            View window = LayoutInflater.from(MainActivity.this).inflate(R.layout.popup_window_select_dev_to_send, null);
+//            devRecycler = (RecyclerView) window.findViewById(R.id.pop_select_dev_recyclerView);
+//            mSelectDevAdapter = new SelectDevAdapter(MainActivity.this, devList);
+//            devRecycler.setLayoutManager(new LinearLayoutManager(MainActivity.this));
+//            devRecycler.setAdapter(mSelectDevAdapter);
+//            devRecycler.addItemDecoration(new LineItemDecoration(MainActivity.this, 20, 20, R.drawable.line_item_decoration));
+//            Button cancel = (Button) window.findViewById(R.id.pop_select_dev_cancel);
+//            Button sure = (Button) window.findViewById(R.id.pop_select_dev_sure);
+//            cancel.setOnClickListener(this);
+//            sure.setOnClickListener(this);
+//            selectDev = new PopupWindow(window, DimenUtil.getRealWidth(MainActivity.this, 768, 600),
+//                    RelativeLayout.LayoutParams.WRAP_CONTENT);
+//            selectDev.setFocusable(true);
+//            selectDev.setBackgroundDrawable(new ColorDrawable(0x000000));
+//            selectDev.setOnDismissListener(new popOnDismissListener());
 //        } else {
 //            mSelectDevAdapter.notifyDataSetChanged();
-//            Log.d(TAG, "showSelectDevWindow: " + devList.get(0).isSelected());
 //        }
-        selectDev.showAtLocation(mContent, Gravity.CENTER, 0, 0);
-    }
+//        selectDev.showAtLocation(mContent, Gravity.CENTER, 0, 0);
+//    }
 
     private List<DevBean> getDevList() {
         if (conManager == null) {
@@ -611,25 +571,6 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
                     showBackground();
                     showFabMenu();
                 }
-                break;
-            case R.id.pop_open_wifi_create_hotspot:
-                isOpenWifi.dismiss();
-                boolean flag = createHotspot();
-                if (!flag) {
-                    Toast.makeText(MainActivity.this, getString(R.string.create_hotspot_fail), Toast.LENGTH_SHORT).show();
-                } else {
-                    Intent intent = new Intent(MainActivity.this, LinkActivity.class);
-                    startActivity(intent);
-                }
-                break;
-            case R.id.pop_open_wifi_open_wifi:
-                mWifiManager.setWifiEnabled(true);
-                isOpenWifi.dismiss();
-                Intent intent = new Intent(MainActivity.this, LinkActivity.class);
-                startActivity(intent);
-                break;
-            case R.id.pop_open_wifi_cancel:
-                isOpenWifi.dismiss();
                 break;
             case R.id.pop_new_file_cancel:
                 createFile.dismiss();
@@ -658,7 +599,14 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
                 selectDev.dismiss();
                 break;
             case R.id.main_search:
-                //todo to search act 共享动画
+                Intent searchIntent = new Intent(MainActivity.this, SearchActivity.class);
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                    ActivityOptions options = ActivityOptions.makeSceneTransitionAnimation(MainActivity.this,
+                            mSearch, mSearch.getTransitionName());
+                    startActivity(searchIntent, options.toBundle());
+                } else {
+                    startActivity(searchIntent);
+                }
                 break;
         }
     }
@@ -726,27 +674,6 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
         }
     }
 
-    /**
-     * 创建热点
-     *
-     * @return
-     */
-    private boolean createHotspot() {
-        if (mWifiManager.isWifiEnabled()) {
-            mWifiManager.setWifiEnabled(false);
-        }
-        try {
-            WifiConfiguration configuration = new WifiConfiguration();
-            configuration.SSID = Build.MODEL;
-            configuration.preSharedKey = createPassWord();
-            configuration.allowedKeyManagement.set(WifiConfiguration.KeyMgmt.WPA_PSK);
-            Method method = mWifiManager.getClass().getMethod("setWifiApEnabled", WifiConfiguration.class,
-                    Boolean.TYPE);
-            return (Boolean) method.invoke(mWifiManager, configuration, true);
-        } catch (Exception e) {
-            return false;
-        }
-    }
 
     public void changeFabBtnImage(boolean flag) {
         if (flag) {
@@ -756,26 +683,12 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
         }
     }
 
-    /**
-     * 随机生成8位密码
-     *
-     * @return
-     */
-    private String createPassWord() {
-        Random rd = new Random(); // 创建随机对象
-        String passWord = ""; // 保存随机数
-        int rdGet; // 取得随机数
-        do {
-            if (rd.nextInt() % 2 == 1) {
-                rdGet = Math.abs(rd.nextInt()) % 10 + 48; // 产生48到57的随机数(0-9的键位值)
-            } else {
-                rdGet = Math.abs(rd.nextInt()) % 26 + 97; // 产生97到122的随机数(a-z的键位值)
-            }
-            char num1 = (char) rdGet; // int转换char
-            String dd = Character.toString(num1);
-            passWord += dd;
-        } while (passWord.length() < 8);// 设定长度，此处假定长度小于8
-        return passWord;
+
+    @Override
+    public void sendFile(List<DevBean> list) {
+        super.sendFile(list);
+        BaseFragment baseFragment = getCurFragmentByNavId(curFragmentNavId);
+        baseFragment.sendFile(list);
     }
 
     /**

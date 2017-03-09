@@ -7,7 +7,6 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
 import android.media.MediaMetadataRetriever;
-import android.media.MediaScannerConnection;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -29,6 +28,7 @@ import com.example.asus88.finaldesgin.util.LogUtil;
 import com.example.asus88.finaldesgin.util.TimeUtil;
 import com.example.asus88.finaldesgin.util.Utils;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -101,7 +101,7 @@ public class VideoFragment extends BaseFragment implements VideoAdapter.onItemCl
                 size = c.getString(c.getColumnIndexOrThrow(MediaStore.Video.Media.SIZE));
                 if (Long.parseLong(size) > 1024) {
                     bean = new VideoBean();
-                    bean.setModify(TimeUtil.ms2Modify(c.getString(c.getColumnIndexOrThrow(MediaStore.Video.Media.DATE_MODIFIED))));
+                    bean.setModify(TimeUtil.ms2Modify(c.getLong(c.getColumnIndexOrThrow(MediaStore.Video.Media.DATE_MODIFIED))));
                     bean.setName(c.getString(c.getColumnIndexOrThrow(MediaStore.Video.Media.TITLE)));
                     bean.setPath(c.getString(c.getColumnIndexOrThrow(MediaStore.Audio.Media.DATA)));
                     bean.setSize(Utils.changeSize(Long.parseLong(size)));
@@ -183,12 +183,13 @@ public class VideoFragment extends BaseFragment implements VideoAdapter.onItemCl
     @Override
     public void updateMediaDataBase(List<Bean> list) {
         List<String> strList = new ArrayList<>();
-        for (int i = 0; i < list.size(); i++) {
-            if (!strList.contains(list.get(i).getPath())) {
-                strList.add(list.get(i).getPath());
+        for (Bean bean:list) {
+            if (!strList.contains(new File(bean.getPath()).getParent())) {
+                strList.add(bean.getPath());
             }
         }
-        MediaScannerConnection.scanFile((getActivity()).getApplicationContext(), strList.toArray(new String[strList.size()]), null, null);
+        Utils.scanFiletoUpdate((getActivity()).getApplicationContext(),
+                strList.toArray(new String[strList.size()]));
     }
 
     @Override

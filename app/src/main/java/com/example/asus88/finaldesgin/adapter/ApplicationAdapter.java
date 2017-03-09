@@ -11,7 +11,6 @@ import android.widget.TextView;
 import com.example.asus88.finaldesgin.R;
 import com.example.asus88.finaldesgin.bean.ApplicationBean;
 import com.example.asus88.finaldesgin.myViews.AutoCardView;
-import com.example.asus88.finaldesgin.myViews.MarqueeTextView;
 import com.example.asus88.finaldesgin.util.ListUtil;
 import com.example.asus88.finaldesgin.util.LogUtil;
 import com.zhy.autolayout.utils.AutoUtils;
@@ -130,7 +129,7 @@ public class ApplicationAdapter extends RecyclerView.Adapter<ApplicationAdapter.
         ImageView icon;
         ImageView selected;
         ImageView delete;
-        MarqueeTextView name;
+        TextView name;
         TextView size;
         TextView number;
         AutoCardView cardView;
@@ -142,7 +141,7 @@ public class ApplicationAdapter extends RecyclerView.Adapter<ApplicationAdapter.
             icon = (ImageView) view.findViewById(R.id.application_adapter_image);
             selected = (ImageView) view.findViewById(R.id.application_adapter_selected);
             delete = (ImageView) view.findViewById(R.id.application_adapter_delete);
-            name = (MarqueeTextView) view.findViewById(R.id.application_adapter_name);
+            name = (TextView) view.findViewById(R.id.application_adapter_name);
             size = (TextView) view.findViewById(R.id.application_adapter_size);
             number = (TextView) view.findViewById(R.id.application_adapter_number);
             cardView = (AutoCardView) view.findViewById(R.id.application_adapter_cardView);

@@ -2,7 +2,6 @@ package com.example.asus88.finaldesgin.fragment;
 
 import android.content.ContentResolver;
 import android.database.Cursor;
-import android.media.MediaScannerConnection;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -24,6 +23,7 @@ import com.example.asus88.finaldesgin.util.LogUtil;
 import com.example.asus88.finaldesgin.util.TimeUtil;
 import com.example.asus88.finaldesgin.util.Utils;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -126,12 +126,13 @@ public class MusicFragment extends BaseFragment implements MusicAdapter.onItemCl
     @Override
     public void updateMediaDataBase(List<Bean> list) {
         List<String> strList = new ArrayList<>();
-        for (int i = 0; i < list.size(); i++) {
-            if (!strList.contains(list.get(i).getPath())) {
-                strList.add(list.get(i).getPath());
+        for (Bean bean:list) {
+            if (!strList.contains(new File(bean.getPath()).getParent())) {
+                strList.add(bean.getPath());
             }
         }
-        MediaScannerConnection.scanFile((getActivity()).getApplicationContext(), strList.toArray(new String[strList.size()]), null, null);
+        Utils.scanFiletoUpdate((getActivity()).getApplicationContext(),
+                strList.toArray(new String[strList.size()]));
     }
 
     @Override

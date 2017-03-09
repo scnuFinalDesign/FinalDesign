@@ -64,7 +64,7 @@ public class DigitalProgressBar extends ProgressBar {
     @Override
     protected void onSizeChanged(int w, int h, int oldw, int oldh) {
         super.onSizeChanged(w, h, oldw, oldh);
-        mViewWidth = getWidth() - getPaddingRight() - getPaddingLeft();
+        mViewWidth = w - getPaddingRight() - getPaddingLeft();
     }
 
     @Override

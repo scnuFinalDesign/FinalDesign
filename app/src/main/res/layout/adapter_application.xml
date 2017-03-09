@@ -20,17 +20,17 @@
         android:id="@+id/application_adapter_image"
         android:layout_width="100px"
         android:layout_height="100px"
-        android:scaleType="fitXY"
-        android:layout_gravity="center_horizontal"/>
+        android:layout_gravity="center_horizontal"
+        android:scaleType="fitXY"/>
 
 
-    <com.example.asus88.finaldesgin.myViews.MarqueeTextView
+    <TextView
         android:id="@+id/application_adapter_name"
         android:layout_width="match_parent"
         android:layout_height="40px"
         android:layout_gravity="bottom"
         android:layout_marginBottom="95px"
-        android:ellipsize="marquee"
+        android:ellipsize="end"
         android:gravity="center"
         android:marqueeRepeatLimit="marquee_forever"
         android:singleLine="true"/>

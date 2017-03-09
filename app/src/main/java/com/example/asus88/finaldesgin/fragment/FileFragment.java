@@ -19,8 +19,10 @@ import com.example.asus88.finaldesgin.bean.Bean;
 import com.example.asus88.finaldesgin.bean.FileBean;
 import com.example.asus88.finaldesgin.itemDecoration.FileItemDirection;
 import com.example.asus88.finaldesgin.itemDecoration.LineItemDecoration;
+import com.example.asus88.finaldesgin.util.DimenUtil;
 import com.example.asus88.finaldesgin.util.FileUtil;
 import com.example.asus88.finaldesgin.util.TimeUtil;
+import com.example.asus88.finaldesgin.util.Utils;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -47,6 +49,9 @@ public class FileFragment extends BaseFragment implements FileAdapter.onItemClic
     private LocationAdapter mLocationAdapter;
     private String rootPath;
     private RecyclerView locationRecycler;
+
+    private boolean isSearch;
+    private List<FileBean> searchResultList;
 
     private Comparator mComparator = new Comparator() {
         @Override
@@ -75,27 +80,36 @@ public class FileFragment extends BaseFragment implements FileAdapter.onItemClic
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         mView = inflater.inflate(R.layout.fragment_file, container, false);
+        Bundle bundle = getArguments();
+        if (bundle != null) {
+            isSearch = bundle.getBoolean("isSearch", false);
+        }
         mRecyclerView = (RecyclerView) mView.findViewById(R.id.recyclerView);
         mFileList = new ArrayList<>();
-        rootPath = Environment.getExternalStorageDirectory().getAbsolutePath();
         mAdapter = new FileAdapter(mView.getContext(), mFileList);
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                getFileData(rootPath);
-                Message msg = Message.obtain();
-                msg.what = 1;
-                mHandler.sendMessage(msg);
-            }
-        }).start();
+        if (!isSearch) {
+            rootPath = Environment.getExternalStorageDirectory().getAbsolutePath();
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    getFileData(rootPath);
+                    Message msg = Message.obtain();
+                    msg.what = 1;
+                    mHandler.sendMessage(msg);
+                }
+            }).start();
+        } else {
+            rootPath = "result";
+            searchResultList = new ArrayList<>();
+        }
         mAdapter.setOnItemClickListener(this);
         mRecyclerView.setLayoutManager(new LinearLayoutManager(mView.getContext()));
-        mRecyclerView.addItemDecoration(new LineItemDecoration(getContext(), 250, 20, R.drawable.line_item_decoration));
+        mRecyclerView.addItemDecoration(new LineItemDecoration(getContext(), DimenUtil.getRealWidth(mView.getContext(), 768, 180),
+                DimenUtil.getRealWidth(mView.getContext(), 768, 30), R.drawable.line_item_decoration));
         mRecyclerView.setAdapter(mAdapter);
 
 
         locationRecycler = (RecyclerView) mView.findViewById(R.id.location_recycler);
-        rootPath = Environment.getExternalStorageDirectory().getAbsolutePath();
         locationList = new ArrayList<>();
         locationList.add(rootPath);
         mLocationAdapter = new LocationAdapter(getContext(), locationList);
@@ -110,13 +124,13 @@ public class FileFragment extends BaseFragment implements FileAdapter.onItemClic
     @Override
     public void onDestroy() {
         super.onDestroy();
-        if(mFileList!=null){
+        if (mFileList != null) {
             mFileList.clear();
-            mFileList=null;
+            mFileList = null;
         }
-        if(locationList!=null){
+        if (locationList != null) {
             locationList.clear();
-            locationList=null;
+            locationList = null;
         }
     }
 
@@ -144,9 +158,9 @@ public class FileFragment extends BaseFragment implements FileAdapter.onItemClic
         filePath = file.getPath();
         bean.setPath(filePath);
         if (modify == 0) {
-            bean.setModify(TimeUtil.ms2Modify(String.valueOf(file.lastModified())));
+            bean.setModify(TimeUtil.ms2Modify(file.lastModified()));
         } else {
-            bean.setModify(TimeUtil.ms2Modify(String.valueOf(modify)));
+            bean.setModify(TimeUtil.ms2Modify(modify));
         }
         if (file.isDirectory()) {
             bean.setType("directory");
@@ -195,7 +209,7 @@ public class FileFragment extends BaseFragment implements FileAdapter.onItemClic
             locationList.add(bean.getPath());
             mLocationAdapter.notifyItemInserted(locationList.size() - 1);
         } else {
-            FileUtil.showOpenTypeWindow(bean.getPath(),getContext());
+            FileUtil.showOpenTypeWindow(bean.getPath(), getContext());
         }
     }
 
@@ -217,13 +231,29 @@ public class FileFragment extends BaseFragment implements FileAdapter.onItemClic
             locationList.remove(i);
         }
         mLocationAdapter.notifyDataSetChanged();
-        getFileData(locationList.get(position));
+        if (locationList.get(position).equals("result")) {
+            mFileList.clear();
+            mFileList.addAll(searchResultList);
+        } else {
+            getFileData(locationList.get(position));
+        }
         mAdapter.notifyDataSetChanged();
     }
 
     @Override
     public List getDataList() {
         return mFileList;
+    }
+
+    public void setFileList(List<FileBean> fileList) {
+        Collections.sort(fileList);
+        Collections.sort(fileList, mComparator);
+        searchResultList = fileList;
+        mFileList.clear();
+        mFileList.addAll(fileList);
+        Message message = Message.obtain();
+        message.what = 1;
+        mHandler.sendMessage(message);
     }
 
     public int getFabButtonNum() {
@@ -238,14 +268,23 @@ public class FileFragment extends BaseFragment implements FileAdapter.onItemClic
 
     @Override
     public void updateMediaDataBase(List<Bean> list) {
-
+        if (isSearch) {
+            List<String> strList = new ArrayList<>();
+            for (Bean bean : list) {
+                if (!strList.contains(new File(bean.getPath()).getParent())) {
+                    strList.add(bean.getPath());
+                }
+            }
+            Utils.scanFiletoUpdate(getActivity().getApplicationContext(),
+                    strList.toArray(new String[strList.size()]));
+        }
     }
 
     @Override
     public void setAllUnSelected() {
-        for(int i=0;i<mFileList.size();i++){
-            FileBean bean=mFileList.get(i);
-            if(bean.isSelected()) {
+        for (int i = 0; i < mFileList.size(); i++) {
+            FileBean bean = mFileList.get(i);
+            if (bean.isSelected()) {
                 bean.setSelected(false);
                 mAdapter.notifyItemChanged(i);
             }

@@ -6,15 +6,6 @@ package com.example.asus88.finaldesgin.bean;
 
 public class FileBean extends Bean implements Comparable<FileBean> {
     private String type;
-    private int iconId;
-
-    public int getIconId() {
-        return iconId;
-    }
-
-    public void setIconId(int iconId) {
-        this.iconId = iconId;
-    }
 
     public String getType() {
         return type;

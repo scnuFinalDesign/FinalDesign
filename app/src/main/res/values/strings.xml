@@ -37,4 +37,6 @@
     <string name="no_dev_selected">当前未选择任何设备</string>
     <string name="device">设备</string>
     <string name="scan_tips">请把二维码放进方框中</string>
+    <string name="search">搜索</string>
+    <string name="search_content_not_null">搜索内容不能为空</string>
 </resources>

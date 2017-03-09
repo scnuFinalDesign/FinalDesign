@@ -15,8 +15,7 @@ public class TimeUtil {
         return format.format(duration);
     }
 
-    public static String ms2Modify(String time) {
-        long duration = Long.parseLong(time);
+    public static String ms2Modify(Long duration) {
         SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         format.setTimeZone(TimeZone.getTimeZone("GMT+8"));
         return format.format(duration);

@@ -26,11 +26,13 @@
                 android:layout_gravity="center_horizontal"
                 />
             <ImageView
-                android:layout_width="60px"
+                android:layout_width="100px"
                 android:id="@+id/main_search"
-                android:layout_height="60px"
+                android:layout_height="100px"
                 android:layout_marginRight="30px"
+                android:transitionName="searchImg"
                 android:src="@mipmap/search"
+                android:scaleType="centerInside"
                 android:layout_gravity="right"/>
         </android.support.v7.widget.Toolbar>
 

@@ -69,13 +69,12 @@ public abstract class BaseFragment extends Fragment {
 
     public void sendFile(List<DevBean> devList) {
         List<Bean> sList = getSelectedList(getDataList());
-        for (int i = 0; i < devList.size(); i++) {
-            DevBean bean = devList.get(i);
+        for (DevBean bean : devList) {
             if (bean.isSelected()) {
-                Transfer transfer=bean.getTransfer();
-                for (int j = 0; j < sList.size(); j++) {
+                Transfer transfer = bean.getTransfer();
+                for (Bean fileBean : sList) {
                     try {
-                        transfer.addTask(sList.get(j).getPath());
+                        transfer.addTask(fileBean.getPath());
                     } catch (Exception e) {
                         e.printStackTrace();
                     }

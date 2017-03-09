@@ -1,18 +1,77 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
-    android:id="@+id/activity_search"
+<FrameLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/colorPrimary"
-    android:orientation="vertical"
     tools:context="com.example.asus88.finaldesgin.activity.SearchActivity">
 
-    <ImageView
-        android:layout_width="50px"
-        android:layout_height="50px"
-        android:layout_gravity="right"
-        android:src="@mipmap/search"
-        android:transitionName="searchImg"/>
-</LinearLayout>
+    <LinearLayout
+        android:id="@+id/search_act_bar"
+        android:layout_width="match_parent"
+        android:layout_height="100px"
+        android:background="@color/colorPrimary"
+        android:orientation="horizontal"
+        android:padding="10px">
+
+        <ImageView
+            android:id="@+id/search_act_back"
+            android:layout_width="50px"
+            android:layout_height="50px"
+            android:layout_gravity="center_vertical"
+            android:layout_marginLeft="10px"
+            android:background="@mipmap/icon_white_back"
+            android:visibility="invisible"/>
+
+        <View
+            android:layout_width="0.1dp"
+            android:layout_height="60px"
+            android:layout_gravity="center_vertical"
+            android:layout_marginLeft="20px"
+            android:background="@color/white"/>
+
+        <ImageView
+            android:layout_width="60px"
+            android:layout_height="60px"
+            android:layout_gravity="center_vertical"
+            android:layout_marginLeft="20px"
+            android:paddingLeft="10px"
+            android:scaleType="centerInside"
+            android:src="@mipmap/search"
+            android:transitionName="searchImg"/>
+
+        <EditText
+            android:id="@+id/search_act_search_content"
+            android:layout_width="0dp"
+            android:layout_height="80px"
+            android:layout_marginRight="20px"
+            android:layout_weight="1"
+            android:hint="@string/search"
+            android:imeOptions="actionSearch"
+            android:inputType="text"
+            android:padding="10px"
+            android:textColor="@color/white"
+            android:textColorHint="@color/white"
+            android:visibility="gone"
+            />
+    </LinearLayout>
+
+
+    <FrameLayout
+        android:id="@+id/search_act_file_content"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:background="@color/white"
+        android:visibility="gone"/>
+
+
+    <android.support.design.widget.FloatingActionButton
+        android:id="@+id/search_act_fab"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end"
+        android:layout_marginBottom="@dimen/fab_margin_bottom"
+        android:layout_marginRight="@dimen/fab_margin_right"
+        android:src="@mipmap/fab_more"
+        android:visibility="gone"/>
+</FrameLayout>

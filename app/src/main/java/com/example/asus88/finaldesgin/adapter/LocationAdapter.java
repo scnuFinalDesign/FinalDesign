@@ -54,11 +54,14 @@ public class LocationAdapter extends RecyclerView.Adapter<LocationAdapter.MyView
         String path = list.get(position);
         if (path.equals(Environment.getExternalStorageDirectory().getAbsolutePath())) {
             holder.mTextView.setText("手机存储");
+        } else if (path.equals("result")) {
+            holder.mTextView.setText("搜索结果");
         } else {
             int index = path.lastIndexOf("/");
             holder.mTextView.setText(path.substring(index + 1));
         }
     }
+
 
     @Override
     public int getItemCount() {

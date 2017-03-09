@@ -12,7 +12,6 @@ import android.widget.TextView;
 
 import com.example.asus88.finaldesgin.R;
 import com.example.asus88.finaldesgin.bean.FileBean;
-import com.example.asus88.finaldesgin.myViews.MarqueeTextView;
 import com.example.asus88.finaldesgin.util.FileUtil;
 import com.example.asus88.finaldesgin.util.ListUtil;
 import com.example.asus88.finaldesgin.util.LogUtil;
@@ -84,6 +83,15 @@ public class FileAdapter extends RecyclerView.Adapter<FileAdapter.MyViewHolder> 
         return ListUtil.getSize(list);
     }
 
+    public void setList(List<FileBean> list) {
+        this.list = list;
+        notifyDataSetChanged();
+    }
+
+    public List<FileBean> getList() {
+        return list;
+    }
+
     public interface onItemClickListener {
         void onItemClick(View view, int position);
 
@@ -93,7 +101,7 @@ public class FileAdapter extends RecyclerView.Adapter<FileAdapter.MyViewHolder> 
 
     class MyViewHolder extends RecyclerView.ViewHolder {
         ImageView icon;
-        MarqueeTextView name;
+        TextView name;
         TextView size;
         TextView modify;
         CheckBox selected;
@@ -104,7 +112,7 @@ public class FileAdapter extends RecyclerView.Adapter<FileAdapter.MyViewHolder> 
             super(itemView);
             AutoUtils.autoSize(itemView);
             icon = (ImageView) itemView.findViewById(R.id.file_adapter_image);
-            name = (MarqueeTextView) itemView.findViewById(R.id.file_adapter_name);
+            name = (TextView) itemView.findViewById(R.id.file_adapter_name);
             size = (TextView) itemView.findViewById(R.id.file_adapter_size);
             modify = (TextView) itemView.findViewById(R.id.file_adapter_modify);
             selected = (CheckBox) itemView.findViewById(R.id.file_adapter_checkBox);
