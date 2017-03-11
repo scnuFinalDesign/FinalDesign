@@ -271,11 +271,12 @@ public class FileFragment extends BaseFragment implements FileAdapter.onItemClic
         if (isSearch) {
             List<String> strList = new ArrayList<>();
             for (Bean bean : list) {
-                if (!strList.contains(new File(bean.getPath()).getParent())) {
-                    strList.add(bean.getPath());
+                String path=new File(bean.getPath()).getParent();
+                if (!strList.contains(path)) {
+                    strList.add(path);
                 }
             }
-            Utils.scanFiletoUpdate(getActivity().getApplicationContext(),
+            Utils.scanFileToUpdate(getActivity().getApplicationContext(),
                     strList.toArray(new String[strList.size()]));
         }
     }
@@ -289,6 +290,7 @@ public class FileFragment extends BaseFragment implements FileAdapter.onItemClic
                 mAdapter.notifyItemChanged(i);
             }
         }
+        mAdapter.notifyDataSetChanged();
     }
 
 }

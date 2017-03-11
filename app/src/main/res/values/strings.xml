@@ -39,4 +39,6 @@
     <string name="scan_tips">请把二维码放进方框中</string>
     <string name="search">搜索</string>
     <string name="search_content_not_null">搜索内容不能为空</string>
+    <string name="transition_scan">scan</string>
+    <string name="transition_search">search</string>
 </resources>

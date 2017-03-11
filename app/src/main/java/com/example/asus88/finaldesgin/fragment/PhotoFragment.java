@@ -33,6 +33,8 @@ import java.util.List;
 public class PhotoFragment extends BaseFragment implements PhotoGroupAdapter.onItemClickListener {
     private static final String TAG = "PhotoFragment";
 
+    private static final int SCAN_PHOTO_REQUEST_CODE = 110;
+    private int scanPos;
     private View mView;
 
     private RecyclerView mRecyclerView;
@@ -79,9 +81,9 @@ public class PhotoFragment extends BaseFragment implements PhotoGroupAdapter.onI
     @Override
     public void onDestroy() {
         super.onDestroy();
-        if(mPhotoBeanList!=null){
+        if (mPhotoBeanList != null) {
             mPhotoBeanList.clear();
-            mPhotoBeanList=null;
+            mPhotoBeanList = null;
         }
     }
 
@@ -96,7 +98,7 @@ public class PhotoFragment extends BaseFragment implements PhotoGroupAdapter.onI
 
             PhotoBean photoBean = new PhotoBean();
             photoBean.setPath(path);
-
+            photoBean.setSelected(0);
             if (!mPhotoBeanList.contains(bean)) {
                 List<PhotoBean> list = new ArrayList<>();
                 list.add(photoBean);
@@ -112,10 +114,11 @@ public class PhotoFragment extends BaseFragment implements PhotoGroupAdapter.onI
 
     @Override
     public void onItemClick(int position) {
+        scanPos = position;
         Intent intent = new Intent(getActivity(), PhotoActivity.class);
         intent.putExtra("path", mPhotoBeanList.get(position).getPath());
         intent.putParcelableArrayListExtra("photo", (ArrayList) mPhotoBeanList.get(position).getPhotoPath());
-        startActivity(intent);
+        startActivityForResult(intent, SCAN_PHOTO_REQUEST_CODE);
     }
 
     @Override
@@ -136,20 +139,31 @@ public class PhotoFragment extends BaseFragment implements PhotoGroupAdapter.onI
     @Override
     public void updateMediaDataBase(List<Bean> list) {
         List<String> strList = new ArrayList<>();
-        for (Bean bean:list) {
-            if (!strList.contains(bean.getPath())) {
-                strList.add(bean.getPath());
+        for (Bean bean : list) {
+            String path = new File(bean.getPath()).getParent();
+            if (!strList.contains(path)) {
+                strList.add(path);
             }
         }
-        Utils.scanFiletoUpdate((getActivity()).getApplicationContext(),
+        Utils.scanFileToUpdate((getActivity()).getApplicationContext(),
                 strList.toArray(new String[strList.size()]));
     }
 
     @Override
     public void setAllUnSelected() {
-        for(int i=0;i<mPhotoBeanList.size();i++){
+        for (int i = 0; i < mPhotoBeanList.size(); i++) {
             mPhotoBeanList.get(i).setSelected(false);
         }
+        mAdapter.notifyDataSetChanged();
     }
 
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == SCAN_PHOTO_REQUEST_CODE && resultCode == 1) {
+            List<PhotoBean> list = data.getParcelableArrayListExtra("photo");
+            mPhotoBeanList.get(scanPos).setPhotoPath(list);
+            mAdapter.notifyItemChanged(scanPos);
+        }
+    }
 }

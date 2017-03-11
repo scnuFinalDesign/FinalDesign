@@ -2,6 +2,7 @@ package com.example.asus88.finaldesgin.adapter;
 
 import android.content.Context;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -9,10 +10,12 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.example.asus88.finaldesgin.R;
+import com.example.asus88.finaldesgin.connection.Manager;
 import com.example.asus88.finaldesgin.connection.Task;
 import com.example.asus88.finaldesgin.myViews.DigitalProgressBar;
 import com.example.asus88.finaldesgin.util.FileUtil;
 import com.example.asus88.finaldesgin.util.ListUtil;
+import com.example.asus88.finaldesgin.util.Utils;
 import com.zhy.autolayout.utils.AutoUtils;
 
 import java.util.List;
@@ -27,10 +30,16 @@ public class ReceiveTaskAdapter extends RecyclerView.Adapter<ReceiveTaskAdapter.
     private Context mContext;
     private List<Task> list;
     private onItemStateClickListener mOnItemStateClickListener;
+    private String savePath;
 
     public ReceiveTaskAdapter(Context context, List<Task> list) {
         mContext = context;
         this.list = list;
+        try {
+            savePath = Manager.getManager().getStorePath();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
@@ -56,6 +65,12 @@ public class ReceiveTaskAdapter extends RecyclerView.Adapter<ReceiveTaskAdapter.
         holder.progressBar.setProgress((int) task.getRate());
         holder.icon.setImageResource(FileUtil.getImageId(FileUtil.getFileSuffix(task.name)));
         holder.status.setImageResource(task.getStateIconId());
+        //// TODO: 2017/3/10 update database
+        if (task.getRate() == 100) {
+            //// TODO: 2017/3/10 scan file
+            Log.d(TAG, "onBindViewHolder: scan");
+            Utils.scanFileToUpdate(mContext, new String[]{savePath});
+        }
     }
 
     @Override

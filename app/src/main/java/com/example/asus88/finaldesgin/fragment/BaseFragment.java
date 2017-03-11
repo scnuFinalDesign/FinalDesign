@@ -59,8 +59,8 @@ public abstract class BaseFragment extends Fragment {
         if (sList == null || sList.size() <= 0) {
             Toast.makeText(getActivity(), getString(R.string.no_selected), Toast.LENGTH_SHORT).show();
         } else {
-            for (int i = 0; i < sList.size(); i++) {
-                FileUtil.deleteFile(new File(sList.get(i).getPath()));
+            for (Bean bean : sList) {
+                FileUtil.deleteFile(new File(bean.getPath()));
             }
             updateMediaDataBase(sList);
             notifyRecyclerView(sList);

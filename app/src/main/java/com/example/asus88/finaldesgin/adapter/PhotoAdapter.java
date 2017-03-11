@@ -46,7 +46,7 @@ public class PhotoAdapter extends RecyclerView.Adapter<PhotoAdapter.MyViewHolder
             holder.itemView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    mOnItemClickListener.onItemClick(holder.getLayoutPosition());
+                    mOnItemClickListener.onItemClick(holder.image,holder.getLayoutPosition());
                 }
             });
         } else {
@@ -68,10 +68,10 @@ public class PhotoAdapter extends RecyclerView.Adapter<PhotoAdapter.MyViewHolder
     }
 
     public interface onItemClickListener {
-        void onItemClick(int position);
+        void onItemClick(View view,int position);
     }
 
-    class MyViewHolder extends RecyclerView.ViewHolder {
+  public static class MyViewHolder extends RecyclerView.ViewHolder {
         ImageView image;
         CheckBox isSelected;
         PhotoBean bean;

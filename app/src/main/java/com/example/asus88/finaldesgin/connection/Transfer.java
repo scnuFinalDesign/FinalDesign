@@ -730,7 +730,7 @@ public class Transfer {
             initTaskRef.remoteID = mID;
             sendTaskList.add(initTaskRef);
             //通知Manager新增了任务
-            Manager.getManager().onTransferReceiveListChanged(Transfer.this, initTaskRef, ACTION_ADD);
+            Manager.getManager().onTransferSendListChanged(Transfer.this, initTaskRef, ACTION_ADD);
         } else {
             // 对方创建任务失败，应进行提示
         }

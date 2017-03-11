@@ -183,12 +183,13 @@ public class VideoFragment extends BaseFragment implements VideoAdapter.onItemCl
     @Override
     public void updateMediaDataBase(List<Bean> list) {
         List<String> strList = new ArrayList<>();
-        for (Bean bean:list) {
-            if (!strList.contains(new File(bean.getPath()).getParent())) {
-                strList.add(bean.getPath());
+        for (Bean bean : list) {
+            String path=new File(bean.getPath()).getParent();
+            if (!strList.contains(path)) {
+                strList.add(path);
             }
         }
-        Utils.scanFiletoUpdate((getActivity()).getApplicationContext(),
+        Utils.scanFileToUpdate((getActivity()).getApplicationContext(),
                 strList.toArray(new String[strList.size()]));
     }
 
@@ -197,6 +198,7 @@ public class VideoFragment extends BaseFragment implements VideoAdapter.onItemCl
         for (int i = 0; i < mVideoBeanList.size(); i++) {
             mVideoBeanList.get(i).setSelected(false);
         }
+        mAdapter.notifyDataSetChanged();
     }
 
 }

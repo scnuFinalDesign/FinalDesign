@@ -425,6 +425,7 @@ public class LinkActivity extends BaseActivity implements LinkAdapter.onItemClic
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        //// TODO: 2017/3/11 add window to loading link
         if (requestCode == SCAN_QR_CODE_REQUEST && resultCode == RESULT_OK) {
             Bundle bundle = data.getExtras();
             if (bundle != null) {

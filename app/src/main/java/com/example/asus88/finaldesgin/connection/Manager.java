@@ -117,7 +117,7 @@ public class Manager {
 
     private void onUpdateDeviceMap(Dev dev, boolean isAdd) {
         //如果正在显示设备列表则刷新设备列表
-        Log.d(TAG, "onUpdateDeviceMap: "+dev.mac+isAdd);
+        Log.d(TAG, "onUpdateDeviceMap: " + dev.mac + isAdd);
         if (mOnDevMapChangeListener != null) {
             mOnDevMapChangeListener.onDevNumChange(dev, isAdd);
         } else {
@@ -143,6 +143,7 @@ public class Manager {
     }
 
     private static Manager ref;
+    private String storePath;
     private volatile ExecutorService mainPool;
     private volatile Map<Dev, Transfer> devMap;
     private volatile SocketListener socketListener;
@@ -171,6 +172,17 @@ public class Manager {
     private Manager() {
         mainPool = Executors.newSingleThreadExecutor();
         devMap = new LinkedHashMap<Dev, Transfer>();
+
+        File file = Environment.getExternalStorageDirectory();
+        Log.i("tag", file.getAbsolutePath() + " " + file.exists());
+        if (!file.exists()) {
+            try {
+                throw new Exception("默认存储路径有误！");
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+       storePath = file.getAbsolutePath() + "/dd/";
 
         // 用于监听套接字的链接
         socketListener = new SocketListener();
@@ -221,15 +233,12 @@ public class Manager {
         return true;
     }
 
-    public String getStorePath() throws Exception {
-        File file = Environment.getExternalStorageDirectory();
-        Log.i("tag", file.getAbsolutePath() + " " + file.exists());
-        if (!file.exists()) {
-            throw new Exception("默认存储路径有误！");
-        }
-        String path = file.getAbsolutePath() + "/dd/";
-        Log.i("tag", "路径" + path);
-        return path;
+    public String getStorePath()  {
+        return storePath;
+    }
+
+    public void setStorePath(String storePath) {
+        this.storePath = storePath;
     }
 
     private void detectNetwork() {

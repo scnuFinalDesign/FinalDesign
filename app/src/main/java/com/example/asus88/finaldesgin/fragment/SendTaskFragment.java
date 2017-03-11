@@ -84,7 +84,9 @@ public class SendTaskFragment extends Fragment implements Manager.onSendTaskList
 
     @Override
     public void onSendTaskChane(Transfer transfer, Task task, int action) {
+        Log.d(TAG, "onSendTaskChane: " + action);
         String mac = transfer.getRemoteDev().mac;
+        int pos = 0;
         ReceiverBean rBean = null;
         boolean flag = true;
         if (task != null) {
@@ -93,6 +95,7 @@ public class SendTaskFragment extends Fragment implements Manager.onSendTaskList
                 if (bean instanceof ReceiverBean) {
                     if (((ReceiverBean) bean).getMac().equals(mac)) {
                         rBean = (ReceiverBean) taskList.get(i);
+                        pos = i;
                         flag = false;
                         break;
                     }
@@ -101,7 +104,9 @@ public class SendTaskFragment extends Fragment implements Manager.onSendTaskList
             if (flag) {
                 rBean = new ReceiverBean();
                 rBean.setDev(transfer.getRemoteDev());
+                rBean.setSendList(new ArrayList<Task>());
                 taskList.add(rBean);
+                pos = taskList.size();
             }
             switch (action) {
                 case 0:
@@ -113,16 +118,30 @@ public class SendTaskFragment extends Fragment implements Manager.onSendTaskList
                 default:
                     break;
             }
-            //todo if parent expand refresh
-
-            getActivity().runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    mAdapter.notifyDataSetChanged();
+            if (flag) {
+                getActivity().runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        mAdapter.notifyDataSetChanged();
+                    }
+                });
+            } else if (rBean.isExpand()) {
+                if (action == 1) {
+                    pos = +rBean.getSendList().size();
+                    taskList.add(pos, task);
                 }
-            });
+                getActivity().runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        mAdapter.notifyDataSetChanged();
+                    }
+                });
+            }
+
+
         }
     }
+
 
     @Override
     public void onReceiverItemClick(int position) {
@@ -152,7 +171,6 @@ public class SendTaskFragment extends Fragment implements Manager.onSendTaskList
                 conManager = Manager.getManager();
             }
             Task task = (Task) taskList.get(position);
-            Log.d(TAG, "onTaskStateChange: "+task.getDev());
             Transfer t = conManager.getTransferFromMap(task.getDev());
             if (t != null) {
                 t.clickSendTaskListItem(task);

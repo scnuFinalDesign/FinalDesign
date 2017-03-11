@@ -16,7 +16,7 @@ import com.example.asus88.finaldesgin.R;
 
 public class DigitalProgressBar extends ProgressBar {
     private static final String TAG = "DigitalProgressBar";
-
+//// TODO: 2017/3/9  problem reach width
     private static final int DEFAULT_TEXT_SIZE = 30;
     private static final int DEFAULT_TEXT_COLOR = 0xFF000000;
     private static final int DEFAULT_UNREACHED_BAR_COLOR = 0xFF9b9898;

@@ -14,6 +14,7 @@ import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewTreeObserver;
 import android.view.Window;
 import android.view.inputmethod.EditorInfo;
 import android.widget.EditText;
@@ -53,10 +54,10 @@ public class SearchActivity extends BaseActivity implements View.OnClickListener
     EditText mSearchContent;
     @BindView(R.id.search_act_fab)
     FloatingActionButton mFab;
-    @BindView(R.id.search_act_bar)
-    LinearLayout mBar;
     @BindView(R.id.search_act_file_content)
     FrameLayout mFileContent;
+    @BindView(R.id.search_act_icon)
+    ImageView mIcon;
 
 
     private List<FileBean> fileList;
@@ -76,13 +77,13 @@ public class SearchActivity extends BaseActivity implements View.OnClickListener
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_search);
-        initViews();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            //延迟共享元素动画
+            postponeEnterTransition();
+        }
+        ButterKnife.bind(this);
         initData();
         initEvents();
-    }
-
-    private void initViews() {
-        ButterKnife.bind(this);
     }
 
 
@@ -137,6 +138,18 @@ public class SearchActivity extends BaseActivity implements View.OnClickListener
 
         devList = new ArrayList<>();
         mOnDismissListener = new popOnDismissListener();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            mIcon.getViewTreeObserver().addOnPreDrawListener(
+                    new ViewTreeObserver.OnPreDrawListener() {
+                        @Override
+                        public boolean onPreDraw() {
+                            //启动动画
+                            mIcon.getViewTreeObserver().removeOnPreDrawListener(this);
+                            startPostponedEnterTransition();
+                            return true;
+                        }
+                    });
+        }
     }
 
     private void initEvents() {
@@ -232,26 +245,15 @@ public class SearchActivity extends BaseActivity implements View.OnClickListener
 
 
     @Override
-    public void onWindowFocusChanged(boolean hasFocus) {
-        super.onWindowFocusChanged(hasFocus);
-        Rect out = new Rect();
-        getWindow().findViewById(Window.ID_ANDROID_CONTENT).getDrawingRect(out);
-        int w = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED);
-        int h = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED);
-        mBar.measure(w, h);
-        int height = mBar.getMeasuredHeight();
-        FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT,
-                out.height() - height - DimenUtil.getRealHeight(this, 1280, 20));
-        params.gravity = Gravity.BOTTOM;
-        mFileContent.setLayoutParams(params);
-    }
-
-    @Override
     protected void onDestroy() {
         super.onDestroy();
         if (fileList != null) {
             fileList.clear();
             fileList = null;
+        }
+        if (fabBtnList != null) {
+            fabBtnList.clear();
+            fabBtnList = null;
         }
     }
 
@@ -266,6 +268,7 @@ public class SearchActivity extends BaseActivity implements View.OnClickListener
                 background.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
+                        removeBtnFromBg();
                         setBackGroundState(false);
                     }
                 });

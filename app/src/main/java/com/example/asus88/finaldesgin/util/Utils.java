@@ -102,7 +102,7 @@ public class Utils {
         return "weizhi";
     }
 
-    public static void scanFiletoUpdate(Context context, String[] path) {
+    public static void scanFileToUpdate(Context context, String[] path) {
         MediaScannerConnection.scanFile(context, path, null, null);
     }
 }

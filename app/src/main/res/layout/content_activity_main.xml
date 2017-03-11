@@ -25,15 +25,17 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_horizontal"
                 />
+
             <ImageView
-                android:layout_width="100px"
                 android:id="@+id/main_search"
-                android:layout_height="100px"
-                android:layout_marginRight="30px"
-                android:transitionName="searchImg"
-                android:src="@mipmap/search"
+                android:layout_width="150px"
+                android:layout_height="150px"
+                android:layout_gravity="right"
+                android:layout_marginRight="20px"
                 android:scaleType="centerInside"
-                android:layout_gravity="right"/>
+                android:src="@mipmap/search"
+                android:background="?android:attr/selectableItemBackground"
+                android:transitionName="@string/transition_search"/>
         </android.support.v7.widget.Toolbar>
 
     </android.support.design.widget.AppBarLayout>
@@ -50,7 +52,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"
-        android:src="@mipmap/fab_more"
         android:layout_marginBottom="@dimen/fab_margin_bottom"
-        android:layout_marginRight="@dimen/fab_margin_right"/>
+        android:layout_marginRight="@dimen/fab_margin_right"
+        android:src="@mipmap/fab_more"/>
 </android.support.design.widget.CoordinatorLayout>

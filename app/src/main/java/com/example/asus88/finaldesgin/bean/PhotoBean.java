@@ -7,7 +7,7 @@ import android.os.Parcelable;
  * Created by asus88 on 2016/12/22.
  */
 
-public class PhotoBean implements Parcelable{
+public class PhotoBean implements Parcelable {
     private String path;
     private int selected;  //0 未选 1已选
 
@@ -22,7 +22,7 @@ public class PhotoBean implements Parcelable{
     public static final Creator<PhotoBean> CREATOR = new Creator<PhotoBean>() {
         @Override
         public PhotoBean createFromParcel(Parcel in) {
-            return new PhotoBean(in.readString(),in.readInt());
+            return new PhotoBean(in.readString(), in.readInt());
         }
 
         @Override
@@ -56,5 +56,14 @@ public class PhotoBean implements Parcelable{
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeString(path);
         dest.writeInt(selected);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null)
+            return false;
+        if (!(obj instanceof PhotoBean))
+            return false;
+        return this.path.equals(((PhotoBean) obj).getPath());
     }
 }

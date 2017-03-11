@@ -63,7 +63,6 @@ public class ReceiveTaskFragment extends Fragment implements Manager.onReceiveTa
                 mHandler.sendMessage(message);
             }
         }).start();
-        taskList = conManager.getReceiveTaskList();
         mAdapter = new ReceiveTaskAdapter(mView.getContext(), taskList);
         mAdapter.setOnItemStateClickListener(this);
         mRecyclerView.setLayoutManager(new LinearLayoutManager(mView.getContext()));
@@ -82,6 +81,7 @@ public class ReceiveTaskFragment extends Fragment implements Manager.onReceiveTa
 
     @Override
     public void onReceiveTaskChange(Transfer transfer, Task task, int action) {
+        Log.d(TAG, "onReceiveTaskChange: "+action);
         switch (action) {
             case 0:
                 taskList.clear();
@@ -93,6 +93,7 @@ public class ReceiveTaskFragment extends Fragment implements Manager.onReceiveTa
                 });
                 break;
             case 1:
+                Log.d(TAG, "onReceiveTaskChange: ");
                 taskList.add(task);
                 getActivity().runOnUiThread(new Runnable() {
                     @Override

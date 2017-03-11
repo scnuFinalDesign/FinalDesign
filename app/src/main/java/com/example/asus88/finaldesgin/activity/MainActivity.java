@@ -19,7 +19,6 @@ import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v4.widget.ViewDragHelper;
 import android.support.v7.app.ActionBarDrawerToggle;
-import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
 import android.view.Gravity;
@@ -39,7 +38,6 @@ import android.widget.Toast;
 
 import com.example.asus88.finaldesgin.R;
 import com.example.asus88.finaldesgin.TextViewFactory;
-import com.example.asus88.finaldesgin.adapter.SelectDevAdapter;
 import com.example.asus88.finaldesgin.bean.DevBean;
 import com.example.asus88.finaldesgin.bean.FabMenuButtonBean;
 import com.example.asus88.finaldesgin.connection.Manager;
@@ -126,11 +124,8 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
     private ImageView point;
     private int type;
 
-    private PopupWindow selectDev;
     private List<DevBean> devList;
-    private SelectDevAdapter mSelectDevAdapter;
     private Manager conManager;
-    private RecyclerView devRecycler;
     private popOnDismissListener mOnDismissListener;
 
 
@@ -529,29 +524,6 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
     }
 
 
-//    private void showSelectDevWindow() {
-//        if (selectDev == null) {
-//            View window = LayoutInflater.from(MainActivity.this).inflate(R.layout.popup_window_select_dev_to_send, null);
-//            devRecycler = (RecyclerView) window.findViewById(R.id.pop_select_dev_recyclerView);
-//            mSelectDevAdapter = new SelectDevAdapter(MainActivity.this, devList);
-//            devRecycler.setLayoutManager(new LinearLayoutManager(MainActivity.this));
-//            devRecycler.setAdapter(mSelectDevAdapter);
-//            devRecycler.addItemDecoration(new LineItemDecoration(MainActivity.this, 20, 20, R.drawable.line_item_decoration));
-//            Button cancel = (Button) window.findViewById(R.id.pop_select_dev_cancel);
-//            Button sure = (Button) window.findViewById(R.id.pop_select_dev_sure);
-//            cancel.setOnClickListener(this);
-//            sure.setOnClickListener(this);
-//            selectDev = new PopupWindow(window, DimenUtil.getRealWidth(MainActivity.this, 768, 600),
-//                    RelativeLayout.LayoutParams.WRAP_CONTENT);
-//            selectDev.setFocusable(true);
-//            selectDev.setBackgroundDrawable(new ColorDrawable(0x000000));
-//            selectDev.setOnDismissListener(new popOnDismissListener());
-//        } else {
-//            mSelectDevAdapter.notifyDataSetChanged();
-//        }
-//        selectDev.showAtLocation(mContent, Gravity.CENTER, 0, 0);
-//    }
-
     private List<DevBean> getDevList() {
         if (conManager == null) {
             conManager = Manager.getManager();
@@ -578,25 +550,6 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
                 break;
             case R.id.pop_new_file_sure:
                 newFile();
-                break;
-            case R.id.pop_select_dev_cancel:
-                selectDev.dismiss();
-                break;
-            case R.id.pop_select_dev_sure:
-                boolean isSelectDev = false;
-                for (int i = 0; i < devList.size(); i++) {
-                    if (devList.get(i).isSelected()) {
-                        isSelectDev = true;
-                        break;
-                    }
-                }
-                if (isSelectDev) {
-                    BaseFragment baseFragment = getCurFragmentByNavId(curFragmentNavId);
-                    baseFragment.sendFile(devList);
-                } else {
-                    Toast.makeText(MainActivity.this, getString(R.string.no_dev_selected), Toast.LENGTH_SHORT).show();
-                }
-                selectDev.dismiss();
                 break;
             case R.id.main_search:
                 Intent searchIntent = new Intent(MainActivity.this, SearchActivity.class);

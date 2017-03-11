@@ -126,12 +126,13 @@ public class MusicFragment extends BaseFragment implements MusicAdapter.onItemCl
     @Override
     public void updateMediaDataBase(List<Bean> list) {
         List<String> strList = new ArrayList<>();
-        for (Bean bean:list) {
-            if (!strList.contains(new File(bean.getPath()).getParent())) {
-                strList.add(bean.getPath());
+        for (Bean bean : list) {
+            String path=new File(bean.getPath()).getParent();
+            if (!strList.contains(path)) {
+                strList.add(path);
             }
         }
-        Utils.scanFiletoUpdate((getActivity()).getApplicationContext(),
+        Utils.scanFileToUpdate((getActivity()).getApplicationContext(),
                 strList.toArray(new String[strList.size()]));
     }
 
@@ -140,6 +141,7 @@ public class MusicFragment extends BaseFragment implements MusicAdapter.onItemCl
         for (int i = 0; i < mMusicBeanList.size(); i++) {
             mMusicBeanList.get(i).setSelected(false);
         }
+        mAdapter.notifyDataSetChanged();
     }
 
     @Override
