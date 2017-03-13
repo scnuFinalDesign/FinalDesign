@@ -2,6 +2,7 @@ package com.example.asus88.finaldesgin.adapter;
 
 import android.content.Context;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -11,6 +12,7 @@ import android.widget.TextView;
 import com.example.asus88.finaldesgin.R;
 import com.example.asus88.finaldesgin.bean.ApplicationBean;
 import com.example.asus88.finaldesgin.myViews.AutoCardView;
+import com.example.asus88.finaldesgin.util.DimenUtil;
 import com.example.asus88.finaldesgin.util.ListUtil;
 import com.example.asus88.finaldesgin.util.LogUtil;
 import com.zhy.autolayout.utils.AutoUtils;
@@ -79,6 +81,8 @@ public class ApplicationAdapter extends RecyclerView.Adapter<ApplicationAdapter.
         holder.itemView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                Log.d(TAG, "onClick: " + holder.cardView.getHeight());
+                Log.d(TAG, "onClick: deviceheight"+ DimenUtil.getDeviceHeight(mContext));
                 holder.bean.setSelected(!holder.bean.isSelected());
                 notifyItemChanged(holder.getLayoutPosition());
             }

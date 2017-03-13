@@ -5,7 +5,7 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="220px"
-    android:layout_height="250px"
+    android:layout_height="wrap_content"
     android:layout_marginBottom="30px"
     android:layout_marginLeft="22px"
     android:layout_marginTop="30px"
@@ -28,8 +28,7 @@
         android:id="@+id/application_adapter_name"
         android:layout_width="match_parent"
         android:layout_height="40px"
-        android:layout_gravity="bottom"
-        android:layout_marginBottom="95px"
+        android:layout_marginTop="120px"
         android:ellipsize="end"
         android:gravity="center"
         android:marqueeRepeatLimit="marquee_forever"
@@ -39,16 +38,14 @@
         android:id="@+id/application_adapter_size"
         android:layout_width="match_parent"
         android:layout_height="40px"
-        android:layout_gravity="bottom"
-        android:layout_marginBottom="50px"
+        android:layout_marginTop="170px"
         android:gravity="center"/>
 
     <TextView
         android:id="@+id/application_adapter_number"
         android:layout_width="match_parent"
         android:layout_height="40px"
-        android:layout_gravity="bottom"
-        android:layout_marginBottom="5px"
+        android:layout_marginTop="220px"
         android:gravity="center"
         android:maxLines="1"
         />

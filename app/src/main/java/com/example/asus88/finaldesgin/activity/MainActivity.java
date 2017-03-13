@@ -9,6 +9,7 @@ import android.graphics.drawable.ColorDrawable;
 import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
@@ -21,16 +22,19 @@ import android.support.v4.widget.ViewDragHelper;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewStub;
 import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.PopupWindow;
 import android.widget.RadioButton;
 import android.widget.TextView;
@@ -88,10 +92,13 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
     DrawerLayout mDrawer;
     @BindView(R.id.main_search)
     ImageView mSearch;
+    @BindView(R.id.main_view_stub)
+    ViewStub mViewStub;
 
     private static final int DEFAULT_FILE_FRAGMENT_ID = R.id.nav_file;
     private ActionBarDrawerToggle toggle;
 
+    private MenuItem selectedItem;
 
     //fab menu
     private ViewGroup background;
@@ -133,6 +140,9 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
 
     private TranslationFragment traFragment;
 
+    //viewStub
+    private LinearLayout mLinearLayout;
+
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -151,7 +161,7 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
 
         toggle = new ActionBarDrawerToggle(
                 this, mDrawer, mToolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
-        mDrawer.setDrawerListener(toggle);
+        mDrawer.addDrawerListener(toggle);
         toggle.syncState();
 
     }
@@ -172,7 +182,7 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
         mWifiManager = (WifiManager) getSystemService(Context.WIFI_SERVICE);
         devList = new ArrayList<>();
 
-        mOnDismissListener=new popOnDismissListener();
+        mOnDismissListener = new popOnDismissListener();
     }
 
     private void initEvents() {
@@ -241,7 +251,7 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
                 if ((mWifiManager.getWifiState() == WIFI_STATE_DISABLING ||
                         mWifiManager.getWifiState() == WIFI_STATE_DISABLED) &&
                         (state == 10 || state == 11)) {
-                    showIsOpenWifiWindow(MainActivity.this, mContent, mWifiManager,mOnDismissListener);
+                    showIsOpenWifiWindow(MainActivity.this, mContent, mWifiManager, mOnDismissListener);
                 } else {
                     Intent intent = new Intent(MainActivity.this, LinkActivity.class);
                     startActivity(intent);
@@ -260,7 +270,7 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
                     devList.addAll(getDevList());
                     if (devList.size() > 0) {
                         //  showSelectDevWindow();
-                        showSelectDevWindow(MainActivity.this, mContent, devList,mOnDismissListener );
+                        showSelectDevWindow(MainActivity.this, mContent, devList, mOnDismissListener);
                     } else {
                         Toast.makeText(MainActivity.this, getString(R.string.no_link), Toast.LENGTH_SHORT).show();
                         hideBackground();
@@ -359,51 +369,73 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
     }
 
     @Override
-    public boolean onNavigationItemSelected(MenuItem item) {
+    public boolean onNavigationItemSelected(@NonNull MenuItem item) {
         int id = item.getItemId();
-        Fragment fragment;
-        if (mRadioTranslate.isChecked()) {
-            fragment = traFragment;
-            mRadioFile.setChecked(true);
-        } else {
-            fragment = getCurFragmentByNavId(curFragmentNavId);
-        }
-        switch (id) {
-            case R.id.nav_file:
-                replaceFragment(fragment, mFileFragment);
-                break;
-            case R.id.nav_photo:
-                if (mPhotoFragment == null) {
-                    mPhotoFragment = new PhotoFragment();
-                }
-                replaceFragment(fragment, mPhotoFragment);
-                break;
-            case R.id.nav_music:
-                if (mMusicFragment == null) {
-                    mMusicFragment = new MusicFragment();
-                }
-                replaceFragment(fragment, mMusicFragment);
-                break;
-            case R.id.nav_application:
-                if (mAppFragment == null) {
-                    mAppFragment = new ApplicationFragment();
-                }
-                replaceFragment(fragment, mAppFragment);
-                break;
-            case R.id.nav_video:
-                if (mVideoFragment == null) {
-                    mVideoFragment = new VideoFragment();
-                }
-                replaceFragment(fragment, mVideoFragment);
-                break;
-        }
-        curFragmentNavId = id;
-        mDrawer.closeDrawer(GravityCompat.START);
-        if (mAppFragment != null && mAppFragment.getFabBtnMode()) {
-            if (R.id.nav_application == id) {
-                changeFabBtnImage(false);
+        if (id == R.id.nav_set_path) {
+            if (curFragmentNavId != DEFAULT_FILE_FRAGMENT_ID) {
+                replaceFragment(getCurFragmentByNavId(curFragmentNavId), mFileFragment);
+                curFragmentNavId = DEFAULT_FILE_FRAGMENT_ID;
+            }
+            if (mViewStub.getParent() != null) {
+                mLinearLayout = (LinearLayout) mViewStub.inflate();
+                Button sure = (Button) mLinearLayout.findViewById(R.id.stub_sure);
+                Button cancel = (Button) mLinearLayout.findViewById(R.id.stub_cancel);
+                sure.setOnClickListener(this);
+                cancel.setOnClickListener(this);
             } else {
-                changeFabBtnImage(true);
+                mLinearLayout.setVisibility(View.VISIBLE);
+            }
+            mFab.setVisibility(View.GONE);
+            mDrawer.closeDrawer(GravityCompat.START);
+        } else {
+            if (selectedItem == null) {
+                selectedItem = mNav.getMenu().findItem(0).getSubMenu().getItem(0);
+                selectedItem.setChecked(false);
+            }
+            Fragment fragment;
+            if (mRadioTranslate.isChecked()) {
+                fragment = traFragment;
+                mRadioFile.setChecked(true);
+            } else {
+                fragment = getCurFragmentByNavId(curFragmentNavId);
+            }
+            switch (id) {
+                case R.id.nav_file:
+                    replaceFragment(fragment, mFileFragment);
+                    break;
+                case R.id.nav_photo:
+                    if (mPhotoFragment == null) {
+                        mPhotoFragment = new PhotoFragment();
+                    }
+                    replaceFragment(fragment, mPhotoFragment);
+                    break;
+                case R.id.nav_music:
+                    if (mMusicFragment == null) {
+                        mMusicFragment = new MusicFragment();
+                    }
+                    replaceFragment(fragment, mMusicFragment);
+                    break;
+                case R.id.nav_application:
+                    if (mAppFragment == null) {
+                        mAppFragment = new ApplicationFragment();
+                    }
+                    replaceFragment(fragment, mAppFragment);
+                    break;
+                case R.id.nav_video:
+                    if (mVideoFragment == null) {
+                        mVideoFragment = new VideoFragment();
+                    }
+                    replaceFragment(fragment, mVideoFragment);
+                    break;
+            }
+            mDrawer.closeDrawer(GravityCompat.START);
+            curFragmentNavId = id;
+            if (mAppFragment != null && mAppFragment.getFabBtnMode()) {
+                if (R.id.nav_application == id) {
+                    changeFabBtnImage(false);
+                } else {
+                    changeFabBtnImage(true);
+                }
             }
         }
         return true;
@@ -560,6 +592,15 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
                 } else {
                     startActivity(searchIntent);
                 }
+                break;
+            case R.id.stub_cancel:
+                mLinearLayout.setVisibility(View.GONE);
+                mFab.setVisibility(View.VISIBLE);
+                break;
+            case R.id.stub_sure:
+                mFab.setVisibility(View.VISIBLE);
+                conManager.setStorePath(mFileFragment.getStorePath());
+                mLinearLayout.setVisibility(View.GONE);
                 break;
         }
     }

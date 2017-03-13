@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout android:id="@+id/stub_layout"
+              xmlns:android="http://schemas.android.com/apk/res/android"
+              android:layout_width="match_parent"
+              android:layout_height="56dp"
+              android:orientation="horizontal">
+
+    <Button
+        android:id="@+id/stub_cancel"
+        android:layout_width="0dp"
+        android:layout_height="56dp"
+        android:layout_weight="1"
+        android:background="@drawable/bg_new_sure_btn"
+        android:text="@string/cancel"/>
+
+    <Button
+        android:id="@+id/stub_sure"
+        android:layout_width="0dp"
+        android:layout_height="56dp"
+        android:layout_weight="1"
+        android:background="@drawable/bg_new_sure_btn"
+        android:text="@string/sure"
+        android:textColor="@color/sure_text_color"/>
+</LinearLayout>

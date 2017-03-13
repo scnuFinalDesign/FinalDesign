@@ -16,7 +16,6 @@ import com.example.asus88.finaldesgin.R;
 
 public class DigitalProgressBar extends ProgressBar {
     private static final String TAG = "DigitalProgressBar";
-//// TODO: 2017/3/9  problem reach width
     private static final int DEFAULT_TEXT_SIZE = 30;
     private static final int DEFAULT_TEXT_COLOR = 0xFF000000;
     private static final int DEFAULT_UNREACHED_BAR_COLOR = 0xFF9b9898;
@@ -72,13 +71,12 @@ public class DigitalProgressBar extends ProgressBar {
         canvas.save();
         canvas.translate(getPaddingLeft(), getHeight() / 2);
         float percentage = getProgress() * 1.0f / getMax();
-        float reachBarWidth = mViewWidth * percentage;
         boolean isNeedUnReached = true;
         String text = getProgress() + "%";
 
         float textWidth = mPaint.measureText(text);
         float textHeight = (mPaint.descent() + mPaint.ascent()) / 2;
-
+        float reachBarWidth = (mViewWidth - textWidth) * percentage;
         if (reachBarWidth + textWidth > mViewWidth) {
             reachBarWidth = mViewWidth - textWidth;
             isNeedUnReached = false;

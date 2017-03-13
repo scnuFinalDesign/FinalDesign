@@ -41,4 +41,5 @@
     <string name="search_content_not_null">搜索内容不能为空</string>
     <string name="transition_scan">scan</string>
     <string name="transition_search">search</string>
+    <string name="set_storePath">接收路径</string>
 </resources>

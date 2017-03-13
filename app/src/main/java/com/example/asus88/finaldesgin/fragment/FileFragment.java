@@ -271,7 +271,7 @@ public class FileFragment extends BaseFragment implements FileAdapter.onItemClic
         if (isSearch) {
             List<String> strList = new ArrayList<>();
             for (Bean bean : list) {
-                String path=new File(bean.getPath()).getParent();
+                String path = new File(bean.getPath()).getParent();
                 if (!strList.contains(path)) {
                     strList.add(path);
                 }
@@ -293,4 +293,7 @@ public class FileFragment extends BaseFragment implements FileAdapter.onItemClic
         mAdapter.notifyDataSetChanged();
     }
 
+    public String getStorePath() {
+        return locationList.get(locationList.size() - 1);
+    }
 }
