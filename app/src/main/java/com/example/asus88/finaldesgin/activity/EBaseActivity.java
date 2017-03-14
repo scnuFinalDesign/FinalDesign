@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
@@ -33,6 +34,7 @@ import static android.net.wifi.WifiManager.WIFI_STATE_DISABLING;
 
 public class EBaseActivity extends BaseActivity implements Manager.onDevMapChangeListener {
 
+    private static final String TAG = "EBaseActivity";
     public Manager conManager;
     public WifiManager mWifiManager;
     private FrameLayout background;
@@ -43,6 +45,7 @@ public class EBaseActivity extends BaseActivity implements Manager.onDevMapChang
     private List<DevBean> devList;
     private int type;
     private int marLeft;
+    private boolean isBackgroundShow;
     private popOnDismissListener mOnDismissListener;
 
     @Override
@@ -54,28 +57,30 @@ public class EBaseActivity extends BaseActivity implements Manager.onDevMapChang
         fabButton = new TextView[5];
         mOnDismissListener = new popOnDismissListener();
         devList = new ArrayList<>();
-        marLeft = DimenUtil.getRealWidth(this, 1280, 140);
+        marLeft = DimenUtil.getRealWidth(this, 768, 84);
 
     }
 
     @Override
     public void onDevNumChange(Dev dev, boolean isAdd) {
-// link
+
     }
 
     @Override
     public void onTransferStateChange(Dev dev, boolean isEnabled) {
-// 3个页面
+        if (!isEnabled) {
+            Toast.makeText(this, "与" + dev.getName() + "链接已断开", Toast.LENGTH_SHORT).show();
+        }
     }
 
     @Override
     public void onNetWorkStateChange() {
-//// TODO: 2017/3/11 3个页面都重写
+        Toast.makeText(this, getString(R.string.check_your_network_setting), Toast.LENGTH_SHORT).show();
     }
 
     @Override
     public void onCreateTransferFail(Dev dev) {
-// link
+
     }
 
     public void setFabButtonSize(int fabButtonSize) {
@@ -86,6 +91,14 @@ public class EBaseActivity extends BaseActivity implements Manager.onDevMapChang
     protected void onDestroy() {
         super.onDestroy();
         conManager.setOnDevMapChangeListener(null);
+        if (devList != null) {
+            devList.clear();
+            devList = null;
+        }
+        if (fabBtnList != null) {
+            fabBtnList.clear();
+            fabBtnList = null;
+        }
     }
 
     public void showBackground() {
@@ -106,10 +119,12 @@ public class EBaseActivity extends BaseActivity implements Manager.onDevMapChang
         }
         addFabButtonToBg();
         background.setVisibility(View.VISIBLE);
+        isBackgroundShow = true;
     }
 
     public void hideBackground() {
         background.setVisibility(View.GONE);
+        isBackgroundShow = false;
     }
 
     public void initFabButton() {
@@ -187,16 +202,21 @@ public class EBaseActivity extends BaseActivity implements Manager.onDevMapChang
     }
 
     private void addFabButtonToBg() {
-        int start=5 - fabButtonSize;
-        int firMargin=getFirstBtnMarTop(fabButtonSize, 70, 20);
+        int start = 5 - fabButtonSize;
+        int firMargin = getFirstBtnMarTop(fabButtonSize, 120, 40);
+        boolean flag = false;
+        if (oldSize != fabButtonSize) {
+            flag = true;
+            oldSize = fabButtonSize;
+        }
         for (int i = start; i < 5; i++) {
+            Log.d(TAG, "addFabButtonToBg: i=" + i);
             if (fabButton[i] == null) {
                 fabButton[i] = TextViewFactory.createTextView(EBaseActivity.this, fabBtnList.get(i));
             }
-            if (oldSize != fabButtonSize) {
+            if (flag) {
                 FrameLayout.LayoutParams params = (FrameLayout.LayoutParams) fabButton[i].getLayoutParams();
-                params.setMargins(marLeft, DimenUtil.getRealHeight(EBaseActivity.this, 768, (firMargin + (i - start) * 90)), 0, 0);
-                oldSize = fabButtonSize;
+                params.setMargins(marLeft, DimenUtil.getRealHeight(EBaseActivity.this, 1280, (firMargin + (i - start) * 160)), 0, 0);
             }
             background.addView(fabButton[i]);
         }
@@ -212,9 +232,9 @@ public class EBaseActivity extends BaseActivity implements Manager.onDevMapChang
      */
     private int getFirstBtnMarTop(int btnNum, int btnHeight, int margin) {
         if (btnNum % 2 == 0) {
-            return (768 - btnNum * btnHeight - (btnNum - 1) * margin) / 2;
+            return (1280 - btnNum * btnHeight - (btnNum - 1) * margin) / 2;
         } else {
-            return (768 - btnHeight - (btnNum - 1) * (btnHeight + margin)) / 2;
+            return (1280 - btnHeight - (btnNum - 1) * (btnHeight + margin)) / 2;
         }
     }
 
@@ -222,6 +242,10 @@ public class EBaseActivity extends BaseActivity implements Manager.onDevMapChang
         for (int i = 5 - fabButtonSize; i < 5; i++) {
             background.removeView(fabButton[i]);
         }
+    }
+
+    public boolean isBackgroundShow() {
+        return isBackgroundShow;
     }
 
     /**

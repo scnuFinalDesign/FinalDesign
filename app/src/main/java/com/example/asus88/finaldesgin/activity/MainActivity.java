@@ -451,9 +451,9 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
      */
     private int getFirstBtnMarTop(int btnNum, int btnHeight, int margin) {
         if (btnNum % 2 == 0) {
-            return (768 - btnNum * btnHeight - (btnNum - 1) * margin) / 2;
+            return (1280- btnNum * btnHeight - (btnNum - 1) * margin) / 2;
         } else {
-            return (768 - btnHeight - (btnNum - 1) * (btnHeight + margin)) / 2;
+            return (1280 - btnHeight - (btnNum - 1) * (btnHeight + margin)) / 2;
         }
     }
 
@@ -461,14 +461,15 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
         BaseFragment fragment = getCurFragmentByNavId(curFragmentNavId);
         int num = fragment.getFabButtonNum();
         int start = 5 - fragment.getFabButtonNum();
-        int firMargin = getFirstBtnMarTop(num, 70, 20);
-        int marLeft = DimenUtil.getRealWidth(this, 1280, 140);
+        int firMargin = getFirstBtnMarTop(num, 120, 40);
+        Log.d(TAG, "showFabMenu: first:"+firMargin);
+        int marLeft = DimenUtil.getRealWidth(this, 768, 84);
         for (int i = start; i < 5; i++) {
             if (fabButton[i] == null) {
                 fabButton[i] = TextViewFactory.createTextView(MainActivity.this, fabBtnList.get(i));
             }
             FrameLayout.LayoutParams params = (FrameLayout.LayoutParams) fabButton[i].getLayoutParams();
-            params.setMargins(marLeft, DimenUtil.getRealHeight(MainActivity.this, 768, (firMargin + (i - start) * 90)), 0, 0);
+            params.setMargins(marLeft, DimenUtil.getRealHeight(MainActivity.this, 1280, (firMargin + (i - start) * 160)), 0, 0);
             background.addView(fabButton[i]);
         }
     }

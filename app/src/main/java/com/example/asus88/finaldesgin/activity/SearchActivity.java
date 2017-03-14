@@ -30,6 +30,7 @@ import com.example.asus88.finaldesgin.TextViewFactory;
 import com.example.asus88.finaldesgin.bean.DevBean;
 import com.example.asus88.finaldesgin.bean.FabMenuButtonBean;
 import com.example.asus88.finaldesgin.bean.FileBean;
+import com.example.asus88.finaldesgin.connection.Dev;
 import com.example.asus88.finaldesgin.connection.Manager;
 import com.example.asus88.finaldesgin.fragment.FileFragment;
 import com.example.asus88.finaldesgin.util.DimenUtil;
@@ -42,10 +43,11 @@ import java.util.List;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 
+import static android.R.attr.button;
 import static android.net.wifi.WifiManager.WIFI_STATE_DISABLED;
 import static android.net.wifi.WifiManager.WIFI_STATE_DISABLING;
 
-public class SearchActivity extends BaseActivity implements View.OnClickListener {
+public class SearchActivity extends EBaseActivity implements View.OnClickListener {
     private static final String TAG = "SearchActivity";
 
     @BindView(R.id.search_act_back)
@@ -62,15 +64,7 @@ public class SearchActivity extends BaseActivity implements View.OnClickListener
 
     private List<FileBean> fileList;
     private String content;
-    private FrameLayout background;
-    private TextView[] button;
-    private List<FabMenuButtonBean> fabBtnList;
-    private Manager conManager;
-    private WifiManager mWifiManager;
     private FileFragment mFileFragment;
-
-    private List<DevBean> devList;
-    private popOnDismissListener mOnDismissListener;
 
 
     @Override
@@ -122,10 +116,6 @@ public class SearchActivity extends BaseActivity implements View.OnClickListener
             });
         }
 
-        button = new TextView[3];
-        fabBtnList = new ArrayList<>();
-        conManager = Manager.getManager();
-        mWifiManager = (WifiManager) getSystemService(Context.WIFI_SERVICE);
         if (mFileFragment == null) {
             Bundle bundle = new Bundle();
             bundle.putBoolean("isSearch", true);
@@ -136,8 +126,7 @@ public class SearchActivity extends BaseActivity implements View.OnClickListener
         transaction.replace(R.id.search_act_file_content, mFileFragment);
         transaction.commit();
 
-        devList = new ArrayList<>();
-        mOnDismissListener = new popOnDismissListener();
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             mIcon.getViewTreeObserver().addOnPreDrawListener(
                     new ViewTreeObserver.OnPreDrawListener() {
@@ -150,6 +139,7 @@ public class SearchActivity extends BaseActivity implements View.OnClickListener
                         }
                     });
         }
+        setFabButtonSize(3);
     }
 
     private void initEvents() {
@@ -177,72 +167,6 @@ public class SearchActivity extends BaseActivity implements View.OnClickListener
         });
     }
 
-    /**
-     * 初始化fab button
-     */
-    private void initFabButtonData() {
-        FabMenuButtonBean delete = new FabMenuButtonBean("delete", R.drawable.bg_fab_delete_btn);
-        delete.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                mFileFragment.deleteFile();
-                setBackGroundState(false);
-            }
-        });
-        FabMenuButtonBean link = new FabMenuButtonBean("link", R.drawable.bg_fab_link_btn);
-        link.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                removeBtnFromBg();
-                int state = WifiUtil.getWifiApState(mWifiManager);
-                if ((mWifiManager.getWifiState() == WIFI_STATE_DISABLING ||
-                        mWifiManager.getWifiState() == WIFI_STATE_DISABLED) &&
-                        (state == 10 || state == 11)) {
-                    showIsOpenWifiWindow(SearchActivity.this, getWindow().getDecorView().getRootView(),
-                            mWifiManager, mOnDismissListener);
-                } else {
-                    Intent intent = new Intent(SearchActivity.this, LinkActivity.class);
-                    startActivity(intent);
-                    setBackGroundState(false);
-                }
-            }
-        });
-        FabMenuButtonBean send = new FabMenuButtonBean("send", R.drawable.bg_fab_send_btn);
-        send.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                setBackGroundState(false);
-                if (mFileFragment.getSelectedNum() > 0) {
-                    devList.clear();
-                    devList.addAll(conManager.getLinkingDev());
-                    if (devList.size() > 0) {
-                        showSelectDevWindow(SearchActivity.this, getWindow().getDecorView().getRootView(),
-                                devList, mOnDismissListener);
-                    } else {
-                        Toast.makeText(SearchActivity.this, getString(R.string.no_link), Toast.LENGTH_SHORT).show();
-                        setBackGroundState(false);
-                    }
-                } else {
-                    Toast.makeText(SearchActivity.this, getString(R.string.no_selected), Toast.LENGTH_SHORT).show();
-                    setBackGroundState(false);
-                }
-            }
-        });
-
-        fabBtnList.add(delete);
-        fabBtnList.add(link);
-        fabBtnList.add(send);
-        int marLeft = DimenUtil.getRealWidth(this, 1280, 140);
-        int firMargin = (768 - 70 - (3 - 1) * (70 + 20)) / 2;
-        for (int i = 0; i < 3; i++) {
-            if (button[i] == null) {
-                button[i] = TextViewFactory.createTextView(this, fabBtnList.get(i));
-            }
-            FrameLayout.LayoutParams params = (FrameLayout.LayoutParams) button[i].getLayoutParams();
-            params.setMargins(marLeft, DimenUtil.getRealHeight(this, 768, (firMargin + i * 90)), 0, 0);
-        }
-    }
-
 
     @Override
     protected void onDestroy() {
@@ -251,48 +175,8 @@ public class SearchActivity extends BaseActivity implements View.OnClickListener
             fileList.clear();
             fileList = null;
         }
-        if (fabBtnList != null) {
-            fabBtnList.clear();
-            fabBtnList = null;
-        }
     }
 
-
-    private void setBackGroundState(boolean isShow) {
-        if (isShow) {
-            if (background == null) {
-                ViewGroup rootView = (ViewGroup) getWindow().getDecorView().getRootView();
-                background = new FrameLayout(this);
-                background.setBackgroundColor(getResources().getColor(R.color.fab_menu_color));
-                background.setLayoutParams(new FrameLayout.LayoutParams(rootView.getWidth(), rootView.getHeight()));
-                background.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        removeBtnFromBg();
-                        setBackGroundState(false);
-                    }
-                });
-                initFabButtonData();
-                rootView.addView(background);
-            }
-            addBtnToBg();
-            background.setVisibility(View.VISIBLE);
-        } else {
-            background.setVisibility(View.GONE);
-        }
-    }
-
-    private void removeBtnFromBg() {
-        for (int i = 0; i < 3; i++) {
-            background.removeView(button[i]);
-        }
-    }
-
-    private void addBtnToBg() {
-        for (int i = 0; i < 3; i++) {
-            background.addView(button[i]);
-        }
-    }
 
     @Override
     public void onClick(View v) {
@@ -302,7 +186,7 @@ public class SearchActivity extends BaseActivity implements View.OnClickListener
                 finish();
                 break;
             case R.id.search_act_fab:
-                setBackGroundState(true);
+                showBackground();
                 break;
         }
     }
@@ -313,14 +197,13 @@ public class SearchActivity extends BaseActivity implements View.OnClickListener
         mFileFragment.sendFile(list);
     }
 
-    /**
-     * 监听popWindow dismiss
-     */
-    private class popOnDismissListener implements PopupWindow.OnDismissListener {
+    @Override
+    public void deleteFile() {
+        mFileFragment.deleteFile();
+    }
 
-        @Override
-        public void onDismiss() {
-            setBackGroundState(false);
-        }
+    @Override
+    public int getSelectedSize() {
+        return mFileFragment.getSelectedNum();
     }
 }

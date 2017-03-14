@@ -16,11 +16,9 @@ import com.example.asus88.finaldesgin.util.DimenUtil;
 
 public class TextViewFactory {
     public static TextView createTextView(Context context, FabMenuButtonBean bean) {
-        FrameLayout.LayoutParams layoutParams = new FrameLayout.LayoutParams(DimenUtil.getRealWidth(context, 1280, 1000),
-                DimenUtil.getRealHeight(context, 768, 70));
+        FrameLayout.LayoutParams layoutParams = new FrameLayout.LayoutParams(DimenUtil.getRealWidth(context, 768, 600),
+                DimenUtil.getRealHeight(context, 1280, 120));
         TextView textView = new TextView(context);
-
-        layoutParams.setMargins(DimenUtil.getRealWidth(context,1280,140), 0, 0, 0);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             textView.setElevation(20);
         }
