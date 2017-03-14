@@ -108,6 +108,7 @@ public class SendTaskFragment extends Fragment implements Manager.onSendTaskList
                 taskList.add(rBean);
                 pos = taskList.size();
             }
+            Log.d(TAG, "onSendTaskChane: " + rBean.getName());
             switch (action) {
                 case 0:
                     rBean.setSendList(null);
@@ -127,7 +128,9 @@ public class SendTaskFragment extends Fragment implements Manager.onSendTaskList
                 });
             } else if (rBean.isExpand()) {
                 if (action == 1) {
+                    Log.d(TAG, "onSendTaskChane: pos:" + pos);
                     pos = +rBean.getSendList().size();
+                    Log.d(TAG, "onSendTaskChane: calsize" + pos);
                     taskList.add(pos, task);
                 }
                 getActivity().runOnUiThread(new Runnable() {
@@ -147,6 +150,7 @@ public class SendTaskFragment extends Fragment implements Manager.onSendTaskList
     public void onReceiverItemClick(int position) {
         if (taskList.get(position) instanceof ReceiverBean) {
             ReceiverBean rBean = ((ReceiverBean) (taskList.get(position)));
+            Log.d(TAG, "onReceiverItemClick: " + rBean.getName());
             List<Task> tList = rBean.getSendList();
             if (!rBean.isExpand()) {
                 rBean.setExpand(true);

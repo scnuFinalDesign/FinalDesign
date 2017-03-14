@@ -28,10 +28,10 @@
 
             <ImageView
                 android:id="@+id/main_search"
-                android:layout_width="150px"
-                android:layout_height="150px"
+                android:layout_width="50dp"
+                android:layout_height="50dp"
                 android:layout_gravity="right"
-                android:layout_marginRight="20px"
+                android:layout_marginRight="5dp"
                 android:scaleType="centerInside"
                 android:src="@mipmap/search"
                 android:background="?android:attr/selectableItemBackground"

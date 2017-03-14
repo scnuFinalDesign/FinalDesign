@@ -55,6 +55,6 @@ public class ReceiverBean extends SendTakBean {
         if (!(o instanceof ReceiverBean)) {
             return false;
         }
-        return this.getMac() == ((ReceiverBean) o).getMac();
+        return this.getMac().equals(((ReceiverBean) o).getMac());
     }
 }

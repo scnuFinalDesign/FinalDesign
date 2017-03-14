@@ -4,6 +4,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.drawable.ColorDrawable;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.net.wifi.WifiConfiguration;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
@@ -71,6 +73,7 @@ public class LinkActivity extends BaseActivity implements LinkAdapter.onItemClic
 
     private Manager conManager;
     private WifiManager mWifiManager;
+    private ConnectivityManager cManager;
 
     private boolean isCreate;
     private String wifiName;
@@ -95,13 +98,12 @@ public class LinkActivity extends BaseActivity implements LinkAdapter.onItemClic
         initEvents();
     }
 
+
     private void initData() {
         wifiName = "";
         wifiPassWord = "";
         encodeType = "";
         conManager = Manager.getManager();
-        conManager.setOnDevMapChangeListener(this);
-        conManager.searchDevice();
         mDevList = new ArrayList<>();
         getDevDataFromMap();
         mAdapter = new LinkAdapter(this, mDevList);
@@ -109,15 +111,6 @@ public class LinkActivity extends BaseActivity implements LinkAdapter.onItemClic
         mRecycler.addItemDecoration(new LineItemDecoration(this, 0, 0, R.drawable.line_item_decoration));
         mRecycler.setAdapter(mAdapter);
         mWifiManager = (WifiManager) getSystemService(Context.WIFI_SERVICE);
-        int state = WifiUtil.getWifiApState(mWifiManager);
-        if (state == 12 || state == 13) {
-            isCreate = true;
-            mImage.setImageResource(R.mipmap.icon_qrcode);
-        } else {
-            isCreate = false;
-            mImage.setImageResource(R.mipmap.icon_scan);
-        }
-
         qrHeight = DimenUtil.getRealHeight(this, 1280, 500);
         qrWidth = DimenUtil.getRealWidth(this, 768, 500);
         mTitle.setText(getString(R.string.device));
@@ -273,7 +266,7 @@ public class LinkActivity extends BaseActivity implements LinkAdapter.onItemClic
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        conManager.stopSearchDevice();
+        Log.d(TAG, "onDestroy: ");
         if (mDevList != null) {
             mDevList.clear();
             mDevList = null;
@@ -287,7 +280,64 @@ public class LinkActivity extends BaseActivity implements LinkAdapter.onItemClic
     @Override
     protected void onResume() {
         super.onResume();
-        conManager.resumeSearch();
+        Log.d(TAG, "onResume: ");
+        int state = WifiUtil.getWifiApState(mWifiManager);
+        if (state == 12 || state == 13) {
+            isCreate = true;
+            mImage.setImageResource(R.mipmap.icon_qrcode);
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    while (WifiUtil.getWifiApState(mWifiManager) != 13) {
+                        try {
+                            Thread.sleep(500);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                    conManager.searchDevice();
+                    conManager.setOnDevMapChangeListener(LinkActivity.this);
+                }
+            }).start();
+        } else if ((mWifiManager.getWifiState() == WifiManager.WIFI_STATE_ENABLED ||
+                mWifiManager.getWifiState() == WifiManager.WIFI_STATE_ENABLING)) {
+            isCreate = false;
+            mImage.setImageResource(R.mipmap.icon_scan);
+            cManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    while (true) {
+                        NetworkInfo info = cManager.getActiveNetworkInfo();
+                        if (info != null && info.getType() == ConnectivityManager.TYPE_WIFI) {
+                            break;
+                        }
+                        try {
+                            Thread.sleep(500);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                    conManager.searchDevice();
+                    conManager.setOnDevMapChangeListener(LinkActivity.this);
+                }
+            }).start();
+        }
+    }
+
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        Log.d(TAG, "onPause: ");
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        Log.d(TAG, "onStop: ");
+        conManager.stopSearchDevice();
+        conManager.setOnDevMapChangeListener(null);
     }
 
     private void showBreakLinkWindow(final Dev dev) {
