@@ -1,12 +1,8 @@
 package com.example.asus88.finaldesgin.activity;
 
-import android.animation.ArgbEvaluator;
 import android.app.ActivityOptions;
-import android.content.Context;
 import android.content.Intent;
-import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
-import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -22,13 +18,14 @@ import android.support.v4.widget.ViewDragHelper;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.Gravity;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewStub;
+import android.view.inputmethod.EditorInfo;
 import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.EditText;
@@ -41,10 +38,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.asus88.finaldesgin.R;
-import com.example.asus88.finaldesgin.TextViewFactory;
 import com.example.asus88.finaldesgin.bean.DevBean;
-import com.example.asus88.finaldesgin.bean.FabMenuButtonBean;
-import com.example.asus88.finaldesgin.connection.Manager;
 import com.example.asus88.finaldesgin.fragment.ApplicationFragment;
 import com.example.asus88.finaldesgin.fragment.BaseFragment;
 import com.example.asus88.finaldesgin.fragment.FileFragment;
@@ -52,21 +46,16 @@ import com.example.asus88.finaldesgin.fragment.MusicFragment;
 import com.example.asus88.finaldesgin.fragment.PhotoFragment;
 import com.example.asus88.finaldesgin.fragment.TranslationFragment;
 import com.example.asus88.finaldesgin.fragment.VideoFragment;
-import com.example.asus88.finaldesgin.util.AnimationManager;
 import com.example.asus88.finaldesgin.util.DimenUtil;
 import com.example.asus88.finaldesgin.util.FileUtil;
-import com.example.asus88.finaldesgin.util.WifiUtil;
 
 import java.io.File;
 import java.lang.reflect.Field;
-import java.util.ArrayList;
 import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 
-import static android.net.wifi.WifiManager.WIFI_STATE_DISABLED;
-import static android.net.wifi.WifiManager.WIFI_STATE_DISABLING;
 import static com.example.asus88.finaldesgin.R.string.newDirectory;
 import static com.example.asus88.finaldesgin.R.string.newFile;
 
@@ -74,7 +63,7 @@ import static com.example.asus88.finaldesgin.R.string.newFile;
  * Created by asus88 on 2016/12/27.
  */
 
-public class MainActivity extends BaseActivity implements NavigationView.OnNavigationItemSelectedListener, View.OnClickListener {
+public class MainActivity extends EBaseActivity implements NavigationView.OnNavigationItemSelectedListener, View.OnClickListener {
     private static final String TAG = "MainActivity";
     @BindView(R.id.radio_file)
     RadioButton mRadioFile;
@@ -100,12 +89,6 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
 
     private MenuItem selectedItem;
 
-    //fab menu
-    private ViewGroup background;
-    private boolean isAnimating;
-    private int fabMenuBagColor;
-    private TextView[] fabButton;
-    private List<FabMenuButtonBean> fabBtnList;
 
     //main content
     private ApplicationFragment mAppFragment;
@@ -114,6 +97,7 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
     private VideoFragment mVideoFragment;
     private FileFragment mFileFragment;
     private FragmentTransaction transaction;
+    private BaseFragment curFragment;
     private FragmentManager mManager;
     private int curFragmentNavId = DEFAULT_FILE_FRAGMENT_ID;
 
@@ -131,12 +115,6 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
     private ImageView point;
     private int type;
 
-    private List<DevBean> devList;
-    private Manager conManager;
-    private popOnDismissListener mOnDismissListener;
-
-
-    private WifiManager mWifiManager;
 
     private TranslationFragment traFragment;
 
@@ -172,17 +150,6 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
         transaction = mManager.beginTransaction();
         transaction.add(R.id.main_content, mFileFragment);
         transaction.commit();
-
-        // todo new thread to load
-        // fab menu btn
-        fabMenuBagColor = getResources().getColor(R.color.fab_menu_color);
-        fabButton = new TextView[5];
-        initFabMenuBtnData();
-
-        mWifiManager = (WifiManager) getSystemService(Context.WIFI_SERVICE);
-        devList = new ArrayList<>();
-
-        mOnDismissListener = new popOnDismissListener();
     }
 
     private void initEvents() {
@@ -210,84 +177,6 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
         });
     }
 
-    private void initFabMenuBtnData() {
-        fabBtnList = new ArrayList<>();
-        FabMenuButtonBean newDirectory = new FabMenuButtonBean("newDirectory", R.drawable.bg_fab_new_btn);
-        newDirectory.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                removeButtonFromBg();
-                type = 1;
-                showFileWindow();
-            }
-        });
-        FabMenuButtonBean newFile = new FabMenuButtonBean("newFile", R.drawable.bg_fab_new_file_btn);
-        newFile.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                removeButtonFromBg();
-                type = 0;
-                showFileWindow();
-            }
-        });
-        FabMenuButtonBean delete = new FabMenuButtonBean("delete", R.drawable.bg_fab_delete_btn);
-        delete.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                BaseFragment baseFragment = getCurFragmentByNavId(curFragmentNavId);
-                if (baseFragment != null) {
-                    baseFragment.deleteFile();
-                }
-                removeButtonFromBg();
-                hideBackground();
-            }
-        });
-        FabMenuButtonBean link = new FabMenuButtonBean("link", R.drawable.bg_fab_link_btn);
-        link.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                removeButtonFromBg();
-                int state = WifiUtil.getWifiApState(mWifiManager);
-                if ((mWifiManager.getWifiState() == WIFI_STATE_DISABLING ||
-                        mWifiManager.getWifiState() == WIFI_STATE_DISABLED) &&
-                        (state == 10 || state == 11)) {
-                    showIsOpenWifiWindow(MainActivity.this, mContent, mWifiManager, mOnDismissListener);
-                } else {
-                    Intent intent = new Intent(MainActivity.this, LinkActivity.class);
-                    startActivity(intent);
-                    hideBackground();
-                }
-            }
-        });
-        FabMenuButtonBean send = new FabMenuButtonBean("send", R.drawable.bg_fab_send_btn);
-        send.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                removeButtonFromBg();
-                BaseFragment baseFragment = getCurFragmentByNavId(curFragmentNavId);
-                if (baseFragment != null && baseFragment.getSelectedNum() > 0) {
-                    devList.clear();
-                    devList.addAll(getDevList());
-                    if (devList.size() > 0) {
-                        //  showSelectDevWindow();
-                        showSelectDevWindow(MainActivity.this, mContent, devList, mOnDismissListener);
-                    } else {
-                        Toast.makeText(MainActivity.this, getString(R.string.no_link), Toast.LENGTH_SHORT).show();
-                        hideBackground();
-                    }
-                } else {
-                    Toast.makeText(MainActivity.this, getString(R.string.no_selected), Toast.LENGTH_SHORT).show();
-                    hideBackground();
-                }
-            }
-        });
-
-        fabBtnList.add(newDirectory);
-        fabBtnList.add(newFile);
-        fabBtnList.add(delete);
-        fabBtnList.add(link);
-        fabBtnList.add(send);
-    }
 
     /**
      * 修改 drawerlayout 的响应范围
@@ -441,90 +330,11 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
         return true;
     }
 
-    /**
-     * 算出第一个按钮的marginTop
-     *
-     * @param btnNum
-     * @param btnHeight
-     * @param margin    按钮间的margin
-     * @return
-     */
-    private int getFirstBtnMarTop(int btnNum, int btnHeight, int margin) {
-        if (btnNum % 2 == 0) {
-            return (1280- btnNum * btnHeight - (btnNum - 1) * margin) / 2;
-        } else {
-            return (1280 - btnHeight - (btnNum - 1) * (btnHeight + margin)) / 2;
-        }
-    }
-
-    private void showFabMenu() {
-        BaseFragment fragment = getCurFragmentByNavId(curFragmentNavId);
-        int num = fragment.getFabButtonNum();
-        int start = 5 - fragment.getFabButtonNum();
-        int firMargin = getFirstBtnMarTop(num, 120, 40);
-        Log.d(TAG, "showFabMenu: first:"+firMargin);
-        int marLeft = DimenUtil.getRealWidth(this, 768, 84);
-        for (int i = start; i < 5; i++) {
-            if (fabButton[i] == null) {
-                fabButton[i] = TextViewFactory.createTextView(MainActivity.this, fabBtnList.get(i));
-            }
-            FrameLayout.LayoutParams params = (FrameLayout.LayoutParams) fabButton[i].getLayoutParams();
-            params.setMargins(marLeft, DimenUtil.getRealHeight(MainActivity.this, 1280, (firMargin + (i - start) * 160)), 0, 0);
-            background.addView(fabButton[i]);
-        }
-    }
-
-    private void removeButtonFromBg() {
-        BaseFragment fragment = getCurFragmentByNavId(curFragmentNavId);
-        int start = 5 - fragment.getFabButtonNum();
-        for (int i = start; i < 5; i++) {
-            background.removeView(fabButton[i]);
-        }
-    }
-
-    /**
-     * 显示fabmenu 背景
-     */
-    private void showBackground() {
-        if (background == null) {
-            ViewGroup rootView = (ViewGroup) MainActivity.this.getWindow().getDecorView();
-            background = new FrameLayout(this);
-            FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(rootView.getWidth(), rootView.getHeight());
-            background.setLayoutParams(params);
-            background.setBackgroundColor(Color.TRANSPARENT);
-            background.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    if (isAnimating) return;
-                    //收起动画
-                    removeButtonFromBg();
-                    hideBackground();
-                }
-            });
-            rootView.addView(background);
-        }
-        background.setVisibility(View.VISIBLE);
-        AnimationManager.animate(background, "backgroundColor", 0, 1, new ArgbEvaluator(),
-                null, Color.TRANSPARENT, fabMenuBagColor);
-
-    }
-
-    private void hideBackground() {
-        background.setVisibility(View.GONE);
-        AnimationManager.animate(
-                background,
-                "backgroundColor",
-                0,
-                1,
-                new ArgbEvaluator(), null,
-                fabMenuBagColor,
-                Color.TRANSPARENT);
-    }
 
     /**
      * 显示新建文件夹窗口 type=1
      */
-    private void showFileWindow() {
+    public void showFileWindow(int t) {
         if (createFile == null) {
             View window = LayoutInflater.from(this).inflate(R.layout.popup_window_new_file, null);
             newTitle = (TextView) window.findViewById(R.id.pop_new_file_title);
@@ -538,31 +348,53 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
                     ViewGroup.LayoutParams.WRAP_CONTENT);
             createFile.setFocusable(true);
             createFile.setBackgroundDrawable(new ColorDrawable(0x000000));
-            createFile.setOnDismissListener(new popOnDismissListener());
+            createFile.setOnDismissListener(new PopupWindow.OnDismissListener() {
+                @Override
+                public void onDismiss() {
+                    hideBackground();
+                }
+            });
+            newName.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+                @Override
+                public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+                    if (actionId == EditorInfo.IME_ACTION_DONE) {
+                        newFile();
+                        return true;
+                    }
+                    return false;
+                }
+            });
+            suffix.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+                @Override
+                public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+                    if (actionId == EditorInfo.IME_ACTION_DONE) {
+                        newFile();
+                    }
+                    return true;
+                }
+            });
             cancel.setOnClickListener(this);
             sure.setOnClickListener(this);
         }
+        type = t;
+        newName.setText("");
+        suffix.setText("");
         if (type == 1) {
             newTitle.setText(getString(newDirectory));
             newName.setWidth(DimenUtil.getRealWidth(this, 768, 580));
+            newName.setImeOptions(EditorInfo.IME_ACTION_DONE);
             suffix.setVisibility(View.GONE);
             point.setVisibility(View.GONE);
         } else {
             newTitle.setText(getString(newFile));
             newName.setWidth(DimenUtil.getRealWidth(this, 768, 470));
+            newName.setImeOptions(EditorInfo.IME_ACTION_NEXT);
             suffix.setVisibility(View.VISIBLE);
             point.setVisibility(View.VISIBLE);
         }
         createFile.showAtLocation(mContent, Gravity.CENTER, 0, 0);
     }
 
-
-    private List<DevBean> getDevList() {
-        if (conManager == null) {
-            conManager = Manager.getManager();
-        }
-        return conManager.getLinkingDev();
-    }
 
     @Override
     public void onClick(View v) {
@@ -573,8 +405,11 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
                     mAppFragment.finishDelMode();
                     changeFabBtnImage(true);
                 } else {
-                    showBackground();
-                    showFabMenu();
+                    curFragment = getCurFragmentByNavId(curFragmentNavId);
+                    if (curFragment != null) {
+                        setFabButtonSize(curFragment.getFabButtonNum());
+                        showBackground();
+                    }
                 }
                 break;
             case R.id.pop_new_file_cancel:
@@ -609,17 +444,6 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        if (fabBtnList != null) {
-            fabBtnList.clear();
-            fabBtnList = null;
-        }
-        if (devList != null) {
-            devList.clear();
-            devList = null;
-        }
-        if (fabButton != null) {
-            fabButton = null;
-        }
     }
 
     /**
@@ -630,6 +454,7 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
         if (TextUtils.isEmpty(fileName)) {
             Toast.makeText(MainActivity.this, getResources().getString(R.string.file_name_can_not_empty), Toast.LENGTH_SHORT).show();
         } else {
+            StringBuilder builder = new StringBuilder();
             filePath = mFileFragment.getCurrentPath();
             if (type == 1) {
                 result = FileUtil.newDirectory(fileName, filePath);
@@ -638,7 +463,11 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
                 if (TextUtils.isEmpty(fileSuffix)) {
                     Toast.makeText(MainActivity.this, getResources().getString(R.string.file_suffix_can_not_empty), Toast.LENGTH_SHORT).show();
                 } else {
-                    result = FileUtil.newFile(fileName, filePath, fileSuffix);
+                    builder.append(fileName);
+                    builder.append(".");
+                    builder.append(fileSuffix);
+                    fileName = builder.toString();
+                    result = FileUtil.newFile(fileName, filePath);
                 }
             }
             if (result) {
@@ -678,22 +507,24 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
         }
     }
 
+    @Override
+    public void deleteFile() {
+        curFragment = getCurFragmentByNavId(curFragmentNavId);
+        if (curFragment != null) {
+            curFragment.deleteFile();
+        }
+    }
+
+    @Override
+    public int getSelectedSize() {
+        return getCurFragmentByNavId(curFragmentNavId).getSelectedNum();
+    }
 
     @Override
     public void sendFile(List<DevBean> list) {
-        super.sendFile(list);
-        BaseFragment baseFragment = getCurFragmentByNavId(curFragmentNavId);
-        baseFragment.sendFile(list);
-    }
-
-    /**
-     * 监听popWindow dismiss
-     */
-    private class popOnDismissListener implements PopupWindow.OnDismissListener {
-
-        @Override
-        public void onDismiss() {
-            hideBackground();
+        curFragment = getCurFragmentByNavId(curFragmentNavId);
+        if (curFragment != null) {
+            curFragment.sendFile(list);
         }
     }
 }

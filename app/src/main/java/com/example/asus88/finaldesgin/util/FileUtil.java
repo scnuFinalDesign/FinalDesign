@@ -210,9 +210,9 @@ public class FileUtil {
      * @param suffix   后缀
      * @return
      */
-    public static boolean newFile(String fileName, String filePath, String suffix) {
+    public static boolean newFile(String fileName, String filePath) {
         Boolean flag = false;
-        File file = new File(filePath, fileName + "." + suffix);
+        File file = new File(filePath, fileName );
         if (file.exists()) {
             return false;
         }

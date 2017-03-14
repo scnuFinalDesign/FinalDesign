@@ -18,6 +18,7 @@
         android:layout_height="90px"
         android:layout_below="@+id/pop_new_file_title"
         android:layout_marginLeft="40px"
+        android:inputType="text"
         android:layout_marginTop="20px"
         android:textSize="16sp"/>
 
@@ -37,8 +38,10 @@
         android:layout_height="90px"
         android:layout_below="@+id/pop_new_file_title"
         android:layout_marginRight="40px"
+        android:inputType="text"
         android:layout_marginTop="20px"
         android:layout_toEndOf="@+id/pop_new_file_point_image"
+        android:imeOptions="actionDone"
         android:textSize="16sp"
         android:visibility="gone"
         />
@@ -60,7 +63,7 @@
         android:layout_alignParentEnd="true"
         android:layout_below="@+id/pop_new_file_name"
         android:layout_marginTop="20px"
-        android:text="@string/sure"
         android:background="@drawable/bg_new_sure_btn"
+        android:text="@string/sure"
         android:textColor="@color/sure_text_color"/>
 </RelativeLayout>

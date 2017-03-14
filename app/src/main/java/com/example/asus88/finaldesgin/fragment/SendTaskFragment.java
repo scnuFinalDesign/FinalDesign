@@ -85,6 +85,7 @@ public class SendTaskFragment extends Fragment implements Manager.onSendTaskList
     @Override
     public void onSendTaskChane(Transfer transfer, Task task, int action) {
         Log.d(TAG, "onSendTaskChane: " + action);
+        //// TODO: 2017/3/14  多人传输有bug 
         String mac = transfer.getRemoteDev().mac;
         int pos = 0;
         ReceiverBean rBean = null;
