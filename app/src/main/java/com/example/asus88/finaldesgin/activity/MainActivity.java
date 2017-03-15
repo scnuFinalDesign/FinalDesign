@@ -441,10 +441,6 @@ public class MainActivity extends EBaseActivity implements NavigationView.OnNavi
         }
     }
 
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-    }
 
     /**
      * 新建文件/文件夹

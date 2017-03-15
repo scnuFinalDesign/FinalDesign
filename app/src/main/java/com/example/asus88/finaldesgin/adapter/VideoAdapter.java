@@ -1,6 +1,8 @@
 package com.example.asus88.finaldesgin.adapter;
 
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.os.AsyncTask;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -10,12 +12,15 @@ import android.widget.CompoundButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.bumptech.glide.Glide;
 import com.example.asus88.finaldesgin.R;
 import com.example.asus88.finaldesgin.bean.VideoBean;
+import com.example.asus88.finaldesgin.util.BitmapUtil;
 import com.example.asus88.finaldesgin.util.ListUtil;
 import com.example.asus88.finaldesgin.util.LogUtil;
 import com.zhy.autolayout.utils.AutoUtils;
 
+import java.lang.ref.WeakReference;
 import java.util.List;
 
 /**
@@ -69,7 +74,12 @@ public class VideoAdapter extends RecyclerView.Adapter<VideoAdapter.MyViewHolder
         holder.name.setText(bean.getName());
         holder.size.setText(bean.getSize());
         holder.duration.setText(bean.getDuration());
-        holder.image.setImageBitmap(bean.getBitmap());
+        if (bean.getBitmap() == null) {
+            AsyncByteTask task = new AsyncByteTask(holder, mContext);
+            task.execute(bean.getPath());
+        } else {
+            Glide.with(mContext).load(bean.getBitmap()).thumbnail(0.1f).into(holder.image);
+        }
         holder.selected.setChecked(bean.isSelected());
 
     }
@@ -108,6 +118,33 @@ public class VideoAdapter extends RecyclerView.Adapter<VideoAdapter.MyViewHolder
                     bean.setSelected(isChecked);
                 }
             });
+        }
+    }
+
+    class AsyncByteTask extends AsyncTask<String, Void, byte[]> {
+        private MyViewHolder mHolder;
+        private WeakReference<Context> context;
+        private String path;
+
+        public AsyncByteTask(MyViewHolder holder, Context context) {
+            mHolder = holder;
+            this.context = new WeakReference<Context>(context);
+        }
+
+        @Override
+        protected byte[] doInBackground(String... params) {
+            path = params[0];
+            Bitmap bitmap = BitmapUtil.getVideoThumbnail(path, context.get().getResources());
+            return BitmapUtil.bitmapToByteArray(bitmap);
+        }
+
+        @Override
+        protected void onPostExecute(byte[] bytes) {
+            super.onPostExecute(bytes);
+            if (mHolder != null && bytes != null) {
+                mHolder.bean.setBitmap(bytes);
+                Glide.with(context.get()).load(bytes).thumbnail(0.1f).into(mHolder.image);
+            }
         }
     }
 }

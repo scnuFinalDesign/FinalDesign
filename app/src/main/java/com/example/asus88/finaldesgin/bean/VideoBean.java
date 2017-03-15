@@ -1,14 +1,12 @@
 package com.example.asus88.finaldesgin.bean;
 
-import android.graphics.Bitmap;
-
 /**
  * Created by asus88 on 2016/12/22.
  */
 
 public class VideoBean extends Bean {
     private String duration;
-    private Bitmap bitmap;
+    private byte[] bitmap;
 
     public String getDuration() {
         return duration;
@@ -18,11 +16,11 @@ public class VideoBean extends Bean {
         this.duration = duration;
     }
 
-    public Bitmap getBitmap() {
+    public byte[] getBitmap() {
         return bitmap;
     }
 
-    public void setBitmap(Bitmap bitmap) {
+    public void setBitmap(byte[] bitmap) {
         this.bitmap = bitmap;
     }
 }

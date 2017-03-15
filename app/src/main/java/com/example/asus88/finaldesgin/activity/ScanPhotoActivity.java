@@ -57,7 +57,7 @@ public class ScanPhotoActivity extends BaseActivity {
             PhotoView photoView = new PhotoView(this);
             photoView.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
                     ViewGroup.LayoutParams.WRAP_CONTENT));
-            Glide.with(this).load(list.get(i).getPath()).into(photoView);
+            Glide.with(this).load(list.get(i).getPath()).thumbnail(0.1f).into(photoView);
             photoList.add(photoView);
         }
         mAdapter = new ScanPhotoAdapter(this, photoList);

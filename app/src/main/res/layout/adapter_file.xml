@@ -25,7 +25,7 @@
         android:layout_centerVertical="true"
         android:layout_marginStart="30px"
         android:background="@drawable/bg_ic_file"
-        android:scaleType="centerInside"/>
+        />
 
     <TextView
         android:id="@+id/file_adapter_size"

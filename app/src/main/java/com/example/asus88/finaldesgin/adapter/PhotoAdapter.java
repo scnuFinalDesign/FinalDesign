@@ -41,12 +41,12 @@ public class PhotoAdapter extends RecyclerView.Adapter<PhotoAdapter.MyViewHolder
 
     @Override
     public MyViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        final MyViewHolder holder=new MyViewHolder(LayoutInflater.from(mContext).inflate(R.layout.adapter_photo, parent, false));
+        final MyViewHolder holder = new MyViewHolder(LayoutInflater.from(mContext).inflate(R.layout.adapter_photo, parent, false));
         if (mOnItemClickListener != null) {
             holder.itemView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    mOnItemClickListener.onItemClick(holder.image,holder.getLayoutPosition());
+                    mOnItemClickListener.onItemClick(holder.image, holder.getLayoutPosition());
                 }
             });
         } else {
@@ -58,8 +58,8 @@ public class PhotoAdapter extends RecyclerView.Adapter<PhotoAdapter.MyViewHolder
     @Override
     public void onBindViewHolder(MyViewHolder holder, final int position) {
         final PhotoBean bean = list.get(position);
-        holder.bean=bean;
-        Glide.with(mContext).load(bean.getPath()).into(holder.image);
+        holder.bean = bean;
+        Glide.with(mContext).load(bean.getPath()).thumbnail(0.1f).into(holder.image);
     }
 
     @Override
@@ -68,10 +68,10 @@ public class PhotoAdapter extends RecyclerView.Adapter<PhotoAdapter.MyViewHolder
     }
 
     public interface onItemClickListener {
-        void onItemClick(View view,int position);
+        void onItemClick(View view, int position);
     }
 
-  public static class MyViewHolder extends RecyclerView.ViewHolder {
+    public static class MyViewHolder extends RecyclerView.ViewHolder {
         ImageView image;
         CheckBox isSelected;
         PhotoBean bean;

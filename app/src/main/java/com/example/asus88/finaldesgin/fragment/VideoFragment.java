@@ -1,12 +1,7 @@
 package com.example.asus88.finaldesgin.fragment;
 
 import android.content.ContentResolver;
-import android.content.res.Resources;
 import android.database.Cursor;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.Matrix;
-import android.media.MediaMetadataRetriever;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -106,7 +101,6 @@ public class VideoFragment extends BaseFragment implements VideoAdapter.onItemCl
                     bean.setPath(c.getString(c.getColumnIndexOrThrow(MediaStore.Audio.Media.DATA)));
                     bean.setSize(Utils.changeSize(Long.parseLong(size)));
                     bean.setDuration(TimeUtil.ms2Time(c.getString(c.getColumnIndexOrThrow(MediaStore.Video.Media.DURATION))));
-                    bean.setBitmap(getVideoThumbnail(bean.getPath(), mView.getResources()));
                     mVideoBeanList.add(bean);
                 }
             }
@@ -114,46 +108,6 @@ public class VideoFragment extends BaseFragment implements VideoAdapter.onItemCl
         c.close();
     }
 
-    /**
-     * 返回视频缩略图
-     *
-     * @param filePath
-     * @param resources
-     * @return
-     */
-    private Bitmap getVideoThumbnail(String filePath, Resources resources) {
-        Bitmap bitmap = null;
-        MediaMetadataRetriever retriever = new MediaMetadataRetriever();
-        try {
-            retriever.setDataSource(filePath);
-            bitmap = retriever.getFrameAtTime();
-        } catch (IllegalArgumentException e) {
-            e.printStackTrace();
-        } catch (RuntimeException e) {
-            e.printStackTrace();
-        } finally {
-            try {
-                retriever.release();
-            } catch (RuntimeException e) {
-                e.printStackTrace();
-            }
-        }
-        if (bitmap == null)
-            bitmap = BitmapFactory.decodeResource(resources, R.mipmap.ic_launcher);
-        bitmap = resizeBitmap(bitmap);
-        return bitmap;
-    }
-
-    private Bitmap resizeBitmap(Bitmap bitmap) {
-        if (bitmap.getWidth() < bitmap.getHeight()) {
-            float x = (float) bitmap.getHeight() / (float) bitmap.getWidth();
-            Matrix matrix = new Matrix();
-            matrix.postScale(x, 1);
-            Bitmap resizeBmp = Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, true);
-            return resizeBmp;
-        }
-        return bitmap;
-    }
 
     @Override
     public void onItemClick(int position) {
