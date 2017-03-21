@@ -35,7 +35,7 @@ public class FileItemDirection extends RecyclerView.ItemDecoration {
 
     private void drawHorizontal(Canvas c, RecyclerView parent) {
         final int top = parent.getPaddingTop()+mTopMargin;
-        final int bottom = parent.getHeight() - parent.getPaddingBottom()-mTopMargin;
+        final int bottom = parent.getHeight() - parent.getPaddingBottom()-2*mTopMargin;
         final int childCount = parent.getChildCount();
         for (int i = 0; i < childCount - 1; i++) {
             final View child = parent.getChildAt(i);

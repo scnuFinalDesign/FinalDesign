@@ -10,7 +10,7 @@
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="120px"
-        android:background="@color/black">
+        android:background="@color/colorPrimary">
 
         <ImageView
             android:id="@+id/link_act_back"

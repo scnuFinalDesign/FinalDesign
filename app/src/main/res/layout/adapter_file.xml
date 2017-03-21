@@ -15,7 +15,7 @@
         android:layout_marginEnd="20px"
         android:background="@drawable/radio_button_style"
         android:button="@null"
-        />
+        android:layout_marginRight="20px"/>
 
     <ImageView
         android:id="@+id/file_adapter_image"
@@ -25,14 +25,16 @@
         android:layout_centerVertical="true"
         android:layout_marginStart="30px"
         android:background="@drawable/bg_ic_file"
-        />
+        android:layout_alignParentLeft="true"
+        android:layout_marginLeft="30px"/>
 
     <TextView
         android:id="@+id/file_adapter_size"
         android:layout_width="200px"
         android:layout_height="40px"
         android:layout_alignStart="@+id/file_adapter_name"
-        android:layout_marginTop="50px"/>
+        android:layout_marginTop="50px"
+        android:layout_alignLeft="@+id/file_adapter_name"/>
 
     <TextView
         android:id="@+id/file_adapter_modify"
@@ -42,7 +44,9 @@
         android:layout_alignBottom="@+id/file_adapter_size"
         android:layout_marginEnd="15dp"
         android:layout_toStartOf="@+id/file_adapter_checkBox"
-        android:textSize="12sp"/>
+        android:textSize="12sp"
+        android:layout_marginRight="15dp"
+        android:layout_toLeftOf="@+id/file_adapter_checkBox"/>
 
     <TextView
         android:id="@+id/file_adapter_name"

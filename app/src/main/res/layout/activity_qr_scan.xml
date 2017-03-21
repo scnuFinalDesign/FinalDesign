@@ -1,30 +1,33 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-                android:id="@+id/capture_containter"
+<RelativeLayout android:id="@+id/capture_containter"
+                xmlns:android="http://schemas.android.com/apk/res/android"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent" >
+                android:layout_height="match_parent"
+    >
+
 
     <SurfaceView
         android:id="@+id/capture_preview"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:layout_height="match_parent"/>
 
     <ImageView
         android:id="@+id/top_mask"
         android:layout_width="match_parent"
         android:layout_height="100dp"
+        android:layout_above="@+id/capture_crop_layout"
         android:layout_alignParentTop="true"
         android:background="@drawable/scan_mask"
-        android:contentDescription="@string/app_name" />
+        android:contentDescription="@string/app_name"/>
 
     <RelativeLayout
         android:id="@+id/capture_crop_layout"
         android:layout_width="200dp"
         android:layout_height="200dp"
-        android:layout_below="@id/top_mask"
         android:layout_centerHorizontal="true"
+        android:layout_centerVertical="true"
         android:background="@drawable/capture"
-        android:contentDescription="@string/app_name" >
+        android:contentDescription="@string/app_name">
 
         <ImageView
             android:id="@+id/capture_scan_line"
@@ -33,7 +36,7 @@
             android:layout_alignParentTop="true"
             android:layout_margin="5dp"
             android:background="@drawable/scan_line"
-            android:contentDescription="@string/app_name" />
+            android:contentDescription="@string/app_name"/>
     </RelativeLayout>
 
     <ImageView
@@ -43,7 +46,7 @@
         android:layout_alignParentBottom="true"
         android:layout_below="@id/capture_crop_layout"
         android:background="@drawable/scan_mask"
-        android:contentDescription="@string/app_name" />
+        android:contentDescription="@string/app_name"/>
 
     <ImageView
         android:id="@+id/left_mask"
@@ -54,7 +57,7 @@
         android:layout_below="@id/top_mask"
         android:layout_toLeftOf="@id/capture_crop_layout"
         android:background="@drawable/scan_mask"
-        android:contentDescription="@string/app_name" />
+        android:contentDescription="@string/app_name"/>
 
     <ImageView
         android:id="@+id/right_mask"
@@ -65,7 +68,7 @@
         android:layout_below="@id/top_mask"
         android:layout_toRightOf="@id/capture_crop_layout"
         android:background="@drawable/scan_mask"
-        android:contentDescription="@string/app_name" />
+        android:contentDescription="@string/app_name"/>
 
     <TextView
         android:layout_width="wrap_content"
@@ -75,6 +78,29 @@
         android:layout_marginTop="50dp"
         android:text="@string/scan_tips"
         android:textColor="@android:color/white"
-        android:textSize="15sp" />
+        android:textSize="15sp"/>
+    <FrameLayout
+        android:id="@+id/qr_scan_act_toolbar"
+        android:layout_width="match_parent"
+        android:layout_marginTop="@dimen/toolbar_margin_top"
+        android:layout_height="56dp"
+        >
 
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:text="@string/qr_code"
+            android:textColor="@color/white"
+            android:textSize="18sp"/>
+
+        <ImageView
+            android:id="@+id/qr_scan_act_back"
+            android:layout_width="40dp"
+            android:layout_marginLeft="10dp"
+            android:layout_height="40dp"
+            android:layout_gravity="left|center_vertical"
+            android:scaleType="centerInside"
+            android:src="@mipmap/icon_white_back"/>
+    </FrameLayout>
 </RelativeLayout>

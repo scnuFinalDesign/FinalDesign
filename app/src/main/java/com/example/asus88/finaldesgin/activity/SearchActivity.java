@@ -1,53 +1,38 @@
 package com.example.asus88.finaldesgin.activity;
 
-import android.content.Context;
-import android.content.Intent;
-import android.graphics.Rect;
-import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.FragmentTransaction;
 import android.text.TextUtils;
 import android.transition.Transition;
-import android.view.Gravity;
 import android.view.KeyEvent;
+import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
-import android.view.Window;
 import android.view.inputmethod.EditorInfo;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
-import android.widget.PopupWindow;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.asus88.finaldesgin.R;
-import com.example.asus88.finaldesgin.TextViewFactory;
 import com.example.asus88.finaldesgin.bean.DevBean;
-import com.example.asus88.finaldesgin.bean.FabMenuButtonBean;
 import com.example.asus88.finaldesgin.bean.FileBean;
-import com.example.asus88.finaldesgin.connection.Dev;
-import com.example.asus88.finaldesgin.connection.Manager;
 import com.example.asus88.finaldesgin.fragment.FileFragment;
-import com.example.asus88.finaldesgin.util.DimenUtil;
+import com.example.asus88.finaldesgin.myViews.LVBlock;
 import com.example.asus88.finaldesgin.util.FileUtil;
-import com.example.asus88.finaldesgin.util.WifiUtil;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 
-import static android.R.attr.button;
-import static android.net.wifi.WifiManager.WIFI_STATE_DISABLED;
-import static android.net.wifi.WifiManager.WIFI_STATE_DISABLING;
+import static com.example.asus88.finaldesgin.R.string.loading;
 
-public class SearchActivity extends EBaseActivity implements View.OnClickListener {
+public class SearchActivity extends EBaseActivity implements View.OnClickListener, FileFragment.onSearchingListener {
     private static final String TAG = "SearchActivity";
 
     @BindView(R.id.search_act_back)
@@ -65,6 +50,9 @@ public class SearchActivity extends EBaseActivity implements View.OnClickListene
     private List<FileBean> fileList;
     private String content;
     private FileFragment mFileFragment;
+
+    private RelativeLayout loadingLayout;
+    private LVBlock loadingView;
 
 
     @Override
@@ -121,6 +109,7 @@ public class SearchActivity extends EBaseActivity implements View.OnClickListene
             bundle.putBoolean("isSearch", true);
             mFileFragment = new FileFragment();
             mFileFragment.setArguments(bundle);
+            mFileFragment.setOnSearchingListener(this);
         }
         FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
         transaction.replace(R.id.search_act_file_content, mFileFragment);
@@ -151,6 +140,7 @@ public class SearchActivity extends EBaseActivity implements View.OnClickListene
                 if (actionId == EditorInfo.IME_ACTION_SEARCH) {
                     content = mSearchContent.getText().toString();
                     if (!TextUtils.isEmpty(content)) {
+                        showLoadingLayout();
                         new Thread(new Runnable() {
                             @Override
                             public void run() {
@@ -205,5 +195,28 @@ public class SearchActivity extends EBaseActivity implements View.OnClickListene
     @Override
     public int getSelectedSize() {
         return mFileFragment.getSelectedNum();
+    }
+
+    private void showLoadingLayout() {
+        if (loadingLayout == null) {
+            loadingLayout = (RelativeLayout) LayoutInflater.from(this).inflate(R.layout.view_loading, null);
+            loadingView = (LVBlock) loadingLayout.findViewById(R.id.loading_view);
+            TextView textView = (TextView) loadingLayout.findViewById(R.id.loading_text);
+            textView.setText(getString(R.string.searching));
+        }
+        mFileContent.addView(loadingLayout);
+        loadingView.startAnim();
+        mFab.setVisibility(View.GONE);
+    }
+
+    private void hideLoadingLayout() {
+        loadingView.stopAnim();
+        mFileContent.removeView(loadingLayout);
+        mFab.setVisibility(View.VISIBLE);
+    }
+
+    @Override
+    public void onSearchedFinish() {
+        hideLoadingLayout();
     }
 }

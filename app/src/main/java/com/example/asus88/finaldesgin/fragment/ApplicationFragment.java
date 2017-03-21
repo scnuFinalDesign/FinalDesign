@@ -15,12 +15,14 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.RelativeLayout;
 
 import com.example.asus88.finaldesgin.R;
 import com.example.asus88.finaldesgin.activity.MainActivity;
 import com.example.asus88.finaldesgin.adapter.ApplicationAdapter;
 import com.example.asus88.finaldesgin.bean.ApplicationBean;
 import com.example.asus88.finaldesgin.bean.Bean;
+import com.example.asus88.finaldesgin.myViews.LVBlock;
 import com.example.asus88.finaldesgin.util.FileUtil;
 
 import java.util.ArrayList;
@@ -41,11 +43,15 @@ public class ApplicationFragment extends BaseFragment implements ApplicationAdap
     private ApplicationBean bean;
     private String path;
     private int uninstallPosition;
+    private RelativeLayout loadingLayout;
+    private LVBlock loadingView;
 
     private Handler mHandler = new Handler() {
         public void handleMessage(Message msg) {
             switch (msg.what) {
                 case 1:
+                    loadingView.stopAnim();
+                    loadingLayout.setVisibility(View.GONE);
                     mAdapter.notifyDataSetChanged();
             }
         }
@@ -62,6 +68,9 @@ public class ApplicationFragment extends BaseFragment implements ApplicationAdap
         mAdapter.setOnItemClickListener(this);
         mRecyclerView.setLayoutManager(new GridLayoutManager(mView.getContext(), 3));
         mRecyclerView.setAdapter(mAdapter);
+        loadingLayout = (RelativeLayout) mView.findViewById(R.id.loading_layout);
+        loadingView = (LVBlock) mView.findViewById(R.id.loading_view);
+        loadingView.startAnim();
         new Thread(new Runnable() {
             @Override
             public void run() {
@@ -77,9 +86,9 @@ public class ApplicationFragment extends BaseFragment implements ApplicationAdap
     @Override
     public void onDestroy() {
         super.onDestroy();
-        if(mApplicationBeanList!=null){
+        if (mApplicationBeanList != null) {
             mApplicationBeanList.clear();
-            mApplicationBeanList=null;
+            mApplicationBeanList = null;
         }
     }
 
@@ -164,7 +173,7 @@ public class ApplicationFragment extends BaseFragment implements ApplicationAdap
 
     @Override
     public void setAllUnSelected() {
-        for (int i = 0 ;i < mApplicationBeanList.size(); i++) {
+        for (int i = 0; i < mApplicationBeanList.size(); i++) {
             mApplicationBeanList.get(i).setSelected(false);
         }
     }

@@ -42,4 +42,7 @@
     <string name="transition_scan">scan</string>
     <string name="transition_search">search</string>
     <string name="set_storePath">接收路径</string>
+    <string name="qr_code">二维码</string>
+    <string name="loading">加载中...</string>
+    <string name="searching">搜索中...</string>
 </resources>

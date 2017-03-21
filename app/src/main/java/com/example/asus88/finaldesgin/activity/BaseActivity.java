@@ -16,6 +16,7 @@ import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.Button;
+import android.widget.LinearLayout;
 import android.widget.PopupWindow;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
@@ -45,7 +46,6 @@ public class BaseActivity extends AutoLayoutActivity {
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
     }
 
     /**
@@ -120,6 +120,10 @@ public class BaseActivity extends AutoLayoutActivity {
             mSelectDevAdapter = new SelectDevAdapter(context, devList);
             devRecycler.setLayoutManager(new LinearLayoutManager(context));
             devRecycler.setAdapter(mSelectDevAdapter);
+            if(devList.size()>3){
+                devRecycler.setLayoutParams(new LinearLayout.LayoutParams( LinearLayout.LayoutParams.MATCH_PARENT,
+                        DimenUtil.getRealHeight(context, 1280, 330)));
+            }
             devRecycler.addItemDecoration(new LineItemDecoration(context, 20, 20, R.drawable.line_item_decoration));
             Button cancel = (Button) window.findViewById(R.id.pop_select_dev_cancel);
             Button sure = (Button) window.findViewById(R.id.pop_select_dev_sure);
@@ -148,12 +152,19 @@ public class BaseActivity extends AutoLayoutActivity {
                 }
             });
             selectDev = new PopupWindow(window, DimenUtil.getRealWidth(context, 768, 600),
-                    RelativeLayout.LayoutParams.WRAP_CONTENT);
+                    LinearLayout.LayoutParams.WRAP_CONTENT);
             selectDev.setFocusable(true);
             selectDev.setBackgroundDrawable(new ColorDrawable(0x000000));
             selectDev.setOnDismissListener(dismissListener);
         } else {
             mSelectDevAdapter.notifyDataSetChanged();
+        if(devList.size()>3){
+            devRecycler.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT,
+                    DimenUtil.getRealHeight(context, 1280, 300)));
+        }else{
+            devRecycler.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT,
+                    RelativeLayout.LayoutParams.WRAP_CONTENT));
+        }
         }
         selectDev.showAtLocation(view, Gravity.CENTER, 0, 0);
     }

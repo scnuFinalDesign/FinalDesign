@@ -43,7 +43,6 @@ public class SendTaskFragment extends Fragment implements Manager.onSendTaskList
             switch (msg.what) {
                 case 1:
                     mAdapter.notifyDataSetChanged();
-                    Log.d(TAG, "handleMessage: " + taskList.size());
                     break;
             }
         }
@@ -84,7 +83,6 @@ public class SendTaskFragment extends Fragment implements Manager.onSendTaskList
 
     @Override
     public void onSendTaskChane(Transfer transfer, Task task, int action) {
-        Log.d(TAG, "onSendTaskChane: " + action);
         //// TODO: 2017/3/14  多人传输有bug 
         String mac = transfer.getRemoteDev().mac;
         int pos = 0;
@@ -109,13 +107,12 @@ public class SendTaskFragment extends Fragment implements Manager.onSendTaskList
                 taskList.add(rBean);
                 pos = taskList.size();
             }
-            Log.d(TAG, "onSendTaskChane: " + rBean.getName());
             switch (action) {
                 case 0:
                     rBean.setSendList(null);
                     break;
                 case 1:
-                    rBean.getSendList().add(task);
+                    //   rBean.getSendList().add(task);
                     break;
                 default:
                     break;
@@ -129,9 +126,7 @@ public class SendTaskFragment extends Fragment implements Manager.onSendTaskList
                 });
             } else if (rBean.isExpand()) {
                 if (action == 1) {
-                    Log.d(TAG, "onSendTaskChane: pos:" + pos);
-                    pos = +rBean.getSendList().size();
-                    Log.d(TAG, "onSendTaskChane: calsize" + pos);
+                    pos = pos + rBean.getSendList().size();
                     taskList.add(pos, task);
                 }
                 getActivity().runOnUiThread(new Runnable() {
@@ -153,6 +148,7 @@ public class SendTaskFragment extends Fragment implements Manager.onSendTaskList
             ReceiverBean rBean = ((ReceiverBean) (taskList.get(position)));
             Log.d(TAG, "onReceiverItemClick: " + rBean.getName());
             List<Task> tList = rBean.getSendList();
+            Log.d(TAG, "onReceiverItemClick: send list size:" + tList.size());
             if (!rBean.isExpand()) {
                 rBean.setExpand(true);
                 taskList.addAll(position + 1, tList);

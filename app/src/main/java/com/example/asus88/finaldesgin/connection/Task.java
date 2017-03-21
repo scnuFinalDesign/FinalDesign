@@ -60,7 +60,7 @@ public class Task extends SendTakBean {
             return false;
         }
 
-        if (path.equals(((Task) o).path) && type == ((Task) o).type && remoteID == ((Task) o).remoteID)
+        if (path.equals(((Task) o).path) && type == ((Task) o).type && getDev() == ((Task) o).getDev())
             return true;
         else return false;
     }

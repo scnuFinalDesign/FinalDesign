@@ -12,12 +12,14 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.RelativeLayout;
 
 import com.example.asus88.finaldesgin.R;
 import com.example.asus88.finaldesgin.adapter.VideoAdapter;
 import com.example.asus88.finaldesgin.bean.Bean;
 import com.example.asus88.finaldesgin.bean.VideoBean;
 import com.example.asus88.finaldesgin.itemDecoration.LineItemDecoration;
+import com.example.asus88.finaldesgin.myViews.LVBlock;
 import com.example.asus88.finaldesgin.util.FileUtil;
 import com.example.asus88.finaldesgin.util.LogUtil;
 import com.example.asus88.finaldesgin.util.TimeUtil;
@@ -41,10 +43,14 @@ public class VideoFragment extends BaseFragment implements VideoAdapter.onItemCl
     private ContentResolver mResolver;
     private VideoBean bean;
     private String size;
+    private RelativeLayout loadingLayout;
+    private LVBlock loadingView;
     private Handler mHandler = new Handler() {
         public void handleMessage(Message msg) {
             switch (msg.what) {
                 case 1:
+                    loadingView.stopAnim();
+                    loadingLayout.setVisibility(View.GONE);
                     mAdapter.notifyDataSetChanged();
                     break;
             }
@@ -64,6 +70,9 @@ public class VideoFragment extends BaseFragment implements VideoAdapter.onItemCl
         mRecyclerView.setLayoutManager(new LinearLayoutManager(mView.getContext()));
         mRecyclerView.addItemDecoration(new LineItemDecoration(getContext(), 280, 20, R.drawable.line_item_decoration));
         mRecyclerView.setAdapter(mAdapter);
+        loadingLayout = (RelativeLayout) mView.findViewById(R.id.loading_layout);
+        loadingView = (LVBlock) mView.findViewById(R.id.loading_view);
+        loadingView.startAnim();
         new Thread(new Runnable() {
             @Override
             public void run() {

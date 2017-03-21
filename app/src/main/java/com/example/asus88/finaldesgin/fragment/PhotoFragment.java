@@ -13,6 +13,7 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.RelativeLayout;
 
 import com.example.asus88.finaldesgin.R;
 import com.example.asus88.finaldesgin.activity.PhotoActivity;
@@ -20,6 +21,7 @@ import com.example.asus88.finaldesgin.adapter.PhotoGroupAdapter;
 import com.example.asus88.finaldesgin.bean.Bean;
 import com.example.asus88.finaldesgin.bean.PhotoBean;
 import com.example.asus88.finaldesgin.bean.PhotoGroupBean;
+import com.example.asus88.finaldesgin.myViews.LVBlock;
 import com.example.asus88.finaldesgin.util.Utils;
 
 import java.io.File;
@@ -40,7 +42,8 @@ public class PhotoFragment extends BaseFragment implements PhotoGroupAdapter.onI
     private RecyclerView mRecyclerView;
     private List<PhotoGroupBean> mPhotoBeanList;
     private PhotoGroupAdapter mAdapter;
-
+    private RelativeLayout loadingLayout;
+    private LVBlock loadingView;
     private ContentResolver mResolver;
     private String path;
     private String parentName;
@@ -50,6 +53,8 @@ public class PhotoFragment extends BaseFragment implements PhotoGroupAdapter.onI
         public void handleMessage(Message msg) {
             switch (msg.what) {
                 case 1:
+                    loadingView.stopAnim();
+                    loadingLayout.setVisibility(View.GONE);
                     mAdapter.notifyDataSetChanged();
                     break;
             }
@@ -62,6 +67,9 @@ public class PhotoFragment extends BaseFragment implements PhotoGroupAdapter.onI
         mView = inflater.inflate(R.layout.fragment_content, container, false);
         mRecyclerView = (RecyclerView) mView.findViewById(R.id.recyclerView);
         mPhotoBeanList = new ArrayList<>();
+        loadingLayout = (RelativeLayout) mView.findViewById(R.id.loading_layout);
+        loadingView = (LVBlock) mView.findViewById(R.id.loading_view);
+        loadingView.startAnim();
         new Thread(new Runnable() {
             @Override
             public void run() {

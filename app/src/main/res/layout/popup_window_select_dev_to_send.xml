@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:background="@color/white"
+              android:orientation="vertical"
     >
 
     <TextView
@@ -13,24 +14,24 @@
         android:paddingLeft="40px"
         android:text="@string/select_dev_to_send"
         android:textColor="@color/black"
-        android:drawableBottom="@drawable/line_item_decoration"
         android:textSize="18sp"/>
 
 
     <android.support.v7.widget.RecyclerView
         android:id="@+id/pop_select_dev_recyclerView"
         android:layout_width="600px"
-        android:layout_height="300px"
-        android:layout_below="@+id/pop_select_dev_title"
+        android:layout_height="wrap_content"
+        android:background="@drawable/bg_sel_dev_pop"
         android:padding="10px"/>
 
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
     <Button
         android:id="@+id/pop_select_dev_cancel"
         android:layout_width="300px"
         android:layout_height="100px"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true"
-        android:layout_below="@+id/pop_select_dev_recyclerView"
         android:background="@drawable/bg_new_sure_btn"
         android:text="@string/cancel"/>
 
@@ -38,9 +39,8 @@
         android:id="@+id/pop_select_dev_sure"
         android:layout_width="300px"
         android:layout_height="100px"
-        android:layout_below="@+id/pop_select_dev_recyclerView"
-        android:layout_toRightOf="@+id/pop_select_dev_cancel"
         android:background="@drawable/bg_new_sure_btn"
         android:text="@string/sure"
         android:textColor="@color/sure_text_color"/>
-</RelativeLayout>
+    </LinearLayout>
+</LinearLayout>

@@ -1,13 +1,16 @@
 package com.example.asus88.finaldesgin.activity;
 
+import android.animation.Animator;
+import android.animation.AnimatorSet;
+import android.animation.ObjectAnimator;
 import android.content.Context;
 import android.content.Intent;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
-import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.LinearInterpolator;
 import android.widget.FrameLayout;
 import android.widget.PopupWindow;
 import android.widget.TextView;
@@ -19,6 +22,7 @@ import com.example.asus88.finaldesgin.bean.DevBean;
 import com.example.asus88.finaldesgin.bean.FabMenuButtonBean;
 import com.example.asus88.finaldesgin.connection.Dev;
 import com.example.asus88.finaldesgin.connection.Manager;
+import com.example.asus88.finaldesgin.util.AnimationUtil;
 import com.example.asus88.finaldesgin.util.DimenUtil;
 import com.example.asus88.finaldesgin.util.WifiUtil;
 
@@ -43,6 +47,7 @@ public class EBaseActivity extends BaseActivity implements Manager.onDevMapChang
     private int oldSize;
     private List<FabMenuButtonBean> fabBtnList;
     private List<DevBean> devList;
+    private List<Animator> mAnimatorList;
     private int type;
     private int marLeft;
     private boolean isBackgroundShow;
@@ -57,8 +62,8 @@ public class EBaseActivity extends BaseActivity implements Manager.onDevMapChang
         fabButton = new TextView[5];
         mOnDismissListener = new popOnDismissListener();
         devList = new ArrayList<>();
+        mAnimatorList = new ArrayList<>();
         marLeft = DimenUtil.getRealWidth(this, 768, 84);
-
     }
 
     @Override
@@ -99,6 +104,10 @@ public class EBaseActivity extends BaseActivity implements Manager.onDevMapChang
             fabBtnList.clear();
             fabBtnList = null;
         }
+        if (mAnimatorList != null) {
+            mAnimatorList.clear();
+            mAnimatorList = null;
+        }
     }
 
     public void showBackground() {
@@ -110,14 +119,14 @@ public class EBaseActivity extends BaseActivity implements Manager.onDevMapChang
             background.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    removeFabButtonFromBg();
-                    hideBackground();
+                    hideButton(mAnimatorList);
                 }
             });
             initFabButton();
             rootView.addView(background);
         }
         addFabButtonToBg();
+        showButton(mAnimatorList);
         background.setVisibility(View.VISIBLE);
         isBackgroundShow = true;
     }
@@ -130,6 +139,7 @@ public class EBaseActivity extends BaseActivity implements Manager.onDevMapChang
     public void initFabButton() {
         fabBtnList = new ArrayList<>();
         FabMenuButtonBean newDirectory = new FabMenuButtonBean("newDirectory", R.drawable.bg_fab_new_btn);
+        newDirectory.setDrawableLeftId(R.mipmap.ic_folder_white);
         newDirectory.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -139,6 +149,7 @@ public class EBaseActivity extends BaseActivity implements Manager.onDevMapChang
             }
         });
         FabMenuButtonBean newFile = new FabMenuButtonBean("newFile", R.drawable.bg_fab_new_file_btn);
+        newFile.setDrawableLeftId(R.mipmap.ic_file_white);
         newFile.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -148,15 +159,16 @@ public class EBaseActivity extends BaseActivity implements Manager.onDevMapChang
             }
         });
         FabMenuButtonBean delete = new FabMenuButtonBean("delete", R.drawable.bg_fab_delete_btn);
+        delete.setDrawableLeftId(R.mipmap.ic_delete_white);
         delete.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                deleteFile();
-                removeFabButtonFromBg();
-                hideBackground();
+                deleteFile();;
+                hideButton(mAnimatorList);
             }
         });
         FabMenuButtonBean link = new FabMenuButtonBean("link", R.drawable.bg_fab_link_btn);
+        link.setDrawableLeftId(R.mipmap.ic_link_white);
         link.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -174,6 +186,7 @@ public class EBaseActivity extends BaseActivity implements Manager.onDevMapChang
             }
         });
         FabMenuButtonBean send = new FabMenuButtonBean("send", R.drawable.bg_fab_send_btn);
+        send.setDrawableLeftId(R.mipmap.ic_send_white);
         send.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -205,12 +218,12 @@ public class EBaseActivity extends BaseActivity implements Manager.onDevMapChang
         int start = 5 - fabButtonSize;
         int firMargin = getFirstBtnMarTop(fabButtonSize, 120, 40);
         boolean flag = false;
+        mAnimatorList.clear();
         if (oldSize != fabButtonSize) {
             flag = true;
             oldSize = fabButtonSize;
         }
         for (int i = start; i < 5; i++) {
-            Log.d(TAG, "addFabButtonToBg: i=" + i);
             if (fabButton[i] == null) {
                 fabButton[i] = TextViewFactory.createTextView(EBaseActivity.this, fabBtnList.get(i));
             }
@@ -218,6 +231,8 @@ public class EBaseActivity extends BaseActivity implements Manager.onDevMapChang
                 FrameLayout.LayoutParams params = (FrameLayout.LayoutParams) fabButton[i].getLayoutParams();
                 params.setMargins(marLeft, DimenUtil.getRealHeight(EBaseActivity.this, 1280, (firMargin + (i - start) * 160)), 0, 0);
             }
+            mAnimatorList.add(AnimationUtil.createAnimator(fabButton[i], "elevation", 0, 20));
+            mAnimatorList.add(AnimationUtil.createAnimator(fabButton[i], "alpha", 0, 1));
             background.addView(fabButton[i]);
         }
     }
@@ -242,6 +257,53 @@ public class EBaseActivity extends BaseActivity implements Manager.onDevMapChang
         for (int i = 5 - fabButtonSize; i < 5; i++) {
             background.removeView(fabButton[i]);
         }
+    }
+
+    private void showButton(List<Animator> list) {
+        AnimatorSet set = new AnimatorSet();
+        set.setDuration(500);
+        set.setInterpolator(new LinearInterpolator());
+        set.playTogether(list);
+        set.start();
+    }
+
+    private void hideButton(List<Animator> list) {
+        int length = list.size();
+        for (int i = 0; i < length; i++) {
+            ObjectAnimator animator = (ObjectAnimator) list.get(i);
+            if (i % 2 == 0) {
+                animator.setFloatValues(20, 0);
+            } else {
+                animator.setFloatValues(1, 0);
+            }
+        }
+        AnimatorSet set = new AnimatorSet();
+        set.setDuration(500);
+        set.setInterpolator(new LinearInterpolator());
+        set.playTogether(list);
+        set.start();
+        set.addListener(new Animator.AnimatorListener() {
+            @Override
+            public void onAnimationStart(Animator animation) {
+
+            }
+
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                removeFabButtonFromBg();
+                hideBackground();
+            }
+
+            @Override
+            public void onAnimationCancel(Animator animation) {
+
+            }
+
+            @Override
+            public void onAnimationRepeat(Animator animation) {
+
+            }
+        });
     }
 
     public boolean isBackgroundShow() {

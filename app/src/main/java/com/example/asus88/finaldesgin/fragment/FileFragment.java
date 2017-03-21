@@ -8,7 +8,6 @@ import android.support.annotation.Nullable;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -54,6 +53,8 @@ public class FileFragment extends BaseFragment implements FileAdapter.onItemClic
     private boolean isSearch;
     private List<FileBean> searchResultList;
 
+    private onSearchingListener mOnSearchingListener;
+
     private Comparator mComparator = new Comparator() {
         @Override
         public int compare(Object lhs, Object rhs) {
@@ -71,6 +72,12 @@ public class FileFragment extends BaseFragment implements FileAdapter.onItemClic
             switch (msg.what) {
                 case 1:
                     mAdapter.notifyDataSetChanged();
+                    break;
+                case 2:
+                    if (mOnSearchingListener != null) {
+                        mOnSearchingListener.onSearchedFinish();
+                        mAdapter.notifyDataSetChanged();
+                    }
                     break;
             }
         }
@@ -253,7 +260,7 @@ public class FileFragment extends BaseFragment implements FileAdapter.onItemClic
         mFileList.clear();
         mFileList.addAll(fileList);
         Message message = Message.obtain();
-        message.what = 1;
+        message.what = 2;
         mHandler.sendMessage(message);
     }
 
@@ -296,5 +303,13 @@ public class FileFragment extends BaseFragment implements FileAdapter.onItemClic
 
     public String getStorePath() {
         return locationList.get(locationList.size() - 1);
+    }
+
+    public void setOnSearchingListener(onSearchingListener onSearchingListener) {
+        mOnSearchingListener = onSearchingListener;
+    }
+
+    public interface onSearchingListener {
+        void onSearchedFinish();
     }
 }

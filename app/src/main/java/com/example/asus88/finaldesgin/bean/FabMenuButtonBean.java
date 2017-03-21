@@ -9,11 +9,20 @@ import android.view.View;
 public class FabMenuButtonBean {
     private String text;
     private int backgroundId;
+    private int drawableLeftId;
     private View.OnClickListener mOnClickListener;
 
     public FabMenuButtonBean(String text, int backgroundId) {
         this.text = text;
         this.backgroundId = backgroundId;
+    }
+
+    public int getDrawableLeftId() {
+        return drawableLeftId;
+    }
+
+    public void setDrawableLeftId(int drawableLeftId) {
+        this.drawableLeftId = drawableLeftId;
     }
 
     public String getText() {

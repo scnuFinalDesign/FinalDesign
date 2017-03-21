@@ -141,7 +141,6 @@ public class MainActivity extends EBaseActivity implements NavigationView.OnNavi
                 this, mDrawer, mToolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         mDrawer.addDrawerListener(toggle);
         toggle.syncState();
-
     }
 
     private void initData() {

@@ -2,8 +2,8 @@
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
              android:layout_width="230px"
              android:layout_height="250px"
-             android:layout_marginBottom="18px"
-             android:layout_marginTop="18px"
+             android:layout_marginBottom="10px"
+             android:layout_marginTop="10px"
              android:orientation="vertical">
 
     <ImageView
@@ -15,8 +15,10 @@
 
     <CheckBox
         android:id="@+id/photo_adapter_checkBox"
-        android:layout_width="80px"
-        android:layout_height="80px"
+        android:layout_width="50px"
+        android:layout_height="50px"
+        android:button="@null"
+        android:background="@drawable/radio_button_style"
         android:layout_gravity="right|top"
         />
 </FrameLayout>

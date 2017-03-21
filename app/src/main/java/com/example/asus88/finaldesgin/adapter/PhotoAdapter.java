@@ -59,7 +59,12 @@ public class PhotoAdapter extends RecyclerView.Adapter<PhotoAdapter.MyViewHolder
     public void onBindViewHolder(MyViewHolder holder, final int position) {
         final PhotoBean bean = list.get(position);
         holder.bean = bean;
-        Glide.with(mContext).load(bean.getPath()).thumbnail(0.1f).into(holder.image);
+        Glide.with(mContext).load(bean.getPath()).placeholder(R.mipmap.ic_loading).thumbnail(0.1f).into(holder.image);
+        if (bean.getSelected() == 1) {
+            holder.isSelected.setChecked(true);
+        } else {
+            holder.isSelected.setChecked(false);
+        }
     }
 
     @Override

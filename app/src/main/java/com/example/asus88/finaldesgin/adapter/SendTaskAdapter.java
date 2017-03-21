@@ -2,7 +2,6 @@ package com.example.asus88.finaldesgin.adapter;
 
 import android.content.Context;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -43,7 +42,6 @@ public class SendTaskAdapter<T extends SendTakBean> extends RecyclerView.Adapter
 
     @Override
     public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        Log.d(TAG, "onCreateViewHolder: " + viewType);
         if (viewType == R.layout.adapter_receiver) {
             final ReceiverViewHolder holder = new ReceiverViewHolder(LayoutInflater.from(mContext).inflate(viewType,
                     parent, false));
