@@ -37,8 +37,18 @@
             android:layout_marginRight="20px"/>
     </FrameLayout>
 
-    <android.support.v7.widget.RecyclerView
-        android:id="@+id/link_act_recycler"
+    <FrameLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"/>
+        android:layout_height="match_parent">
+
+        <android.support.v7.widget.RecyclerView
+            android:id="@+id/link_act_recycler"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"/>
+
+        <include
+            layout="@layout/view_loading"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"/>
+    </FrameLayout>
 </LinearLayout>

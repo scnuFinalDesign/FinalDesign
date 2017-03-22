@@ -8,6 +8,8 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.bumptech.glide.Glide;
+import com.example.asus88.finaldesgin.BitmapTask;
 import com.example.asus88.finaldesgin.R;
 import com.example.asus88.finaldesgin.bean.ReceiverBean;
 import com.example.asus88.finaldesgin.bean.SendTakBean;
@@ -84,8 +86,20 @@ public class SendTaskAdapter<T extends SendTakBean> extends RecyclerView.Adapter
             ((TaskViewHolder) holder).bean = bean;
             ((TaskViewHolder) holder).fileName.setText(bean.name);
             ((TaskViewHolder) holder).progressBar.setProgress((int) bean.getRate());
-            ((TaskViewHolder) holder).icon.setImageResource(FileUtil.getImageId(FileUtil.getFileSuffix(bean.name)));
             ((TaskViewHolder) holder).status.setImageResource(bean.getStateIconId());
+            String t = FileUtil.getFileType(bean.path);
+            if (t.equals("视频")) {
+                ((TaskViewHolder) holder).icon.setImageResource(R.mipmap.ic_movie_white);
+                BitmapTask bTask = new BitmapTask(mContext, ((TaskViewHolder) holder).icon);
+                bTask.execute(bean.path);
+            } else if (t.equals("图片")) {
+                ((TaskViewHolder) holder).icon.setScaleType(ImageView.ScaleType.CENTER_CROP);
+                Glide.with(mContext).load(bean.path).placeholder(R.mipmap.ic_photo_white).thumbnail(0.1f).into(((TaskViewHolder) holder).icon);
+            } else {
+                ((TaskViewHolder) holder).icon.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
+                ((TaskViewHolder) holder).icon.setImageResource(FileUtil.getImageId(FileUtil.getFileSuffix(bean.name)));
+
+            }
         }
     }
 

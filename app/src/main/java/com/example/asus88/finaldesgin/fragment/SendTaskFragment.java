@@ -7,7 +7,6 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -83,7 +82,6 @@ public class SendTaskFragment extends Fragment implements Manager.onSendTaskList
 
     @Override
     public void onSendTaskChane(Transfer transfer, Task task, int action) {
-        //// TODO: 2017/3/14  多人传输有bug 
         String mac = transfer.getRemoteDev().mac;
         int pos = 0;
         ReceiverBean rBean = null;
@@ -112,7 +110,6 @@ public class SendTaskFragment extends Fragment implements Manager.onSendTaskList
                     rBean.setSendList(null);
                     break;
                 case 1:
-                    //   rBean.getSendList().add(task);
                     break;
                 default:
                     break;
@@ -146,9 +143,7 @@ public class SendTaskFragment extends Fragment implements Manager.onSendTaskList
     public void onReceiverItemClick(int position) {
         if (taskList.get(position) instanceof ReceiverBean) {
             ReceiverBean rBean = ((ReceiverBean) (taskList.get(position)));
-            Log.d(TAG, "onReceiverItemClick: " + rBean.getName());
             List<Task> tList = rBean.getSendList();
-            Log.d(TAG, "onReceiverItemClick: send list size:" + tList.size());
             if (!rBean.isExpand()) {
                 rBean.setExpand(true);
                 taskList.addAll(position + 1, tList);

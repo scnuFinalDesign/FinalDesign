@@ -9,6 +9,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
@@ -25,6 +26,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewStub;
+import android.view.WindowManager;
 import android.view.inputmethod.EditorInfo;
 import android.widget.Button;
 import android.widget.CompoundButton;
@@ -121,6 +123,7 @@ public class MainActivity extends EBaseActivity implements NavigationView.OnNavi
     //viewStub
     private LinearLayout mLinearLayout;
 
+    private long mExitTime = 0;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -136,7 +139,6 @@ public class MainActivity extends EBaseActivity implements NavigationView.OnNavi
     private void initViews() {
         ButterKnife.bind(this);
         setSupportActionBar(mToolbar);
-
         toggle = new ActionBarDrawerToggle(
                 this, mDrawer, mToolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         mDrawer.addDrawerListener(toggle);
@@ -374,6 +376,8 @@ public class MainActivity extends EBaseActivity implements NavigationView.OnNavi
             });
             cancel.setOnClickListener(this);
             sure.setOnClickListener(this);
+            createFile.setSoftInputMode(PopupWindow.INPUT_METHOD_NEEDED);
+            createFile.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
         }
         type = t;
         newName.setText("");
@@ -521,5 +525,20 @@ public class MainActivity extends EBaseActivity implements NavigationView.OnNavi
         if (curFragment != null) {
             curFragment.sendFile(list);
         }
+    }
+
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        if (keyCode == KeyEvent.KEYCODE_BACK) {
+            if (System.currentTimeMillis() - mExitTime > 2000) {
+                Snackbar.make(mContent, getString(R.string.exit), Snackbar.LENGTH_SHORT).show();
+                mExitTime = System.currentTimeMillis();
+            } else {
+                finish();
+                System.exit(0);
+            }
+            return true;
+        }
+        return super.onKeyDown(keyCode, event);
     }
 }

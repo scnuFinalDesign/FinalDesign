@@ -32,6 +32,7 @@ import com.example.asus88.finaldesgin.connection.Dev;
 import com.example.asus88.finaldesgin.connection.Manager;
 import com.example.asus88.finaldesgin.connection.Transfer;
 import com.example.asus88.finaldesgin.itemDecoration.LineItemDecoration;
+import com.example.asus88.finaldesgin.myViews.LVBlock;
 import com.example.asus88.finaldesgin.util.DimenUtil;
 import com.example.asus88.finaldesgin.util.WifiUtil;
 import com.google.zxing.BarcodeFormat;
@@ -64,6 +65,12 @@ public class LinkActivity extends BaseActivity implements LinkAdapter.onItemClic
     RecyclerView mRecycler;
     @BindView(R.id.link_act_image)
     ImageView mImage;
+    @BindView(R.id.loading_view)
+    LVBlock mLoadingView;
+    @BindView(R.id.loading_text)
+    TextView mLoadingText;
+    @BindView(R.id.loading_layout)
+    RelativeLayout mLoadingLayout;
 
     private static final int SCAN_QR_CODE_REQUEST = 1;
     private List<Dev> mDevList;
@@ -88,6 +95,7 @@ public class LinkActivity extends BaseActivity implements LinkAdapter.onItemClic
     private String tName;
     private String tPassword;
     private String tType;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -114,6 +122,8 @@ public class LinkActivity extends BaseActivity implements LinkAdapter.onItemClic
         qrHeight = DimenUtil.getRealHeight(this, 1280, 500);
         qrWidth = DimenUtil.getRealWidth(this, 768, 500);
         mTitle.setText(getString(R.string.device));
+        mLoadingText.setText(getString(R.string.searching));
+        mLoadingView.startAnim();
     }
 
     private void initEvents() {
@@ -266,7 +276,6 @@ public class LinkActivity extends BaseActivity implements LinkAdapter.onItemClic
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        Log.d(TAG, "onDestroy: ");
         if (mDevList != null) {
             mDevList.clear();
             mDevList = null;
@@ -392,7 +401,10 @@ public class LinkActivity extends BaseActivity implements LinkAdapter.onItemClic
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    //  mAdapter.notifyItemInserted(mDevList.size() - 1);
+                    if (mLoadingLayout.getVisibility() == View.VISIBLE) {
+                        mLoadingView.stopAnim();
+                        mLoadingLayout.setVisibility(View.GONE);
+                    }
                     mAdapter.notifyDataSetChanged();
                 }
             });
@@ -406,7 +418,6 @@ public class LinkActivity extends BaseActivity implements LinkAdapter.onItemClic
                 }
             });
         }
-        Log.d(TAG, "onDevNumChange: size" + mDevList.size());
     }
 
     /**
@@ -482,6 +493,7 @@ public class LinkActivity extends BaseActivity implements LinkAdapter.onItemClic
                 String result = bundle.getString("result");
                 if (!TextUtils.isEmpty(result) && result.contains("WIFI") && result.contains("S:")
                         && result.contains("P")) {
+                    showLinking();
                     getWifiInfoFromQrCode(result);
                     linkWifi(wifiName, wifiPassWord, encodeType);
                 }
@@ -552,6 +564,12 @@ public class LinkActivity extends BaseActivity implements LinkAdapter.onItemClic
         final int id = mWifiManager.addNetwork(config);
         if (id != -1) {
             boolean f = mWifiManager.enableNetwork(id, true);
+            if(f){
+                Toast.makeText(this,getString(R.string.link_succeed),Toast.LENGTH_SHORT).show();
+            }else{
+                Toast.makeText(this,getString(R.string.link_fail),Toast.LENGTH_SHORT).show();
+            }
+            hideLinking();
         }
     }
 
@@ -562,5 +580,16 @@ public class LinkActivity extends BaseActivity implements LinkAdapter.onItemClic
                 return configuration;
         }
         return null;
+    }
+
+    private void showLinking(){
+        mLoadingLayout.setVisibility(View.VISIBLE);
+        mLoadingView.startAnim();
+        mLoadingText.setText(getString(R.string.linking));
+    }
+
+    private void hideLinking(){
+        mLoadingView.stopAnim();
+        mLoadingLayout.setVisibility(View.GONE);
     }
 }

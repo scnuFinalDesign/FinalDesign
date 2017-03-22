@@ -45,4 +45,9 @@
     <string name="qr_code">二维码</string>
     <string name="loading">加载中...</string>
     <string name="searching">搜索中...</string>
+    <string name="linking">连接中</string>
+    <string name="link_succeed">链接成功</string>
+    <string name="link_fail">链接失败，请稍后尝试</string>
+    <string name="exit">再按一次退出程序</string>
+    <string name="fab_behavior">com.example.asus88.finaldesgin.myViews.FabBehavior</string>
 </resources>

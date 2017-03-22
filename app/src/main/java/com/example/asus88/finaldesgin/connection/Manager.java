@@ -172,18 +172,19 @@ public class Manager {
     private Manager() {
         mainPool = Executors.newSingleThreadExecutor();
         devMap = new LinkedHashMap<Dev, Transfer>();
-
-        File file = Environment.getExternalStorageDirectory();
-        Log.i("tag", file.getAbsolutePath() + " " + file.exists());
+        String absPath = Environment.getExternalStorageDirectory().getAbsolutePath();
+        File file = new File(absPath + "/receiveFile/");
         if (!file.exists()) {
-            try {
-                throw new Exception("默认存储路径有误！");
-            } catch (Exception e) {
-                e.printStackTrace();
+            boolean flag = file.mkdirs();
+            if (!flag) {
+                try {
+                    throw new Exception("创建失败");
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
         }
-       storePath = file.getAbsolutePath() + "/dd/";
-
+        storePath = file.getAbsolutePath();
         // 用于监听套接字的链接
         socketListener = new SocketListener();
         socketListener.start();
@@ -233,7 +234,7 @@ public class Manager {
         return true;
     }
 
-    public String getStorePath()  {
+    public String getStorePath() {
         return storePath;
     }
 

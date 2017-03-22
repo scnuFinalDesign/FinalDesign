@@ -10,7 +10,7 @@ import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.animation.LinearInterpolator;
+import android.view.animation.DecelerateInterpolator;
 import android.widget.FrameLayout;
 import android.widget.PopupWindow;
 import android.widget.TextView;
@@ -262,7 +262,7 @@ public class EBaseActivity extends BaseActivity implements Manager.onDevMapChang
     private void showButton(List<Animator> list) {
         AnimatorSet set = new AnimatorSet();
         set.setDuration(500);
-        set.setInterpolator(new LinearInterpolator());
+        set.setInterpolator(new DecelerateInterpolator());
         set.playTogether(list);
         set.start();
     }
@@ -279,7 +279,7 @@ public class EBaseActivity extends BaseActivity implements Manager.onDevMapChang
         }
         AnimatorSet set = new AnimatorSet();
         set.setDuration(500);
-        set.setInterpolator(new LinearInterpolator());
+        set.setInterpolator(new DecelerateInterpolator());
         set.playTogether(list);
         set.start();
         set.addListener(new Animator.AnimatorListener() {

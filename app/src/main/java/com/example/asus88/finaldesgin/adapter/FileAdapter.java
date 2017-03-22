@@ -1,8 +1,6 @@
 package com.example.asus88.finaldesgin.adapter;
 
 import android.content.Context;
-import android.graphics.Bitmap;
-import android.os.AsyncTask;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -13,15 +11,14 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
+import com.example.asus88.finaldesgin.BitmapTask;
 import com.example.asus88.finaldesgin.R;
 import com.example.asus88.finaldesgin.bean.FileBean;
-import com.example.asus88.finaldesgin.util.BitmapUtil;
 import com.example.asus88.finaldesgin.util.FileUtil;
 import com.example.asus88.finaldesgin.util.ListUtil;
 import com.example.asus88.finaldesgin.util.LogUtil;
 import com.zhy.autolayout.utils.AutoUtils;
 
-import java.lang.ref.WeakReference;
 import java.util.List;
 
 /**
@@ -78,16 +75,18 @@ public class FileAdapter extends RecyclerView.Adapter<FileAdapter.MyViewHolder> 
         } else {
             holder.size.setText(bean.getSize());
         }
+
         String t = FileUtil.getFileType(bean.getPath());
-        holder.icon.setImageResource(FileUtil.getImageId(bean.getType()));
         if (t.equals("视频")) {
+            holder.icon.setImageResource(R.mipmap.ic_movie_white);
             BitmapTask task = new BitmapTask(mContext, holder.icon);
             task.execute(bean.getPath());
         } else if (t.equals("图片")) {
             holder.icon.setScaleType(ImageView.ScaleType.CENTER_CROP);
-            Glide.with(mContext).load(bean.getPath()).thumbnail(0.1f).into(holder.icon);
+            Glide.with(mContext).load(bean.getPath()).placeholder(R.mipmap.ic_photo_white).thumbnail(0.1f).into(holder.icon);
         } else {
             holder.icon.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
+            holder.icon.setImageResource(FileUtil.getImageId(bean.getType()));
         }
         holder.modify.setText(bean.getModify());
         holder.selected.setChecked(bean.isSelected());
@@ -140,29 +139,5 @@ public class FileAdapter extends RecyclerView.Adapter<FileAdapter.MyViewHolder> 
         }
     }
 
-    class BitmapTask extends AsyncTask<String, Void, byte[]> {
-        ImageView mImageView;
-        WeakReference<Context> context;
-        String path;
 
-        public BitmapTask(Context context, ImageView imageView) {
-            this.context = new WeakReference<Context>(context);
-            mImageView = imageView;
-        }
-
-        @Override
-        protected byte[] doInBackground(String... params) {
-            path = params[0];
-            Bitmap bitmap = BitmapUtil.getVideoThumbnail(path, context.get().getResources());
-            return BitmapUtil.bitmapToByteArray(bitmap);
-        }
-
-        @Override
-        protected void onPostExecute(byte[] bytes) {
-            if (mImageView != null && bytes != null) {
-                mImageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
-                Glide.with(context.get()).load(bytes).thumbnail(0.1f).into(mImageView);
-            }
-        }
-    }
 }

@@ -1,5 +1,6 @@
 package com.example.asus88.finaldesgin.activity;
 
+import android.content.Context;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
@@ -11,6 +12,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewTreeObserver;
 import android.view.inputmethod.EditorInfo;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
@@ -29,8 +31,6 @@ import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
-
-import static com.example.asus88.finaldesgin.R.string.loading;
 
 public class SearchActivity extends EBaseActivity implements View.OnClickListener, FileFragment.onSearchingListener {
     private static final String TAG = "SearchActivity";
@@ -141,6 +141,8 @@ public class SearchActivity extends EBaseActivity implements View.OnClickListene
                     content = mSearchContent.getText().toString();
                     if (!TextUtils.isEmpty(content)) {
                         showLoadingLayout();
+                        InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+                        imm.toggleSoftInput(0, InputMethodManager.HIDE_NOT_ALWAYS);
                         new Thread(new Runnable() {
                             @Override
                             public void run() {

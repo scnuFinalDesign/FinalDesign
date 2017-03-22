@@ -2,13 +2,14 @@ package com.example.asus88.finaldesgin.adapter;
 
 import android.content.Context;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.bumptech.glide.Glide;
+import com.example.asus88.finaldesgin.BitmapTask;
 import com.example.asus88.finaldesgin.R;
 import com.example.asus88.finaldesgin.connection.Manager;
 import com.example.asus88.finaldesgin.connection.Task;
@@ -63,12 +64,21 @@ public class ReceiveTaskAdapter extends RecyclerView.Adapter<ReceiveTaskAdapter.
         holder.bean = task;
         holder.fileName.setText(task.name);
         holder.progressBar.setProgress((int) task.getRate());
-        holder.icon.setImageResource(FileUtil.getImageId(FileUtil.getFileSuffix(task.name)));
+
+        String t = FileUtil.getFileType(task.path);
+        if (t.equals("视频")) {
+            holder.icon.setImageResource(R.mipmap.ic_movie_white);
+            BitmapTask bTask = new BitmapTask(mContext, holder.icon);
+            bTask.execute(task.path);
+        } else if (t.equals("图片")) {
+            holder.icon.setScaleType(ImageView.ScaleType.CENTER_CROP);
+            Glide.with(mContext).load(task.path).placeholder(R.mipmap.ic_photo_white).thumbnail(0.1f).into(holder.icon);
+        } else {
+            holder.icon.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
+            holder.icon.setImageResource(FileUtil.getImageId(FileUtil.getFileSuffix(task.name)));
+        }
         holder.status.setImageResource(task.getStateIconId());
-        //// TODO: 2017/3/10 update database
         if (task.getRate() == 100) {
-            //// TODO: 2017/3/10 scan file
-            Log.d(TAG, "onBindViewHolder: scan");
             Utils.scanFileToUpdate(mContext, new String[]{savePath});
         }
     }
