@@ -1,5 +1,6 @@
 package com.example.asus88.finaldesgin.activity;
 
+import android.animation.ObjectAnimator;
 import android.app.ActivityOptions;
 import android.content.Intent;
 import android.graphics.drawable.ColorDrawable;
@@ -7,6 +8,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
 import android.support.design.widget.Snackbar;
@@ -27,6 +29,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewStub;
 import android.view.WindowManager;
+import android.view.animation.DecelerateInterpolator;
 import android.view.inputmethod.EditorInfo;
 import android.widget.Button;
 import android.widget.CompoundButton;
@@ -50,6 +53,7 @@ import com.example.asus88.finaldesgin.fragment.TranslationFragment;
 import com.example.asus88.finaldesgin.fragment.VideoFragment;
 import com.example.asus88.finaldesgin.util.DimenUtil;
 import com.example.asus88.finaldesgin.util.FileUtil;
+import com.example.asus88.finaldesgin.util.SharePUtil;
 
 import java.io.File;
 import java.lang.reflect.Field;
@@ -124,6 +128,7 @@ public class MainActivity extends EBaseActivity implements NavigationView.OnNavi
     private LinearLayout mLinearLayout;
 
     private long mExitTime = 0;
+    private boolean isNavItemSelected = false;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -160,7 +165,7 @@ public class MainActivity extends EBaseActivity implements NavigationView.OnNavi
         mRadioFile.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                if (isChecked) {
+                if (isChecked && !isNavItemSelected) {
                     replaceFragment(traFragment, getCurFragmentByNavId(curFragmentNavId));
                 }
             }
@@ -275,11 +280,14 @@ public class MainActivity extends EBaseActivity implements NavigationView.OnNavi
             } else {
                 mLinearLayout.setVisibility(View.VISIBLE);
             }
-            mFab.setVisibility(View.GONE);
+            hideFab();
             mDrawer.closeDrawer(GravityCompat.START);
+            mRadioTranslate.setEnabled(false);
+            mDrawer.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED);
         } else {
             if (selectedItem == null) {
                 selectedItem = mNav.getMenu().findItem(0).getSubMenu().getItem(0);
+                isNavItemSelected = true;
                 selectedItem.setChecked(false);
             }
             Fragment fragment;
@@ -328,6 +336,7 @@ public class MainActivity extends EBaseActivity implements NavigationView.OnNavi
                 }
             }
         }
+        isNavItemSelected = false;
         return true;
     }
 
@@ -434,12 +443,18 @@ public class MainActivity extends EBaseActivity implements NavigationView.OnNavi
                 break;
             case R.id.stub_cancel:
                 mLinearLayout.setVisibility(View.GONE);
-                mFab.setVisibility(View.VISIBLE);
+                showFab();
+                mRadioTranslate.setEnabled(true);
+                mDrawer.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED);
                 break;
             case R.id.stub_sure:
-                mFab.setVisibility(View.VISIBLE);
-                conManager.setStorePath(mFileFragment.getStorePath());
+                String path = mFileFragment.getStorePath() + "/";
+                conManager.setStorePath(path);
+                SharePUtil.save("savePath", "path", path);
                 mLinearLayout.setVisibility(View.GONE);
+                showFab();
+                mRadioTranslate.setEnabled(true);
+                mDrawer.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED);
                 break;
         }
     }
@@ -541,4 +556,21 @@ public class MainActivity extends EBaseActivity implements NavigationView.OnNavi
         }
         return super.onKeyDown(keyCode, event);
     }
+
+    private void hideFab() {
+        CoordinatorLayout.LayoutParams lp = (CoordinatorLayout.LayoutParams) mFab.getLayoutParams();
+        ObjectAnimator animator = ObjectAnimator.ofFloat(mFab, "translationY", 0, mFab.getHeight() + lp.bottomMargin);
+        animator.setDuration(300);
+        animator.setInterpolator(new DecelerateInterpolator());
+        animator.start();
+    }
+
+    private void showFab() {
+        CoordinatorLayout.LayoutParams lp = (CoordinatorLayout.LayoutParams) mFab.getLayoutParams();
+        ObjectAnimator animator = ObjectAnimator.ofFloat(mFab, "translationY", mFab.getHeight() + lp.bottomMargin, 0);
+        animator.setDuration(300);
+        animator.setInterpolator(new DecelerateInterpolator());
+        animator.start();
+    }
+
 }

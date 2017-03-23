@@ -118,6 +118,12 @@ public class LinkActivity extends BaseActivity implements LinkAdapter.onItemClic
         mRecycler.setLayoutManager(new LinearLayoutManager(this));
         mRecycler.addItemDecoration(new LineItemDecoration(this, 0, 0, R.drawable.line_item_decoration));
         mRecycler.setAdapter(mAdapter);
+
+        if (mDevList.size() > 0) {
+            mLoadingView.stopAnim();
+            mLoadingLayout.setVisibility(View.GONE);
+        }
+
         mWifiManager = (WifiManager) getSystemService(Context.WIFI_SERVICE);
         qrHeight = DimenUtil.getRealHeight(this, 1280, 500);
         qrWidth = DimenUtil.getRealWidth(this, 768, 500);
@@ -486,7 +492,6 @@ public class LinkActivity extends BaseActivity implements LinkAdapter.onItemClic
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        //// TODO: 2017/3/11 add window to loading link
         if (requestCode == SCAN_QR_CODE_REQUEST && resultCode == RESULT_OK) {
             Bundle bundle = data.getExtras();
             if (bundle != null) {
@@ -564,10 +569,10 @@ public class LinkActivity extends BaseActivity implements LinkAdapter.onItemClic
         final int id = mWifiManager.addNetwork(config);
         if (id != -1) {
             boolean f = mWifiManager.enableNetwork(id, true);
-            if(f){
-                Toast.makeText(this,getString(R.string.link_succeed),Toast.LENGTH_SHORT).show();
-            }else{
-                Toast.makeText(this,getString(R.string.link_fail),Toast.LENGTH_SHORT).show();
+            if (f) {
+                Toast.makeText(this, getString(R.string.link_succeed), Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(this, getString(R.string.link_fail), Toast.LENGTH_SHORT).show();
             }
             hideLinking();
         }
@@ -582,13 +587,13 @@ public class LinkActivity extends BaseActivity implements LinkAdapter.onItemClic
         return null;
     }
 
-    private void showLinking(){
+    private void showLinking() {
         mLoadingLayout.setVisibility(View.VISIBLE);
         mLoadingView.startAnim();
         mLoadingText.setText(getString(R.string.linking));
     }
 
-    private void hideLinking(){
+    private void hideLinking() {
         mLoadingView.stopAnim();
         mLoadingLayout.setVisibility(View.GONE);
     }

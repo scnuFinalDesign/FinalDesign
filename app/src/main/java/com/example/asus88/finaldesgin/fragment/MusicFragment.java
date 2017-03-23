@@ -70,6 +70,7 @@ public class MusicFragment extends BaseFragment implements MusicAdapter.onItemCl
         mRecyclerView.addItemDecoration(new LineItemDecoration(getContext(), 250, 20, R.drawable.line_item_decoration));
         mRecyclerView.setAdapter(mAdapter);
         loadingLayout = (RelativeLayout) mView.findViewById(R.id.loading_layout);
+        loadingLayout.setVisibility(View.VISIBLE);
         loadingView = (LVBlock) mView.findViewById(R.id.loading_view);
         loadingView.startAnim();
         new Thread(new Runnable() {
@@ -136,7 +137,7 @@ public class MusicFragment extends BaseFragment implements MusicAdapter.onItemCl
     public void updateMediaDataBase(List<Bean> list) {
         List<String> strList = new ArrayList<>();
         for (Bean bean : list) {
-            String path=new File(bean.getPath()).getParent();
+            String path = new File(bean.getPath()).getParent();
             if (!strList.contains(path)) {
                 strList.add(path);
             }
@@ -147,18 +148,21 @@ public class MusicFragment extends BaseFragment implements MusicAdapter.onItemCl
 
     @Override
     public void setAllUnSelected() {
-        for (int i = 0; i < mMusicBeanList.size(); i++) {
-            mMusicBeanList.get(i).setSelected(false);
+        int size = mMusicBeanList.size();
+        for (int i = 0; i < size; i++) {
+            if (mMusicBeanList.get(i).isSelected()) {
+                mMusicBeanList.get(i).setSelected(false);
+                mAdapter.notifyItemChanged(i);
+            }
         }
-        mAdapter.notifyDataSetChanged();
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
-        if(mMusicBeanList!=null){
+        if (mMusicBeanList != null) {
             mMusicBeanList.clear();
-            mMusicBeanList=null;
+            mMusicBeanList = null;
         }
     }
 }

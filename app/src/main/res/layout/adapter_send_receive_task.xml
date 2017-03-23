@@ -2,12 +2,13 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
                 android:layout_width="match_parent"
                 android:layout_height="120px"
-                android:padding="20px">
+                android:padding="10px">
 
     <ImageView
         android:id="@+id/task_adapter_icon"
         android:layout_width="80px"
         android:layout_height="80px"
+        android:layout_centerVertical="true"
         android:background="@drawable/bg_ic_file"
         android:scaleType="centerInside"
         />
@@ -24,6 +25,7 @@
         android:id="@+id/task_adapter_status"
         android:layout_width="80px"
         android:layout_height="80px"
+        android:layout_centerVertical="true"
         android:layout_alignParentRight="true"
         android:scaleType="centerInside"/>
 

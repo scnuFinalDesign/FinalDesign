@@ -107,6 +107,9 @@ public abstract class BaseFragment extends Fragment {
         }
         return mList;
     }
+    public  void notifyRecyclerView(List<Bean> list){}
+
+    public  void updateMediaDataBase(List<Bean> list){}
 
     public int getSelectedNum() {
         return ListUtil.getSize(getSelectedList(getDataList()));
@@ -115,10 +118,6 @@ public abstract class BaseFragment extends Fragment {
     public abstract List getDataList();
 
     public abstract int getFabButtonNum();
-
-    public abstract void notifyRecyclerView(List<Bean> list);
-
-    public abstract void updateMediaDataBase(List<Bean> list);
 
     public abstract void setAllUnSelected();
 }

@@ -75,7 +75,7 @@ public class ReceiveTaskAdapter extends RecyclerView.Adapter<ReceiveTaskAdapter.
             Glide.with(mContext).load(task.path).placeholder(R.mipmap.ic_photo_white).thumbnail(0.1f).into(holder.icon);
         } else {
             holder.icon.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
-            holder.icon.setImageResource(FileUtil.getImageId(FileUtil.getFileSuffix(task.name)));
+            holder.icon.setImageResource(FileUtil.getImageId(FileUtil.getFileSuffix(task.path)));
         }
         holder.status.setImageResource(task.getStateIconId());
         if (task.getRate() == 100) {

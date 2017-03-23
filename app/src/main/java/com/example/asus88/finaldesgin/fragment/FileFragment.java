@@ -291,14 +291,14 @@ public class FileFragment extends BaseFragment implements FileAdapter.onItemClic
 
     @Override
     public void setAllUnSelected() {
-        for (int i = 0; i < mFileList.size(); i++) {
+        int size = mFileList.size();
+        for (int i = 0; i < size; i++) {
             FileBean bean = mFileList.get(i);
             if (bean.isSelected()) {
                 bean.setSelected(false);
                 mAdapter.notifyItemChanged(i);
             }
         }
-        mAdapter.notifyDataSetChanged();
     }
 
     public String getStorePath() {

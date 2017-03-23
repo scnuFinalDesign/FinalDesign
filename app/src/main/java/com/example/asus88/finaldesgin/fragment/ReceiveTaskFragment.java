@@ -81,7 +81,7 @@ public class ReceiveTaskFragment extends Fragment implements Manager.onReceiveTa
 
     @Override
     public void onReceiveTaskChange(Transfer transfer, Task task, int action) {
-        Log.d(TAG, "onReceiveTaskChange: "+action);
+        Log.d(TAG, "onReceiveTaskChange: " + action);
         switch (action) {
             case 0:
                 taskList.clear();
@@ -104,13 +104,15 @@ public class ReceiveTaskFragment extends Fragment implements Manager.onReceiveTa
                 break;
             case 2:
                 final int pos = taskList.indexOf(task);
-                taskList.set(pos, task);
-                getActivity().runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        mAdapter.notifyItemChanged(pos);
-                    }
-                });
+                if (pos >= 0) {
+                    taskList.set(pos, task);
+                    getActivity().runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            mAdapter.notifyItemChanged(pos);
+                        }
+                    });
+                }
                 break;
         }
     }
@@ -121,7 +123,7 @@ public class ReceiveTaskFragment extends Fragment implements Manager.onReceiveTa
         if (conManager == null) {
             conManager = Manager.getManager();
         }
-        Log.d(TAG, "onItemStateChangeListener: "+task.getDev());
+        Log.d(TAG, "onItemStateChangeListener: " + task.getDev());
         Transfer t = conManager.getTransferFromMap(task.getDev());
         if (t != null) {
             t.clickReceiveTaskListItem(task);

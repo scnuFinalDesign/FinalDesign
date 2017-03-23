@@ -10,18 +10,22 @@ import android.provider.MediaStore;
 import android.support.annotation.Nullable;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.RelativeLayout;
+import android.widget.Toast;
 
 import com.example.asus88.finaldesgin.R;
 import com.example.asus88.finaldesgin.activity.PhotoActivity;
 import com.example.asus88.finaldesgin.adapter.PhotoGroupAdapter;
-import com.example.asus88.finaldesgin.bean.Bean;
+import com.example.asus88.finaldesgin.bean.DevBean;
 import com.example.asus88.finaldesgin.bean.PhotoBean;
 import com.example.asus88.finaldesgin.bean.PhotoGroupBean;
+import com.example.asus88.finaldesgin.connection.Transfer;
 import com.example.asus88.finaldesgin.myViews.LVBlock;
+import com.example.asus88.finaldesgin.util.FileUtil;
 import com.example.asus88.finaldesgin.util.Utils;
 
 import java.io.File;
@@ -68,6 +72,7 @@ public class PhotoFragment extends BaseFragment implements PhotoGroupAdapter.onI
         mRecyclerView = (RecyclerView) mView.findViewById(R.id.recyclerView);
         mPhotoBeanList = new ArrayList<>();
         loadingLayout = (RelativeLayout) mView.findViewById(R.id.loading_layout);
+        loadingLayout.setVisibility(View.VISIBLE);
         loadingView = (LVBlock) mView.findViewById(R.id.loading_view);
         loadingView.startAnim();
         new Thread(new Runnable() {
@@ -100,17 +105,16 @@ public class PhotoFragment extends BaseFragment implements PhotoGroupAdapter.onI
         Cursor cursor = mResolver.query(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, null, null, null, MediaStore.Images.Media.DATE_MODIFIED);
         while (cursor.moveToNext()) {
             path = cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA));
-            parentName = new File(path).getParentFile().getName();
+            File file = new File(path).getParentFile();
             PhotoGroupBean bean = new PhotoGroupBean();
-            bean.setPath(parentName);
-
+            bean.setName(file.getName());
+            bean.setPath(file.getAbsolutePath());
             PhotoBean photoBean = new PhotoBean();
             photoBean.setPath(path);
             photoBean.setSelected(0);
             if (!mPhotoBeanList.contains(bean)) {
                 List<PhotoBean> list = new ArrayList<>();
                 list.add(photoBean);
-
                 bean.setPhotoPath(list);
                 mPhotoBeanList.add(bean);
             } else {
@@ -124,9 +128,19 @@ public class PhotoFragment extends BaseFragment implements PhotoGroupAdapter.onI
     public void onItemClick(int position) {
         scanPos = position;
         Intent intent = new Intent(getActivity(), PhotoActivity.class);
-        intent.putExtra("path", mPhotoBeanList.get(position).getPath());
+        intent.putExtra("path", mPhotoBeanList.get(position).getName());
         intent.putParcelableArrayListExtra("photo", (ArrayList) mPhotoBeanList.get(position).getPhotoPath());
         startActivityForResult(intent, SCAN_PHOTO_REQUEST_CODE);
+    }
+
+    private List<PhotoGroupBean> getSelectedList() {
+        List<PhotoGroupBean> sList = new ArrayList<>();
+        for (PhotoGroupBean bean : mPhotoBeanList) {
+            if (bean.isSelected()) {
+                sList.add(bean);
+            }
+        }
+        return sList;
     }
 
     @Override
@@ -134,23 +148,74 @@ public class PhotoFragment extends BaseFragment implements PhotoGroupAdapter.onI
         return mPhotoBeanList;
     }
 
+    @Override
+    public void deleteFile() {
+        List<PhotoGroupBean> sList = getSelectedList();
+        if (sList == null || sList.size() <= 0) {
+            Toast.makeText(getActivity(), getString(R.string.no_selected), Toast.LENGTH_SHORT).show();
+        } else {
+            for (PhotoGroupBean bean : sList) {
+                List<PhotoBean> photoList = bean.getPhotoPath();
+                for (PhotoBean photo : photoList) {
+                    FileUtil.deleteFile(new File(photo.getPath()));
+                }
+            }
+            updateDataBase(sList);
+            refreshRecyclerView(sList);
+        }
+    }
+
+    @Override
+    public void sendFile(List<DevBean> devList) {
+        List<PhotoGroupBean> sList = getSelectedList();
+        for (DevBean dev : devList) {
+            if (dev.isSelected()) {
+                Transfer transfer = dev.getTransfer();
+                for (PhotoGroupBean bean : sList) {
+                    try {
+                        Log.d(TAG, "sendFile: " + bean.getPath());
+                        transfer.addPhotoGroupTask(bean.getPath());
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        }
+
+        setAllUnSelected();
+    }
+
+    @Override
+    public int getSelectedNum() {
+        int num = 0;
+        for (PhotoGroupBean bean : mPhotoBeanList) {
+            if (bean.isSelected()) {
+                num++;
+            }
+        }
+        return num;
+    }
+
     public int getFabButtonNum() {
         return 3;
     }
 
-    @Override
-    public void notifyRecyclerView(List<Bean> list) {
+
+    private void refreshRecyclerView(List<PhotoGroupBean> list) {
         mPhotoBeanList.removeAll(list);
         mAdapter.notifyDataSetChanged();
     }
 
-    @Override
-    public void updateMediaDataBase(List<Bean> list) {
+
+    private void updateDataBase(List<PhotoGroupBean> list) {
         List<String> strList = new ArrayList<>();
-        for (Bean bean : list) {
-            String path = new File(bean.getPath()).getParent();
-            if (!strList.contains(path)) {
-                strList.add(path);
+        for (PhotoGroupBean bean : list) {
+            List<PhotoBean> photoList = bean.getPhotoPath();
+            for (PhotoBean photo : photoList) {
+                String path = new File(photo.getPath()).getParent();
+                if (!strList.contains(path)) {
+                    strList.add(path);
+                }
             }
         }
         Utils.scanFileToUpdate((getActivity()).getApplicationContext(),
@@ -159,10 +224,14 @@ public class PhotoFragment extends BaseFragment implements PhotoGroupAdapter.onI
 
     @Override
     public void setAllUnSelected() {
-        for (int i = 0; i < mPhotoBeanList.size(); i++) {
-            mPhotoBeanList.get(i).setSelected(false);
+        int size = mPhotoBeanList.size();
+        for (int i = 0; i < size; i++) {
+            if (mPhotoBeanList.get(i).isSelected()) {
+                mPhotoBeanList.get(i).setSelected(false);
+                mAdapter.notifyItemChanged(i);
+            }
         }
-        mAdapter.notifyDataSetChanged();
+
     }
 
     @Override
@@ -170,8 +239,12 @@ public class PhotoFragment extends BaseFragment implements PhotoGroupAdapter.onI
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == SCAN_PHOTO_REQUEST_CODE && resultCode == 1) {
             List<PhotoBean> list = data.getParcelableArrayListExtra("photo");
-            mPhotoBeanList.get(scanPos).setPhotoPath(list);
-            mAdapter.notifyItemChanged(scanPos);
+            if (list.size() > 0) {
+                mPhotoBeanList.get(scanPos).setPhotoPath(list);
+                mAdapter.notifyItemChanged(scanPos);
+            } else {
+                mAdapter.notifyItemRemoved(scanPos);
+            }
         }
     }
 }

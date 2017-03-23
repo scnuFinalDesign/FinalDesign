@@ -69,6 +69,7 @@ public class ApplicationFragment extends BaseFragment implements ApplicationAdap
         mRecyclerView.setLayoutManager(new GridLayoutManager(mView.getContext(), 3));
         mRecyclerView.setAdapter(mAdapter);
         loadingLayout = (RelativeLayout) mView.findViewById(R.id.loading_layout);
+        loadingLayout.setVisibility(View.VISIBLE);
         loadingView = (LVBlock) mView.findViewById(R.id.loading_view);
         loadingView.startAnim();
         new Thread(new Runnable() {

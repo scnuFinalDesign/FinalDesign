@@ -1,12 +1,14 @@
 package com.example.asus88.finaldesgin.connection;
 
 import android.os.Environment;
+import android.text.TextUtils;
 import android.util.Log;
 
 import com.example.asus88.finaldesgin.bean.DevBean;
 import com.example.asus88.finaldesgin.bean.ReceiverBean;
 import com.example.asus88.finaldesgin.bean.SendTakBean;
 import com.example.asus88.finaldesgin.util.LogUtil;
+import com.example.asus88.finaldesgin.util.SharePUtil;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -172,19 +174,23 @@ public class Manager {
     private Manager() {
         mainPool = Executors.newSingleThreadExecutor();
         devMap = new LinkedHashMap<Dev, Transfer>();
-        String absPath = Environment.getExternalStorageDirectory().getAbsolutePath();
-        File file = new File(absPath + "/receiveFile/");
-        if (!file.exists()) {
-            boolean flag = file.mkdirs();
-            if (!flag) {
-                try {
-                    throw new Exception("创建失败");
-                } catch (Exception e) {
-                    e.printStackTrace();
+        storePath = SharePUtil.read("savePath", "path");
+        if (TextUtils.isEmpty(storePath)) {
+            String absPath = Environment.getExternalStorageDirectory().getAbsolutePath();
+            File file = new File(absPath + "/receiveFile");
+            if (!file.exists()) {
+                boolean flag = file.mkdirs();
+                if (!flag) {
+                    try {
+                        throw new Exception("创建失败");
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
                 }
             }
+            storePath = file.getAbsolutePath() + "/";
         }
-        storePath = file.getAbsolutePath();
+        Log.d(TAG, "Manager: " + storePath);
         // 用于监听套接字的链接
         socketListener = new SocketListener();
         socketListener.start();

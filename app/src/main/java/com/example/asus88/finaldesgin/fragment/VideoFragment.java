@@ -71,6 +71,7 @@ public class VideoFragment extends BaseFragment implements VideoAdapter.onItemCl
         mRecyclerView.addItemDecoration(new LineItemDecoration(getContext(), 280, 20, R.drawable.line_item_decoration));
         mRecyclerView.setAdapter(mAdapter);
         loadingLayout = (RelativeLayout) mView.findViewById(R.id.loading_layout);
+        loadingLayout.setVisibility(View.VISIBLE);
         loadingView = (LVBlock) mView.findViewById(R.id.loading_view);
         loadingView.startAnim();
         new Thread(new Runnable() {
@@ -147,7 +148,7 @@ public class VideoFragment extends BaseFragment implements VideoAdapter.onItemCl
     public void updateMediaDataBase(List<Bean> list) {
         List<String> strList = new ArrayList<>();
         for (Bean bean : list) {
-            String path=new File(bean.getPath()).getParent();
+            String path = new File(bean.getPath()).getParent();
             if (!strList.contains(path)) {
                 strList.add(path);
             }
@@ -158,10 +159,13 @@ public class VideoFragment extends BaseFragment implements VideoAdapter.onItemCl
 
     @Override
     public void setAllUnSelected() {
-        for (int i = 0; i < mVideoBeanList.size(); i++) {
-            mVideoBeanList.get(i).setSelected(false);
-        }
-        mAdapter.notifyDataSetChanged();
-    }
 
+        int size = mVideoBeanList.size();
+        for (int i = 0; i < size; i++) {
+            if (mVideoBeanList.get(i).isSelected()) {
+                mVideoBeanList.get(i).setSelected(false);
+                mAdapter.notifyItemChanged(i);
+            }
+        }
+    }
 }

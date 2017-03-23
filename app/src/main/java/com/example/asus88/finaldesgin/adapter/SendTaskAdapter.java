@@ -2,6 +2,7 @@ package com.example.asus88.finaldesgin.adapter;
 
 import android.content.Context;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -97,7 +98,7 @@ public class SendTaskAdapter<T extends SendTakBean> extends RecyclerView.Adapter
                 Glide.with(mContext).load(bean.path).placeholder(R.mipmap.ic_photo_white).thumbnail(0.1f).into(((TaskViewHolder) holder).icon);
             } else {
                 ((TaskViewHolder) holder).icon.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
-                ((TaskViewHolder) holder).icon.setImageResource(FileUtil.getImageId(FileUtil.getFileSuffix(bean.name)));
+                ((TaskViewHolder) holder).icon.setImageResource(FileUtil.getImageId(FileUtil.getFileSuffix(bean.path)));
 
             }
         }

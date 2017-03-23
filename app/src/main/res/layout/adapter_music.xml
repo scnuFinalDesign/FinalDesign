@@ -14,7 +14,9 @@
         android:background="@drawable/radio_button_style"
         android:button="@null"
         android:layout_centerVertical="true"
-        android:layout_marginEnd="20px"/>
+        android:layout_marginEnd="20px"
+        android:layout_alignParentRight="true"
+        android:layout_marginRight="20px"/>
 
     <ImageView
         android:id="@+id/music_adapter_image"
@@ -25,7 +27,9 @@
         android:layout_marginStart="20px"
         android:scaleType="centerInside"
         android:src="@mipmap/ic_music_white"
-        android:background="@drawable/bg_ic_music"/>
+        android:background="@drawable/bg_ic_music"
+        android:layout_alignParentLeft="true"
+        android:layout_marginLeft="20px"/>
 
     <TextView
         android:id="@+id/music_adapter_time"
@@ -34,23 +38,27 @@
         android:layout_alignTop="@+id/music_adapter_image"
         android:layout_marginEnd="10px"
         android:layout_toStartOf="@+id/music_adapter_checkBox"
-        android:lineSpacingExtra="20px"/>
+        android:lineSpacingExtra="20px"
+        android:layout_marginRight="10px"
+        android:layout_toLeftOf="@+id/music_adapter_checkBox"/>
 
     <TextView
         android:id="@+id/music_adapter_name"
         android:layout_width="350px"
         android:layout_height="40px"
-        android:singleLine="true"
+        android:maxLines="1"
         android:layout_alignParentTop="true"
         android:layout_marginRight="10px"
-        android:layout_toStartOf="@+id/music_adapter_time"/>
+        android:layout_toStartOf="@+id/music_adapter_time"
+        android:layout_toLeftOf="@+id/music_adapter_time"/>
 
     <TextView
         android:id="@+id/music_adapter_author"
         android:layout_width="350px"
         android:layout_height="40px"
-        android:singleLine="true"
+        android:maxLines="1"
         android:layout_marginRight="10px"
         android:layout_alignParentBottom="true"
-        android:layout_toStartOf="@+id/music_adapter_time"/>
+        android:layout_toStartOf="@+id/music_adapter_time"
+        android:layout_toLeftOf="@+id/music_adapter_time"/>
 </RelativeLayout>

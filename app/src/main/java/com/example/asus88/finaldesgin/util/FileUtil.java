@@ -141,9 +141,9 @@ public class FileUtil {
 
     public static String getFileSuffix(String filePath) {
         File file = new File(filePath);
-        String fileName = file.getName();
         if (file.isDirectory())
             return "directory";
+        String fileName = file.getName();
         int dot = fileName.lastIndexOf(".");
         if (dot > 0) {
             String type = fileName.substring(dot + 1);
@@ -212,7 +212,7 @@ public class FileUtil {
      */
     public static boolean newFile(String fileName, String filePath) {
         Boolean flag = false;
-        File file = new File(filePath, fileName );
+        File file = new File(filePath, fileName);
         if (file.exists()) {
             return false;
         }

@@ -445,6 +445,17 @@ public class Transfer {
         initTask();
     }
 
+    public void addPhotoGroupTask(String path) throws Exception {
+        Log.d(TAG, "addTask: " + path);
+        if (isClosed)
+            throw new Exception("链接已关闭");
+        if (!isEnable)
+            throw new Exception("链接不可用");
+
+        initTaskQueue.offer(SendTask.createSendTask(path,remoteDev,new String[]{"jpg","jpeg","png","bmp","gif"}));
+        initTask();
+    }
+
     private void stopSendTask() {
         if (sendTaskRef != null && sendTaskRef.state == Task.RUN) {
             sendTaskRef.state = Task.PAUSE;
