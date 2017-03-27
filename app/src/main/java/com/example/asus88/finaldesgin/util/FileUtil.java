@@ -207,7 +207,6 @@ public class FileUtil {
     /**
      * @param fileName
      * @param filePath
-     * @param suffix   后缀
      * @return
      */
     public static boolean newFile(String fileName, String filePath) {
