@@ -65,7 +65,8 @@ public class PhotoGroupAdapter extends RecyclerView.Adapter<PhotoGroupAdapter.My
         PhotoGroupBean bean = list.get(position);
         holder.bean=bean;
         holder.path.setText(bean.getName());
-        Glide.with(mContext).load(bean.getPhotoPath().get(0).getPath()).error(R.drawable.ic_menu_camera).thumbnail(0.1f).into(holder.image);
+        Glide.with(mContext).load(bean.getPhotoPath().get(0).getPath()).
+                error(R.drawable.ic_menu_camera).thumbnail(0.1f).into(holder.image);
         holder.number.setText(String.valueOf(bean.getPhotoPath().size()));
         holder.mCheckBox.setChecked(bean.isSelected());
     }

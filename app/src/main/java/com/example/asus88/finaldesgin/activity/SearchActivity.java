@@ -7,6 +7,7 @@ import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.FragmentTransaction;
 import android.text.TextUtils;
 import android.transition.Transition;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -31,6 +32,8 @@ import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+
+import static android.R.id.list;
 
 public class SearchActivity extends EBaseActivity implements View.OnClickListener, FileFragment.onSearchingListener {
     private static final String TAG = "SearchActivity";
@@ -59,10 +62,10 @@ public class SearchActivity extends EBaseActivity implements View.OnClickListene
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_search);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            //延迟共享元素动画
-            postponeEnterTransition();
-        }
+//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+//            //延迟共享元素动画
+//            postponeEnterTransition();
+//        }
         ButterKnife.bind(this);
         initData();
         initEvents();
@@ -72,6 +75,8 @@ public class SearchActivity extends EBaseActivity implements View.OnClickListene
     private void initData() {
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            //延迟共享元素动画
+            postponeEnterTransition();
             Transition transition = getWindow().getSharedElementEnterTransition();
             transition.addListener(new Transition.TransitionListener() {
                 @Override
@@ -139,6 +144,7 @@ public class SearchActivity extends EBaseActivity implements View.OnClickListene
             public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
                 if (actionId == EditorInfo.IME_ACTION_SEARCH) {
                     content = mSearchContent.getText().toString();
+                    Log.d(TAG, "onEditorAction: "+content);
                     if (!TextUtils.isEmpty(content)) {
                         showLoadingLayout();
                         InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
@@ -175,7 +181,11 @@ public class SearchActivity extends EBaseActivity implements View.OnClickListene
         int id = v.getId();
         switch (id) {
             case R.id.search_act_back:
-                finish();
+                if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP){
+                    finishAfterTransition();
+                }else{
+                    finish();
+                }
                 break;
             case R.id.search_act_fab:
                 showBackground();
@@ -202,6 +212,7 @@ public class SearchActivity extends EBaseActivity implements View.OnClickListene
     private void showLoadingLayout() {
         if (loadingLayout == null) {
             loadingLayout = (RelativeLayout) LayoutInflater.from(this).inflate(R.layout.view_loading, null);
+            loadingLayout.setVisibility(View.VISIBLE);
             loadingView = (LVBlock) loadingLayout.findViewById(R.id.loading_view);
             TextView textView = (TextView) loadingLayout.findViewById(R.id.loading_text);
             textView.setText(getString(R.string.searching));

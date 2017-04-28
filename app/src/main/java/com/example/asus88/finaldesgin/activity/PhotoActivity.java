@@ -9,12 +9,13 @@ import android.support.v4.app.SharedElementCallback;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.SimpleItemAnimator;
+import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.bumptech.glide.Glide;
 import com.example.asus88.finaldesgin.R;
 import com.example.asus88.finaldesgin.adapter.PhotoAdapter;
 import com.example.asus88.finaldesgin.bean.DevBean;
@@ -68,17 +69,9 @@ public class PhotoActivity extends EBaseActivity implements PhotoAdapter.onItemC
 
         mAdapter = new PhotoAdapter(this, mPhotoBeanList);
         mPhotoRecycler.setLayoutManager(new GridLayoutManager(this, 3));
+        ((SimpleItemAnimator) mPhotoRecycler.getItemAnimator()).setSupportsChangeAnimations(false);
         mPhotoRecycler.setAdapter(mAdapter);
-        mPhotoRecycler.addOnScrollListener(new RecyclerView.OnScrollListener() {
-            @Override
-            public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
-                if (newState == RecyclerView.SCROLL_STATE_IDLE) {//停止滑动 开始加载
-                    Glide.with(PhotoActivity.this).resumeRequests();
-                } else {
-                    Glide.with(PhotoActivity.this).pauseRequests();
-                }
-            }
-        });
+
         setFabButtonSize(3);
     }
 
@@ -129,8 +122,8 @@ public class PhotoActivity extends EBaseActivity implements PhotoAdapter.onItemC
         intent.putParcelableArrayListExtra("photo", (ArrayList) mPhotoBeanList);
         intent.putExtra("position", position);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            ActivityOptions option = ActivityOptions.makeSceneTransitionAnimation(PhotoActivity.this,
-                    view, view.getTransitionName());
+            ActivityOptions option = ActivityOptions.makeSceneTransitionAnimation(
+                    PhotoActivity.this, view, view.getTransitionName());
             startActivity(intent, option.toBundle());
         } else {
             startActivity(intent);
@@ -189,22 +182,25 @@ public class PhotoActivity extends EBaseActivity implements PhotoAdapter.onItemC
 
     @Override
     public void onActivityReenter(int resultCode, Intent data) {
-        super.onActivityReenter(resultCode, data);
         if (resultCode == RESULT_OK) {
             final int position = data.getIntExtra("position", 0);
             LinearLayoutManager layoutManager = (LinearLayoutManager) mPhotoRecycler.getLayoutManager();
             if (position > layoutManager.findLastCompletelyVisibleItemPosition()) {
                 mPhotoRecycler.scrollToPosition(position);
+                //// TODO: 2017/4/18 mPhotoRecycler.getChildAt(position) null
             }
             setExitSharedElementCallback(new SharedElementCallback() {
                 @Override
                 public void onMapSharedElements(List<String> names, Map<String, View> sharedElements) {
-                    PhotoAdapter.MyViewHolder holder = (PhotoAdapter.MyViewHolder) mPhotoRecycler.getChildViewHolder(mPhotoRecycler.getChildAt(position));
+                    PhotoAdapter.MyViewHolder holder = (PhotoAdapter.MyViewHolder) mPhotoRecycler.
+                            getChildViewHolder(mPhotoRecycler.getChildAt(position));
                     sharedElements.put(getString(R.string.transition_scan), holder.itemView.findViewById(R.id.photo_adapter_image));
+                    Log.d(TAG, "onMapSharedElements: change");
                     super.onMapSharedElements(names, sharedElements);
                 }
             });
         }
+        super.onActivityReenter(resultCode, data);
     }
 
     @Override

@@ -15,13 +15,13 @@ import com.example.asus88.finaldesgin.util.DimenUtil;
 
 public class LineItemDecoration extends RecyclerView.ItemDecoration {
     private static final String TAG = "LineItemDecoration";
-    private Drawable mDivier;
+    private Drawable mDivider;
     private int marginLeft, marginRight;
 
     public LineItemDecoration(Context context, int marginLeft, int marginRight, int drawableId) {
         this.marginLeft = DimenUtil.getRealWidth(context, 1280, marginLeft);
         this.marginRight = DimenUtil.getRealWidth(context, 1280, marginRight);
-        mDivier = context.getResources().getDrawable(drawableId);
+        mDivider = context.getResources().getDrawable(drawableId);
     }
 
     @Override
@@ -37,14 +37,14 @@ public class LineItemDecoration extends RecyclerView.ItemDecoration {
             final View child = parent.getChildAt(i);
             final RecyclerView.LayoutParams params = (RecyclerView.LayoutParams) child.getLayoutParams();
             int top = child.getBottom() + params.bottomMargin;
-            int bottom = top + mDivier.getIntrinsicHeight();
-            mDivier.setBounds(left, top, right, bottom);
-            mDivier.draw(c);
+            int bottom = top + mDivider.getIntrinsicHeight();
+            mDivider.setBounds(left, top, right, bottom);
+            mDivider.draw(c);
         }
     }
 
     @Override
     public void getItemOffsets(Rect outRect, View view, RecyclerView parent, RecyclerView.State state) {
-        outRect.set(0, 0, 0, mDivier.getIntrinsicHeight());
+        outRect.set(0, 0, 0, mDivider.getIntrinsicHeight());
     }
 }

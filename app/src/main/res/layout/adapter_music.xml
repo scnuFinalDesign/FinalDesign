@@ -38,7 +38,7 @@
         android:layout_alignTop="@+id/music_adapter_image"
         android:layout_marginEnd="10px"
         android:layout_toStartOf="@+id/music_adapter_checkBox"
-        android:lineSpacingExtra="20px"
+        android:lineSpacingExtra="10px"
         android:layout_marginRight="10px"
         android:layout_toLeftOf="@+id/music_adapter_checkBox"/>
 

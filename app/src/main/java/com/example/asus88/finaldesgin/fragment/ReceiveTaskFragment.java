@@ -7,7 +7,7 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
+import android.support.v7.widget.SimpleItemAnimator;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -28,7 +28,7 @@ import java.util.List;
 public class ReceiveTaskFragment extends Fragment implements Manager.onReceiveTaskListChangeListener, ReceiveTaskAdapter.onItemStateClickListener {
     private static final String TAG = "ReceiveTaskFragment";
 
-    private List<Task> taskList;
+    private volatile List<Task> taskList;
     private RecyclerView mRecyclerView;
     private View mView;
     private ReceiveTaskAdapter mAdapter;
@@ -57,7 +57,7 @@ public class ReceiveTaskFragment extends Fragment implements Manager.onReceiveTa
         new Thread(new Runnable() {
             @Override
             public void run() {
-                taskList = conManager.getReceiveTaskList();
+                taskList.addAll(conManager.getReceiveTaskList());
                 Message message = Message.obtain();
                 message.what = 1;
                 mHandler.sendMessage(message);
@@ -66,6 +66,7 @@ public class ReceiveTaskFragment extends Fragment implements Manager.onReceiveTa
         mAdapter = new ReceiveTaskAdapter(mView.getContext(), taskList);
         mAdapter.setOnItemStateClickListener(this);
         mRecyclerView.setLayoutManager(new LinearLayoutManager(mView.getContext()));
+        ((SimpleItemAnimator) mRecyclerView.getItemAnimator()).setSupportsChangeAnimations(false);
         mRecyclerView.setAdapter(mAdapter);
         return mView;
     }
@@ -81,9 +82,8 @@ public class ReceiveTaskFragment extends Fragment implements Manager.onReceiveTa
 
     @Override
     public void onReceiveTaskChange(Transfer transfer, Task task, int action) {
-        Log.d(TAG, "onReceiveTaskChange: " + action);
         switch (action) {
-            case 0:
+            case Transfer.ACTION_CLEAR:
                 taskList.clear();
                 getActivity().runOnUiThread(new Runnable() {
                     @Override
@@ -92,17 +92,18 @@ public class ReceiveTaskFragment extends Fragment implements Manager.onReceiveTa
                     }
                 });
                 break;
-            case 1:
-                Log.d(TAG, "onReceiveTaskChange: ");
-                taskList.add(task);
-                getActivity().runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        mAdapter.notifyItemInserted(taskList.size() - 1);
-                    }
-                });
+            case Transfer.ACTION_ADD:
+                if (!taskList.contains(task)) {
+                    taskList.add(task);
+                    getActivity().runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            mAdapter.notifyItemInserted(taskList.size() - 1);
+                        }
+                    });
+                }
                 break;
-            case 2:
+            case Transfer.ACTION_CHANGE:
                 final int pos = taskList.indexOf(task);
                 if (pos >= 0) {
                     taskList.set(pos, task);
@@ -123,7 +124,6 @@ public class ReceiveTaskFragment extends Fragment implements Manager.onReceiveTa
         if (conManager == null) {
             conManager = Manager.getManager();
         }
-        Log.d(TAG, "onItemStateChangeListener: " + task.getDev());
         Transfer t = conManager.getTransferFromMap(task.getDev());
         if (t != null) {
             t.clickReceiveTaskListItem(task);

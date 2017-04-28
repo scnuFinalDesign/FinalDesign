@@ -7,7 +7,6 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.provider.MediaStore;
 import android.text.TextUtils;
-import android.util.Log;
 
 import com.example.asus88.finaldesgin.R;
 import com.example.asus88.finaldesgin.bean.FileBean;
@@ -29,7 +28,8 @@ public class FileUtil {
     public static List<FileBean> searchFile(Context context, String keyword) {
         List<FileBean> fileList = new ArrayList<>();
         ContentResolver resolver = context.getContentResolver();
-        Cursor cursor = resolver.query(MediaStore.Files.getContentUri("external"),
+        Uri uri=MediaStore.Files.getContentUri("external");
+        Cursor cursor = resolver.query(uri,
                 new String[]{MediaStore.Files.FileColumns.TITLE, MediaStore.Files.FileColumns.DATA,
                         MediaStore.Files.FileColumns.DATE_MODIFIED, MediaStore.Files.FileColumns.SIZE},
                 MediaStore.Files.FileColumns.TITLE + " LIKE '%" + keyword + "%'",
@@ -48,6 +48,7 @@ public class FileUtil {
                 fileList.add(bean);
             }
         }
+        cursor.close();
         return fileList;
     }
 
@@ -133,6 +134,7 @@ public class FileUtil {
                 return R.mipmap.ic_file_white;
             case "zip":
             case "rar":
+            case "apk":
                 return R.mipmap.ic_zip_white;
             default:
                 return R.mipmap.ic_unknown_white;
@@ -262,19 +264,19 @@ public class FileUtil {
         String type = "*/*";
         String fName = filePath;
 
-        int dotIndex = fName.lastIndexOf(".");
-        if (dotIndex < 0) {
+        int position = fName.lastIndexOf(".");
+        if (position < 0) {
             return type;
         }
 
-        String end = fName.substring(dotIndex, fName.length()).toLowerCase();
+        String end = fName.substring(position, fName.length()).toLowerCase();
         if (TextUtils.isEmpty(end)) {
             return type;
         }
 
-        for (int i = 0; i < MIME_MapTable.length; i++) {
-            if (end.equals(MIME_MapTable[i][0])) {
-                type = MIME_MapTable[i][1];
+        for (int i = 0; i < MIMETable.length; i++) {
+            if (end.equals(MIMETable[i][0])) {
+                type = MIMETable[i][1];
             }
         }
         return type;
@@ -283,7 +285,7 @@ public class FileUtil {
     /**
      * -- MIME 列表 --
      */
-    private static final String[][] MIME_MapTable =
+    private static final String[][] MIMETable =
             {
                     // --{后缀名， MIME类型}   --
                     {".3gp", "video/3gpp"},
@@ -561,7 +563,7 @@ public class FileUtil {
                     {".rtx", "text/richtext"},
                     {".rv", "video/vnd.rn-realvideo"},
                     {".rwc", "application/x-rogerwilco"},
-                    {".rar", "application/x-rar-compressed"},
+                    {".rar", "application/rar"},
                     {".rc", "text/plain"},
                     {".rmvb", "audio/x-pn-realaudio"},
                     {".s3m", "audio/x-mod"},

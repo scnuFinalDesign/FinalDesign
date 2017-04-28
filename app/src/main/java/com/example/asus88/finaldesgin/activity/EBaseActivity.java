@@ -8,6 +8,7 @@ import android.content.Intent;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.DecelerateInterpolator;
@@ -22,6 +23,7 @@ import com.example.asus88.finaldesgin.bean.DevBean;
 import com.example.asus88.finaldesgin.bean.FabMenuButtonBean;
 import com.example.asus88.finaldesgin.connection.Dev;
 import com.example.asus88.finaldesgin.connection.Manager;
+import com.example.asus88.finaldesgin.connection.Transfer;
 import com.example.asus88.finaldesgin.util.AnimationUtil;
 import com.example.asus88.finaldesgin.util.DimenUtil;
 import com.example.asus88.finaldesgin.util.WifiUtil;
@@ -40,7 +42,7 @@ public class EBaseActivity extends BaseActivity implements Manager.onDevMapChang
 
     private static final String TAG = "EBaseActivity";
     public Manager conManager;
-    public WifiManager mWifiManager;
+    public volatile WifiManager mWifiManager;
     private FrameLayout background;
     private TextView[] fabButton;
     private int fabButtonSize;
@@ -58,7 +60,6 @@ public class EBaseActivity extends BaseActivity implements Manager.onDevMapChang
         super.onCreate(savedInstanceState);
         conManager = Manager.getManager();
         mWifiManager = (WifiManager) getSystemService(Context.WIFI_SERVICE);
-        conManager.setOnDevMapChangeListener(this);
         fabButton = new TextView[5];
         mOnDismissListener = new popOnDismissListener();
         devList = new ArrayList<>();
@@ -67,20 +68,43 @@ public class EBaseActivity extends BaseActivity implements Manager.onDevMapChang
     }
 
     @Override
+    protected void onResume() {
+        super.onResume();
+        Log.d(TAG, "onResume: ");
+        conManager.setOnDevMapChangeListener(this);
+    }
+
+    @Override
     public void onDevNumChange(Dev dev, boolean isAdd) {
 
     }
 
     @Override
-    public void onTransferStateChange(Dev dev, boolean isEnabled) {
+    public void onTransferStateChange(final Dev dev, boolean isEnabled) {
+        Log.d(TAG, "onTransferStateChange: " + isEnabled);
         if (!isEnabled) {
-            Toast.makeText(this, "与" + dev.getName() + "链接已断开", Toast.LENGTH_SHORT).show();
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    Transfer t = conManager.getTransferFromMap(dev);
+                    if (t != null) {
+                        Log.d(TAG, "run: close");
+                        t.close();
+                    }
+                    Toast.makeText(EBaseActivity.this, "与" + dev.getName() + "链接已断开", Toast.LENGTH_SHORT).show();
+                }
+            });
         }
     }
 
     @Override
     public void onNetWorkStateChange() {
-        Toast.makeText(this, getString(R.string.check_your_network_setting), Toast.LENGTH_SHORT).show();
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                Toast.makeText(EBaseActivity.this, getString(R.string.check_your_network_setting), Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     @Override
@@ -163,7 +187,7 @@ public class EBaseActivity extends BaseActivity implements Manager.onDevMapChang
         delete.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                deleteFile();;
+                deleteFile();
                 hideButton(mAnimatorList);
             }
         });

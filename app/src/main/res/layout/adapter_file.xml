@@ -12,10 +12,9 @@
         android:layout_alignParentEnd="true"
         android:layout_alignParentRight="true"
         android:layout_centerVertical="true"
-        android:layout_marginEnd="20px"
         android:background="@drawable/radio_button_style"
         android:button="@null"
-        android:layout_marginRight="20px"/>
+       />
 
     <ImageView
         android:id="@+id/file_adapter_image"
@@ -23,10 +22,10 @@
         android:layout_height="80px"
         android:layout_alignParentStart="true"
         android:layout_centerVertical="true"
-        android:layout_marginStart="30px"
+        android:layout_marginLeft="20px"
         android:background="@drawable/bg_ic_file"
         android:layout_alignParentLeft="true"
-        android:layout_marginLeft="30px"/>
+       />
 
     <TextView
         android:id="@+id/file_adapter_size"

@@ -9,6 +9,7 @@ import android.provider.MediaStore;
 import android.support.annotation.Nullable;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -96,6 +97,7 @@ public class MusicFragment extends BaseFragment implements MusicAdapter.onItemCl
                 if (Long.parseLong(size) > 1048576) {
                     bean = new MusicBean();
                     bean.setSize(Utils.changeSize(Long.parseLong(size)));
+                    Log.d(TAG, "getMusicData: "+bean.getSize());
                     bean.setSelected(false);
                     bean.setName(c.getString(c.getColumnIndexOrThrow(MediaStore.Audio.Media.TITLE)));
                     bean.setPath(c.getString(c.getColumnIndexOrThrow(MediaStore.Audio.Media.DATA)));

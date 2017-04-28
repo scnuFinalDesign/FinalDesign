@@ -2,6 +2,7 @@ package com.example.asus88.finaldesgin.adapter;
 
 import android.content.Context;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -69,6 +70,7 @@ public class MusicAdapter extends RecyclerView.Adapter<MusicAdapter.MyViewHolder
         final MusicBean bean = list.get(position);
         holder.bean = bean;
         holder.name.setText(bean.getName());
+        Log.d(TAG, "onBindViewHolder: "+bean.getTimeAndSize());
         holder.time.setText(bean.getTimeAndSize());
         holder.singer.setText(bean.getSinger());
         holder.selected.setChecked(bean.isSelected());

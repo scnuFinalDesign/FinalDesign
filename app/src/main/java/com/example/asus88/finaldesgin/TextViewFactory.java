@@ -3,6 +3,7 @@ package com.example.asus88.finaldesgin;
 import android.content.Context;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
+import android.os.Build;
 import android.view.Gravity;
 import android.widget.FrameLayout;
 import android.widget.TextView;
@@ -25,7 +26,11 @@ public class TextViewFactory {
         textView.setTextColor(Color.WHITE);
         textView.setPadding(40, 0, 40, 0);
         textView.setTextSize(16);
-        textView.setBackground(context.getResources().getDrawable(bean.getBackgroundId()));
+        if (Build.VERSION.SDK_INT >= 16) {
+            textView.setBackground(context.getResources().getDrawable(bean.getBackgroundId()));
+        } else {
+            textView.setBackgroundDrawable(context.getResources().getDrawable(bean.getBackgroundId()));
+        }
         Drawable drawable = context.getResources().getDrawable(bean.getDrawableLeftId());
         drawable.setBounds(0, 0, drawable.getMinimumWidth(), drawable.getMinimumHeight());
         textView.setCompoundDrawables(drawable, null, null, null);

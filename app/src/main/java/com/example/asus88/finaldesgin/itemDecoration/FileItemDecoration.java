@@ -14,18 +14,16 @@ import com.example.asus88.finaldesgin.util.DimenUtil;
  * Created by asus88 on 2017/1/18.
  */
 
-public class FileItemDirection extends RecyclerView.ItemDecoration {
+public class FileItemDecoration extends RecyclerView.ItemDecoration {
     private Drawable mDivider;
-    private int mMargin;      //图像左右的间距
     private int mTopMargin;   //上下间距
     private static int[] ATTRS = new int[]{android.R.attr.listDivider};
 
-    public FileItemDirection(Context context, int margin) {
+    public FileItemDecoration(Context context) {
         final TypedArray a = context.obtainStyledAttributes(ATTRS);
         mDivider = a.getDrawable(0);
         a.recycle();
-        mMargin = DimenUtil.dpTopx(context, margin);
-        mTopMargin=DimenUtil.dpTopx(context,5);
+        mTopMargin = DimenUtil.dpTopx(context, 5);
     }
 
     @Override
@@ -34,13 +32,13 @@ public class FileItemDirection extends RecyclerView.ItemDecoration {
     }
 
     private void drawHorizontal(Canvas c, RecyclerView parent) {
-        final int top = parent.getPaddingTop()+mTopMargin;
-        final int bottom = parent.getHeight() - parent.getPaddingBottom()-2*mTopMargin;
+        final int top = parent.getPaddingTop() + mTopMargin;
+        final int bottom = parent.getHeight() - parent.getPaddingBottom() - 2 * mTopMargin;
         final int childCount = parent.getChildCount();
         for (int i = 0; i < childCount - 1; i++) {
             final View child = parent.getChildAt(i);
             final RecyclerView.LayoutParams params = (RecyclerView.LayoutParams) child.getLayoutParams();
-            final int left = child.getRight() + params.rightMargin + mMargin;
+            final int left = child.getRight() + params.rightMargin ;
             final int right = left + mDivider.getIntrinsicWidth();
             mDivider.setBounds(left, top, right, bottom);
             mDivider.draw(c);
@@ -49,6 +47,6 @@ public class FileItemDirection extends RecyclerView.ItemDecoration {
 
     @Override
     public void getItemOffsets(Rect outRect, View view, RecyclerView parent, RecyclerView.State state) {
-        outRect.set(mMargin, 0, mDivider.getIntrinsicWidth() + mMargin, 0);
+        outRect.set(0, 0, mDivider.getIntrinsicWidth(), 0);
     }
 }

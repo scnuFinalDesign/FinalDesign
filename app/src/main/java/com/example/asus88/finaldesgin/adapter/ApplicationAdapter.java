@@ -54,7 +54,7 @@ public class ApplicationAdapter extends RecyclerView.Adapter<ApplicationAdapter.
             holder.delete.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    if (!deleteMode) {
+                    if (deleteMode) {
                         mOnItemClickListener.onDeleteClick(holder.getLayoutPosition());
                     }
                 }

@@ -28,10 +28,11 @@ public class WifiUtil {
             return 10;
         }
     }
+
     /**
      * 创建热点
-     *@param mWifiManager
      *
+     * @param mWifiManager
      * @return
      */
     public static boolean createHotspot(WifiManager mWifiManager) {
@@ -39,13 +40,13 @@ public class WifiUtil {
             mWifiManager.setWifiEnabled(false);
         }
         try {
-            WifiConfiguration configuration = new WifiConfiguration();
-            configuration.SSID = Build.MODEL;
-            configuration.preSharedKey = createPassWord();
-            configuration.allowedKeyManagement.set(WifiConfiguration.KeyMgmt.WPA_PSK);
+            WifiConfiguration con = new WifiConfiguration();
+            con.SSID = Build.MODEL;
+            con.preSharedKey = createPassWord();
+            con.allowedKeyManagement.set(WifiConfiguration.KeyMgmt.WPA_PSK);
             Method method = mWifiManager.getClass().getMethod("setWifiApEnabled", WifiConfiguration.class,
                     Boolean.TYPE);
-            return (Boolean) method.invoke(mWifiManager, configuration, true);
+            return (Boolean) method.invoke(mWifiManager, con, true);
         } catch (Exception e) {
             return false;
         }
@@ -57,16 +58,16 @@ public class WifiUtil {
      * @return
      */
     private static String createPassWord() {
-        Random rd = new Random(); // 创建随机对象
+        Random mRandom = new Random();
         String passWord = ""; // 保存随机数
-        int rdGet; // 取得随机数
+        int num;
         do {
-            if (rd.nextInt() % 2 == 1) {
-                rdGet = Math.abs(rd.nextInt()) % 10 + 48; // 产生48到57的随机数(0-9的键位值)
+            if (mRandom.nextInt() % 2 == 1) {
+                num = Math.abs(mRandom.nextInt()) % 10 + 48;//0-9
             } else {
-                rdGet = Math.abs(rd.nextInt()) % 26 + 97; // 产生97到122的随机数(a-z的键位值)
+                num = Math.abs(mRandom.nextInt()) % 26 + 97;//a-z
             }
-            char num1 = (char) rdGet; // int转换char
+            char num1 = (char) num; // int转换char
             String dd = Character.toString(num1);
             passWord += dd;
         } while (passWord.length() < 8);// 设定长度，此处假定长度小于8

@@ -1,6 +1,8 @@
 package com.example.asus88.finaldesgin.adapter;
 
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.support.v4.util.ArrayMap;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -8,7 +10,6 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.bumptech.glide.Glide;
 import com.example.asus88.finaldesgin.BitmapTask;
 import com.example.asus88.finaldesgin.R;
 import com.example.asus88.finaldesgin.connection.Manager;
@@ -32,10 +33,12 @@ public class ReceiveTaskAdapter extends RecyclerView.Adapter<ReceiveTaskAdapter.
     private List<Task> list;
     private onItemStateClickListener mOnItemStateClickListener;
     private String savePath;
+    private ArrayMap<String, Bitmap> arrayMap;
 
     public ReceiveTaskAdapter(Context context, List<Task> list) {
         mContext = context;
         this.list = list;
+       arrayMap = new ArrayMap<>();
         try {
             savePath = Manager.getManager().getStorePath();
         } catch (Exception e) {
@@ -67,16 +70,19 @@ public class ReceiveTaskAdapter extends RecyclerView.Adapter<ReceiveTaskAdapter.
 
         String t = FileUtil.getFileType(task.path);
         if (t.equals("视频")) {
-            holder.icon.setImageResource(R.mipmap.ic_movie_white);
-            BitmapTask bTask = new BitmapTask(mContext, holder.icon);
-            bTask.execute(task.path);
-        } else if (t.equals("图片")) {
-            holder.icon.setScaleType(ImageView.ScaleType.CENTER_CROP);
-            Glide.with(mContext).load(task.path).placeholder(R.mipmap.ic_photo_white).thumbnail(0.1f).into(holder.icon);
-        } else {
+            if (task.getRate() > 20) {
+                if (arrayMap.get(task.path) == null) {
+                    BitmapTask bTask = new BitmapTask(mContext, holder.icon, null);
+                    bTask.execute(task.path);
+                }
+            } else {
+                holder.icon.setImageResource(R.mipmap.ic_movie_white);
+            }
+        } else  {
             holder.icon.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
             holder.icon.setImageResource(FileUtil.getImageId(FileUtil.getFileSuffix(task.path)));
         }
+
         holder.status.setImageResource(task.getStateIconId());
         if (task.getRate() == 100) {
             Utils.scanFileToUpdate(mContext, new String[]{savePath});

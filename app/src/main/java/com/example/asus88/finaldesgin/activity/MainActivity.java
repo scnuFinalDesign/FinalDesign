@@ -17,7 +17,6 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
-import android.support.v4.widget.ViewDragHelper;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
@@ -56,7 +55,6 @@ import com.example.asus88.finaldesgin.util.FileUtil;
 import com.example.asus88.finaldesgin.util.SharePUtil;
 
 import java.io.File;
-import java.lang.reflect.Field;
 import java.util.List;
 
 import butterknife.BindView;
@@ -71,6 +69,7 @@ import static com.example.asus88.finaldesgin.R.string.newFile;
 
 public class MainActivity extends EBaseActivity implements NavigationView.OnNavigationItemSelectedListener, View.OnClickListener {
     private static final String TAG = "MainActivity";
+
     @BindView(R.id.radio_file)
     RadioButton mRadioFile;
     @BindView(R.id.radio_translate)
@@ -137,13 +136,13 @@ public class MainActivity extends EBaseActivity implements NavigationView.OnNavi
         initViews();
         initData();
         initEvents();
-        //changeSize();
     }
 
 
     private void initViews() {
         ButterKnife.bind(this);
         setSupportActionBar(mToolbar);
+        getSupportActionBar().setDisplayShowTitleEnabled(false);
         toggle = new ActionBarDrawerToggle(
                 this, mDrawer, mToolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         mDrawer.addDrawerListener(toggle);
@@ -183,65 +182,6 @@ public class MainActivity extends EBaseActivity implements NavigationView.OnNavi
         });
     }
 
-
-    /**
-     * 修改 drawerlayout 的响应范围
-     */
-    private void changeSize() {
-        Field mDragger = null;
-        try {
-            mDragger = mDrawer.getClass().getDeclaredField(
-                    "mLeftDragger"); //mRightDragger for right obviously
-        } catch (NoSuchFieldException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
-        mDragger.setAccessible(true);
-        ViewDragHelper draggerObj = null;
-        try {
-            draggerObj = (ViewDragHelper) mDragger
-                    .get(mDrawer);
-        } catch (IllegalArgumentException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        } catch (IllegalAccessException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
-
-        Field mEdgeSize = null;
-        try {
-            mEdgeSize = draggerObj.getClass().getDeclaredField(
-                    "mEdgeSize");
-        } catch (NoSuchFieldException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
-        mEdgeSize.setAccessible(true);
-        int edge = 0;
-        try {
-            edge = mEdgeSize.getInt(draggerObj);
-        } catch (IllegalArgumentException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        } catch (IllegalAccessException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
-
-        try {
-            mEdgeSize.setInt(draggerObj, edge * 5); //optimal value as for me, you may set any constant in dp
-            //You can set it even to the value you want like mEdgeSize.setInt(draggerObj, 150); for 150dp
-        } catch (IllegalArgumentException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        } catch (IllegalAccessException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
-
-    }
-
     private void replaceFragment(Fragment from, Fragment to) {
         transaction = mManager.beginTransaction();
         transaction.hide(from);
@@ -251,16 +191,6 @@ public class MainActivity extends EBaseActivity implements NavigationView.OnNavi
             transaction.show(to);
         }
         transaction.commit();
-    }
-
-
-    @Override
-    public void onBackPressed() {
-        if (mDrawer.isDrawerOpen(GravityCompat.START)) {
-            mDrawer.closeDrawer(GravityCompat.START);
-        } else {
-            super.onBackPressed();
-        }
     }
 
     @Override
@@ -287,9 +217,9 @@ public class MainActivity extends EBaseActivity implements NavigationView.OnNavi
         } else {
             if (selectedItem == null) {
                 selectedItem = mNav.getMenu().findItem(0).getSubMenu().getItem(0);
-                isNavItemSelected = true;
                 selectedItem.setChecked(false);
             }
+            isNavItemSelected = true;
             Fragment fragment;
             if (mRadioTranslate.isChecked()) {
                 fragment = traFragment;
@@ -545,7 +475,9 @@ public class MainActivity extends EBaseActivity implements NavigationView.OnNavi
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         if (keyCode == KeyEvent.KEYCODE_BACK) {
-            if (System.currentTimeMillis() - mExitTime > 2000) {
+            if (mDrawer.isDrawerOpen(GravityCompat.START)) {
+                mDrawer.closeDrawer(GravityCompat.START);
+            } else if (System.currentTimeMillis() - mExitTime > 2000) {
                 Snackbar.make(mContent, getString(R.string.exit), Snackbar.LENGTH_SHORT).show();
                 mExitTime = System.currentTimeMillis();
             } else {

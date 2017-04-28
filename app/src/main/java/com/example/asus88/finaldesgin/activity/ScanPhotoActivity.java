@@ -44,7 +44,7 @@ public class ScanPhotoActivity extends BaseActivity {
             postponeEnterTransition();
         }
         ButterKnife.bind(this);
-        setStatusBarColor(this, 0xFF797878);
+        setStatusBarColor(this, 0xFF000000);
         initData();
         initEvents();
     }
@@ -63,7 +63,7 @@ public class ScanPhotoActivity extends BaseActivity {
         mAdapter = new ScanPhotoAdapter(this, photoList);
         mViewPager.setAdapter(mAdapter);
         mViewPager.setCurrentItem(position);
-        mViewPager.setBackgroundColor(0xFF797878);
+        mViewPager.setBackgroundColor(0xFF000000);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             final PhotoView photo = photoList.get(position);
             photo.setTransitionName(getString(R.string.transition_scan));
@@ -76,6 +76,7 @@ public class ScanPhotoActivity extends BaseActivity {
                             startPostponedEnterTransition();
                             return true;
                         }
+
                     });
         }
     }

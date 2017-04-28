@@ -22,6 +22,8 @@ import com.example.asus88.finaldesgin.activity.MainActivity;
 import com.example.asus88.finaldesgin.adapter.ApplicationAdapter;
 import com.example.asus88.finaldesgin.bean.ApplicationBean;
 import com.example.asus88.finaldesgin.bean.Bean;
+import com.example.asus88.finaldesgin.bean.DevBean;
+import com.example.asus88.finaldesgin.connection.Transfer;
 import com.example.asus88.finaldesgin.myViews.LVBlock;
 import com.example.asus88.finaldesgin.util.FileUtil;
 
@@ -174,10 +176,32 @@ public class ApplicationFragment extends BaseFragment implements ApplicationAdap
 
     @Override
     public void setAllUnSelected() {
-        for (int i = 0; i < mApplicationBeanList.size(); i++) {
-            mApplicationBeanList.get(i).setSelected(false);
+        int size = mApplicationBeanList.size();
+        for (int i = 0; i < size; i++) {
+            if (mApplicationBeanList.get(i).isSelected()) {
+                mApplicationBeanList.get(i).setSelected(false);
+                mAdapter.notifyItemChanged(i);
+            }
         }
     }
 
 
+    @Override
+    public void sendFile(List<DevBean> devList) {
+        for (DevBean bean : devList) {
+            if (bean.isSelected()) {
+                Transfer transfer = bean.getTransfer();
+                for (ApplicationBean fileBean : mApplicationBeanList) {
+                    if (fileBean.isSelected()) {
+                        try {
+                            transfer.addTask(fileBean.getPath(), fileBean.getName() + ".apk");
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+            }
+        }
+        setAllUnSelected();
+    }
 }

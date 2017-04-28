@@ -1,4 +1,4 @@
-package com.example.asus88.finaldesgin.myViews;
+package com.example.asus88.finaldesgin;
 
 import android.content.Context;
 import android.support.design.widget.CoordinatorLayout;

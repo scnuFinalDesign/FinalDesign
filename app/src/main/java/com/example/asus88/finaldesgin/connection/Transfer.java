@@ -1,5 +1,6 @@
 package com.example.asus88.finaldesgin.connection;
 
+import android.os.Looper;
 import android.util.Log;
 
 import com.example.asus88.finaldesgin.util.Utils;
@@ -17,6 +18,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.net.InetSocketAddress;
+import java.net.Socket;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.channels.SelectionKey;
@@ -38,7 +40,12 @@ public class Transfer {
         private String destPath;
         private long srcOffset;
         private long deservedCount;
-        private boolean isStop;
+        volatile private long writtenCount;
+
+        public void setWrittenCount(long count){
+            writtenCount = count;
+        }
+        volatile private boolean isStop;
 
         public ReceiveDataRunnable(String destPath, long srcOffset, long deservedCount) {
             this.destPath = destPath;
@@ -52,10 +59,6 @@ public class Transfer {
         }
 
         public void run() {
-            /**
-             * 接收前清空缓冲区，然后才开启线程接收
-             */
-            clearBuffer();
             /**
              * 表明从新的文件头发送数据，则之前的接收到的文件长度累加进已接收字节数中
              */
@@ -72,7 +75,7 @@ public class Transfer {
                     fileChannel.position(srcOffset);
                     ByteBuffer byteBuffer = ByteBuffer.allocateDirect(RECEIVE_BUFFER_SIZE);
                     ackReceiveData();
-                    while (!isStop) {
+                    while (true) {
                         rSelector.select();
                         size = dataSocket.read(byteBuffer);
                         if (size == -1)
@@ -82,8 +85,9 @@ public class Transfer {
                         byteBuffer.clear();
                         receivedCount += size;
                         onReceiveProgress(size);
-                        if (receivedCount == deservedCount)
+                        if (receivedCount == deservedCount || (isStop && receivedCount == writtenCount)) {
                             break;
+                        }
                     }
                 }
                 fileOut.close();
@@ -122,6 +126,7 @@ public class Transfer {
                 if (deservedCount != 0) {
                     FileChannel fileChannel = fileIn.getChannel();
                     fileChannel.position(srcOffset);
+                    Log.i("TAG","从pos:"+srcOffset+"发送");
                     ByteBuffer byteBuffer = ByteBuffer.allocateDirect(SEND_BUFFER_SIZE);
                     while (!isStop) {
                         if (fileChannel.read(byteBuffer) == -1)
@@ -138,6 +143,9 @@ public class Transfer {
                             break;
                     }
                 }
+                if(isStop){
+                    requestStopReceiveData(writtenCount);
+                }
                 fileIn.close();
             } catch (Exception e) {
                 sendTaskRef.state = Task.FAILED;
@@ -148,10 +156,10 @@ public class Transfer {
     }
 
     private abstract class KeepAliveTimerTask extends TimerTask {
-        private int log = 5;
+        volatile private int log = 10;
 
         public void reset() {
-            log = 5;
+            log = 10;
         }
 
         public void run() {
@@ -199,7 +207,6 @@ public class Transfer {
     private volatile SocketChannel dataSocket;// 用于传输数据的套接字
     private volatile BufferedReader msgIn;
     private volatile BufferedWriter msgOut;
-    private volatile InputStream dataIn;
     private volatile Selector rSelector;
     private volatile Selector sSelector;
     private volatile ExecutorService mainPool;
@@ -256,14 +263,6 @@ public class Transfer {
         });
     }
 
-    public void clearBuffer() {
-        try {
-            dataIn.skip(dataIn.available());
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
     public void setSocket(SocketChannel msgSocket, SocketChannel dataSocket) {
         if (isEnable)
             return;
@@ -278,7 +277,6 @@ public class Transfer {
 
             this.dataSocket = dataSocket;
             dataSocket.socket().setTcpNoDelay(true);
-            dataIn = dataSocket.socket().getInputStream();
             dataSocket.configureBlocking(false);  //设置非阻塞
             rSelector = Selector.open();
             dataSocket.register(rSelector, SelectionKey.OP_READ);
@@ -298,6 +296,7 @@ public class Transfer {
                         }
                     } while (true);
                 } catch (IOException e) {
+                    Log.i("TAG","消息监听线程调用shutdown");
                     shutdown();
                 }
             }
@@ -308,10 +307,12 @@ public class Transfer {
         keepAliveTimerTask = new KeepAliveTimerTask() {
             protected void onTimeOut() {
                 // 链接超时
+                Log.i("TAG","超时调用shutdown");
                 shutdown();
             }
         };
-        keepAliveTimer.schedule(keepAliveTimerTask, 1000, 1000);// 每隔1秒发一次心跳包
+//        keepAliveTimer.schedule(keepAliveTimerTask, 1000, 1000);// 每隔1秒发一次心跳包
+        keepAliveTimer.scheduleAtFixedRate(keepAliveTimerTask, 1000, 1000);// 每隔1秒发一次心跳包
 
         initTask();
         dispatch();
@@ -357,7 +358,6 @@ public class Transfer {
                     sSelector.close();
                     msgIn.close();
                     msgOut.close();
-                    dataIn.close();
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -441,7 +441,22 @@ public class Transfer {
         if (!isEnable)
             throw new Exception("链接不可用");
 
+        Log.i("TAG","提交任务的时间为"+System.currentTimeMillis());
+
         initTaskQueue.offer(SendTask.createSendTask(path,remoteDev));
+        initTask();
+    }
+
+    public void addTask(String path,String taskName) throws Exception {
+        Log.d(TAG, "addTask: " + path);
+        if (isClosed)
+            throw new Exception("链接已关闭");
+        if (!isEnable)
+            throw new Exception("链接不可用");
+
+        Log.i("TAG","提交任务的时间为"+System.currentTimeMillis());
+
+        initTaskQueue.offer(SendTask.createSendTask(path,remoteDev,taskName));
         initTask();
     }
 
@@ -452,6 +467,8 @@ public class Transfer {
         if (!isEnable)
             throw new Exception("链接不可用");
 
+        Log.i("TAG","提交任务的时间为"+System.currentTimeMillis());
+
         initTaskQueue.offer(SendTask.createSendTask(path,remoteDev,new String[]{"jpg","jpeg","png","bmp","gif"}));
         initTask();
     }
@@ -459,7 +476,6 @@ public class Transfer {
     private void stopSendTask() {
         if (sendTaskRef != null && sendTaskRef.state == Task.RUN) {
             sendTaskRef.state = Task.PAUSE;
-            requestStopReceiveData();
             if (sendDataRunnable != null) {
                 sendDataRunnable.stopSend();
             }
@@ -529,6 +545,8 @@ public class Transfer {
                     return;
 
                 initTaskRef = initTaskQueue.element();
+
+                Log.i("TAG","请求创建任务的时间为"+System.currentTimeMillis());
                 synNewReceiveTask(initTaskRef.mID, initTaskRef.name, initTaskRef.totalCount);
             }
         });
@@ -594,13 +612,16 @@ public class Transfer {
 
     //syn 要求对方做  ack 确认信息
     private void msgResolve(final String msg) {// 在mainPool的线程中执行，保证消息处理的顺序正确
+        if (msg.equals("heart beat")) {
+            keepAliveTimerTask.reset();
+            return;
+        }
+        if (msg.isEmpty()){
+            return;
+        }
         mainPool.execute(new Runnable() {
             public void run() {
-                if (msg.equals("heart beat")) {
-                    keepAliveTimerTask.reset();
-                    return;
-                }
-
+                Log.i(TAG, "receive msg: "+msg+"time: "+System.currentTimeMillis());
                 try {
                     JSONObject obj = new JSONObject(msg);
                     switch (obj.getInt("type")) {
@@ -657,12 +678,14 @@ public class Transfer {
                         }
                         break;
                         case ACK_CLOSE_TYPE: {
+                            Log.i("TAG","用户关闭调用shutdown");
                             shutdown();
                         }
                         break;
                         case REQUEST_STOP_RECEIVE_DATA_TYPE: {
                             if (receiveDataRunnable != null) {
                                 receiveDataRunnable.stopReceive();
+                                receiveDataRunnable.setWrittenCount(obj.getLong("writtenCount"));
                             }
                         }
                         break;
@@ -679,18 +702,35 @@ public class Transfer {
     }
 
     private void sendMsg(final String msg) {// 在mainPool线程池中执行保证消息发送顺序
-        mainPool.execute(new Runnable() {
-            public void run() {
-                Log.i("tag", "发送:" + msg);
-                try {
-                    msgOut.write(msg);
-                    msgOut.newLine();
-                    msgOut.flush();
-                } catch (IOException e) {
-                    shutdown();
+        if(Looper.myLooper() == Looper.getMainLooper()){
+            mainPool.execute(new Runnable() {
+                public void run() {
+                    if(!msg.equals("heart beat")){
+                        Log.i("tag", "send msg: " + msg+"time: "+System.currentTimeMillis());
+                    }
+                    try {
+                        msgOut.write(msg);
+                        msgOut.newLine();
+                        msgOut.flush();
+                    } catch (IOException e) {
+                        Log.i("TAG","发生消息异常调用shutdown");
+                        shutdown();
+                    }
                 }
+            });
+        }else {
+            if(!msg.equals("heart beat")){
+                Log.i("tag", "send msg: " + msg+"time: "+System.currentTimeMillis());
             }
-        });
+            try {
+                msgOut.write(msg);
+                msgOut.newLine();
+                msgOut.flush();
+            } catch (IOException e) {
+                Log.i("TAG","发生消息异常调用shutdown");
+                shutdown();
+            }
+        }
     }
 
     private void onSynNewReceiveTask(int mID, String name, long totalCount) {
@@ -949,6 +989,7 @@ public class Transfer {
     }
 
     private void synDataResult(long offset, boolean isFailed) {
+        Log.d(TAG, "synDataResult: isFailed:"+isFailed);
         JSONObject obj = new JSONObject();
         try {
             obj.put("type", SYN_DATA_RESULT_TYPE);
@@ -1001,10 +1042,11 @@ public class Transfer {
         sendMsg(obj.toString());
     }
 
-    private void requestStopReceiveData() {
+    private void requestStopReceiveData(long writtenCount) {
         JSONObject obj = new JSONObject();
         try {
             obj.put("type", REQUEST_STOP_RECEIVE_DATA_TYPE);
+            obj.put("writtenCount", writtenCount);
         } catch (JSONException e) {
             e.printStackTrace();
         }
@@ -1019,6 +1061,14 @@ public class Transfer {
             e.printStackTrace();
         }
         sendMsg(obj.toString());
+    }
+
+    public BufferedWriter getMsgOut() {
+        return msgOut;
+    }
+
+    public BufferedReader getMsgIn() {
+        return msgIn;
     }
 
     public static final int CREATED = 0;
@@ -1041,7 +1091,7 @@ public class Transfer {
     private static int RECEIVE_BUFFER_SIZE = 8688;
     private static int SEND_BUFFER_SIZE = 7240;
 
-    public static int ACTION_CLEAR = 0;
-    public static int ACTION_ADD = 1;
-    public static int ACTION_CHANGE = 2;
+    public final static int ACTION_CLEAR = 0;
+    public final static int ACTION_ADD = 1;
+    public final static int ACTION_CHANGE = 2;
 }

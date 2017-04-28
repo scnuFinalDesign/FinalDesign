@@ -1,7 +1,5 @@
 package com.example.asus88.finaldesgin.connection;
 
-import android.util.Log;
-
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.InetSocketAddress;
@@ -21,15 +19,6 @@ public abstract class MulticastHelper {
     private volatile ReceiveThread receiveThread;
 
     private volatile boolean isStop = false;
-    private volatile boolean isInterrupted = false;
-
-    public void onResume(){
-        Log.d(TAG, "onResume: "+isInterrupted);
-        if(isInterrupted) {
-            boolean ret = start();
-            isInterrupted = !ret;
-        }
-    }
 
     public MulticastHelper(int port) {
         this.port = port;
@@ -72,9 +61,6 @@ public abstract class MulticastHelper {
     }
 
     public void stop() {
-        Log.d("TAG","调用stop");
-
-
         if (sendThread != null){
             sendThread.quit();
         }
@@ -125,11 +111,6 @@ public abstract class MulticastHelper {
                 } while (true);
             } catch (Exception e) {
                 e.printStackTrace();
-                Log.d("TAG","isStop"+isStop);
-                if(!isStop) {
-                    isInterrupted = true;
-                    Log.d("TAG","中断");
-                }
             } finally {
                 receiveThread = null;
                 onClosed();

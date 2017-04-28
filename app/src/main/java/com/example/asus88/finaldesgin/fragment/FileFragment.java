@@ -17,7 +17,7 @@ import com.example.asus88.finaldesgin.adapter.FileAdapter;
 import com.example.asus88.finaldesgin.adapter.LocationAdapter;
 import com.example.asus88.finaldesgin.bean.Bean;
 import com.example.asus88.finaldesgin.bean.FileBean;
-import com.example.asus88.finaldesgin.itemDecoration.FileItemDirection;
+import com.example.asus88.finaldesgin.itemDecoration.FileItemDecoration;
 import com.example.asus88.finaldesgin.itemDecoration.LineItemDecoration;
 import com.example.asus88.finaldesgin.util.DimenUtil;
 import com.example.asus88.finaldesgin.util.FileUtil;
@@ -112,7 +112,7 @@ public class FileFragment extends BaseFragment implements FileAdapter.onItemClic
         }
         mAdapter.setOnItemClickListener(this);
         mRecyclerView.setLayoutManager(new LinearLayoutManager(mView.getContext()));
-        mRecyclerView.addItemDecoration(new LineItemDecoration(getContext(), DimenUtil.getRealWidth(mView.getContext(), 768, 180),
+        mRecyclerView.addItemDecoration(new LineItemDecoration(getContext(), DimenUtil.getRealWidth(mView.getContext(), 768, 200),
                 DimenUtil.getRealWidth(mView.getContext(), 768, 30), R.drawable.line_item_decoration));
         mRecyclerView.setAdapter(mAdapter);
 
@@ -124,7 +124,7 @@ public class FileFragment extends BaseFragment implements FileAdapter.onItemClic
         mLocationAdapter.setOnItemClickListener(this);
         locationRecycler.setLayoutManager(new LinearLayoutManager(getContext(), LinearLayoutManager.HORIZONTAL, false));
         locationRecycler.setAdapter(mLocationAdapter);
-        locationRecycler.addItemDecoration(new FileItemDirection(getContext(), 10));
+        locationRecycler.addItemDecoration(new FileItemDecoration(getContext()));
 
         return mView;
     }
@@ -215,7 +215,12 @@ public class FileFragment extends BaseFragment implements FileAdapter.onItemClic
             getFileData(bean.getPath());
             mAdapter.notifyDataSetChanged();
             locationList.add(bean.getPath());
-            mLocationAdapter.notifyItemInserted(locationList.size() - 1);
+            int locationPos=locationList.size() - 1;
+            mLocationAdapter.notifyItemInserted(locationPos);
+            LinearLayoutManager layoutManager = (LinearLayoutManager) locationRecycler.getLayoutManager();
+            if (locationPos > layoutManager.findLastCompletelyVisibleItemPosition()) {
+                locationRecycler.scrollToPosition(locationPos);
+            }
         } else {
             FileUtil.showOpenTypeWindow(bean.getPath(), getContext());
         }

@@ -7,6 +7,8 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.SimpleItemAnimator;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -30,9 +32,10 @@ public class SendTaskFragment extends Fragment implements Manager.onSendTaskList
     private static final String TAG = "SendTaskFragment";
 
     private RecyclerView mRecyclerView;
-    private List<SendTakBean> taskList;
+    private  volatile List<SendTakBean> taskList;
     private SendTaskAdapter mAdapter;
     private View mView;
+    private int pos = 0;
 
     private Manager conManager;
 
@@ -58,7 +61,7 @@ public class SendTaskFragment extends Fragment implements Manager.onSendTaskList
         new Thread(new Runnable() {
             @Override
             public void run() {
-                taskList = conManager.getSendTaskList();
+                taskList.addAll(conManager.getSendTaskList());
                 Message message = Message.obtain();
                 message.what = 1;
                 mHandler.sendMessage(message);
@@ -67,6 +70,7 @@ public class SendTaskFragment extends Fragment implements Manager.onSendTaskList
         mAdapter = new SendTaskAdapter(mView.getContext(), taskList);
         mAdapter.setOnReceiverItemClickListener(this);
         mRecyclerView.setLayoutManager(new LinearLayoutManager(mView.getContext()));
+        ((SimpleItemAnimator) mRecyclerView.getItemAnimator()).setSupportsChangeAnimations(false);
         mRecyclerView.setAdapter(mAdapter);
         return mView;
     }
@@ -83,59 +87,85 @@ public class SendTaskFragment extends Fragment implements Manager.onSendTaskList
     @Override
     public void onSendTaskChane(Transfer transfer, Task task, int action) {
         String mac = transfer.getRemoteDev().mac;
-        int pos = 0;
+        Log.d(TAG, "onSendTaskChane: msg:" + action);
         ReceiverBean rBean = null;
         boolean flag = true;
-        if (task != null) {
-            for (int i = 0; i < taskList.size(); i++) {
-                SendTakBean bean = taskList.get(i);
-                if (bean instanceof ReceiverBean) {
-                    if (((ReceiverBean) bean).getMac().equals(mac)) {
-                        rBean = (ReceiverBean) taskList.get(i);
-                        pos = i;
-                        flag = false;
-                        break;
-                    }
+        for (int i = 0; i < taskList.size(); i++) {
+            SendTakBean bean = taskList.get(i);
+            if (bean instanceof ReceiverBean) {
+                if (((ReceiverBean) bean).getMac().equals(mac)) {
+                    rBean = (ReceiverBean) taskList.get(i);
+                    pos = i;
+                    flag = false;
+                    break;
                 }
             }
-            if (flag) {
-                rBean = new ReceiverBean();
-                rBean.setDev(transfer.getRemoteDev());
-                rBean.setSendList(new ArrayList<Task>());
-                taskList.add(rBean);
-                pos = taskList.size();
-            }
-            switch (action) {
-                case 0:
-                    rBean.setSendList(null);
-                    break;
-                case 1:
-                    break;
-                default:
-                    break;
-            }
-            if (flag) {
-                getActivity().runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        mAdapter.notifyDataSetChanged();
-                    }
-                });
-            } else if (rBean.isExpand()) {
-                if (action == 1) {
-                    pos = pos + rBean.getSendList().size();
-                    taskList.add(pos, task);
-                }
-                getActivity().runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        mAdapter.notifyDataSetChanged();
-                    }
-                });
-            }
-
-
         }
+        if (flag) {
+            rBean = new ReceiverBean();
+            rBean.setDev(transfer.getRemoteDev());
+            rBean.setSendList(new ArrayList<Task>());
+            taskList.add(rBean);
+            pos = taskList.size();
+        }
+        switch (action) {
+            case Transfer.ACTION_CLEAR:
+                Log.d(TAG, "onSendTaskChane: clear");
+                if (rBean.isExpand()) {
+                    taskList.removeAll(rBean.getSendList());
+                }
+                rBean.setSendList(null);
+                rBean.setExpand(false);
+                getActivity().runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        mAdapter.notifyDataSetChanged();
+                    }
+                });
+                break;
+            case Transfer.ACTION_ADD:
+                Log.d(TAG, "onSendTaskChane: add");
+                rBean.getSendList().add(task);
+                break;
+            case Transfer.ACTION_CHANGE:
+                Log.d(TAG, "onSendTaskChane: change");
+                List<Task> tList = rBean.getSendList();
+                int t = tList.indexOf(task);
+                if (t >= 0) {
+                    tList.set(t, task);
+                }
+                pos += t + 1;
+                break;
+            default:
+                Log.d(TAG, "onSendTaskChane: default");
+                break;
+        }
+        if (flag) {
+            getActivity().runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    mAdapter.notifyDataSetChanged();
+                }
+            });
+        } else if (rBean.isExpand()) {
+            if (action == Transfer.ACTION_ADD) {
+                pos = pos + rBean.getSendList().size();
+                taskList.add(pos, task);
+                getActivity().runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        mAdapter.notifyItemInserted(pos);
+                    }
+                });
+            } else if (action == Transfer.ACTION_CHANGE) {
+                getActivity().runOnUiThread(new Runnable() {
+                    public void run() {
+                        mAdapter.notifyItemChanged(pos);
+                    }
+                });
+            }
+        }
+
     }
 
 
@@ -144,12 +174,14 @@ public class SendTaskFragment extends Fragment implements Manager.onSendTaskList
         if (taskList.get(position) instanceof ReceiverBean) {
             ReceiverBean rBean = ((ReceiverBean) (taskList.get(position)));
             List<Task> tList = rBean.getSendList();
-            if (!rBean.isExpand()) {
-                rBean.setExpand(true);
-                taskList.addAll(position + 1, tList);
-            } else {
-                rBean.setExpand(false);
-                taskList.removeAll(tList);
+            if (tList != null) {
+                if (!rBean.isExpand()) {
+                    rBean.setExpand(true);
+                    taskList.addAll(position + 1, tList);
+                } else {
+                    rBean.setExpand(false);
+                    taskList.removeAll(tList);
+                }
             }
             mAdapter.notifyDataSetChanged();
         }

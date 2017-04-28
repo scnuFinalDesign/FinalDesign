@@ -79,7 +79,7 @@ public class FileAdapter extends RecyclerView.Adapter<FileAdapter.MyViewHolder> 
         String t = FileUtil.getFileType(bean.getPath());
         if (t.equals("视频")) {
             holder.icon.setImageResource(R.mipmap.ic_movie_white);
-            BitmapTask task = new BitmapTask(mContext, holder.icon);
+            BitmapTask task = new BitmapTask(mContext, holder.icon,null);
             task.execute(bean.getPath());
         } else if (t.equals("图片")) {
             holder.icon.setScaleType(ImageView.ScaleType.CENTER_CROP);

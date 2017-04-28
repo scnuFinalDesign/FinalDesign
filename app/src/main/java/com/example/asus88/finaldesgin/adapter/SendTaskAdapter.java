@@ -1,8 +1,9 @@
 package com.example.asus88.finaldesgin.adapter;
 
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.support.v4.util.ArrayMap;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -31,12 +32,14 @@ public class SendTaskAdapter<T extends SendTakBean> extends RecyclerView.Adapter
     private static final String TAG = "SendTaskAdapter";
     private Context mContext;
     private List<T> mList;
+    private ArrayMap<String, Bitmap> arrayMap;
 
     private onReceiverItemClickListener mOnReceiverItemClickListener;
 
     public SendTaskAdapter(Context context, List<T> list) {
         mContext = context;
         mList = list;
+        arrayMap = new ArrayMap<>();
     }
 
     public void setOnReceiverItemClickListener(onReceiverItemClickListener onReceiverItemClickListener) {
@@ -90,16 +93,17 @@ public class SendTaskAdapter<T extends SendTakBean> extends RecyclerView.Adapter
             ((TaskViewHolder) holder).status.setImageResource(bean.getStateIconId());
             String t = FileUtil.getFileType(bean.path);
             if (t.equals("视频")) {
-                ((TaskViewHolder) holder).icon.setImageResource(R.mipmap.ic_movie_white);
-                BitmapTask bTask = new BitmapTask(mContext, ((TaskViewHolder) holder).icon);
-                bTask.execute(bean.path);
+                if (arrayMap.get(bean.path) == null) {
+                    ((TaskViewHolder) holder).icon.setImageResource(R.mipmap.ic_movie_white);
+                    BitmapTask bTask = new BitmapTask(mContext, ((TaskViewHolder) holder).icon, arrayMap);
+                    bTask.execute(bean.path);
+                }
             } else if (t.equals("图片")) {
                 ((TaskViewHolder) holder).icon.setScaleType(ImageView.ScaleType.CENTER_CROP);
                 Glide.with(mContext).load(bean.path).placeholder(R.mipmap.ic_photo_white).thumbnail(0.1f).into(((TaskViewHolder) holder).icon);
             } else {
                 ((TaskViewHolder) holder).icon.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
                 ((TaskViewHolder) holder).icon.setImageResource(FileUtil.getImageId(FileUtil.getFileSuffix(bean.path)));
-
             }
         }
     }

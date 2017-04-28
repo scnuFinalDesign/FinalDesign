@@ -49,5 +49,6 @@
     <string name="link_succeed">链接成功</string>
     <string name="link_fail">链接失败，请稍后尝试</string>
     <string name="exit">再按一次退出程序</string>
-    <string name="fab_behavior">com.example.asus88.finaldesgin.myViews.FabBehavior</string>
+    <string name="fab_behavior">com.example.asus88.finaldesgin.FabBehavior</string>
+    <string name="wifi_ap_qrCode">热点二维码</string>
 </resources>

@@ -5,10 +5,10 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.drawable.ColorDrawable;
 import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
 import android.net.wifi.WifiConfiguration;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
@@ -72,7 +72,10 @@ public class LinkActivity extends BaseActivity implements LinkAdapter.onItemClic
     @BindView(R.id.loading_layout)
     RelativeLayout mLoadingLayout;
 
+
     private static final int SCAN_QR_CODE_REQUEST = 1;
+    @BindView(R.id.link_act_search)
+    FloatingActionButton mLinkSearch;
     private List<Dev> mDevList;
     private LinkAdapter mAdapter;
 
@@ -83,11 +86,12 @@ public class LinkActivity extends BaseActivity implements LinkAdapter.onItemClic
     private ConnectivityManager cManager;
 
     private boolean isCreate;
-    private String wifiName;
+    private volatile String wifiName;
     private String wifiPassWord;
     private String encodeType;
     private Bitmap qrCode;
     private ImageView qrImage;
+    private TextView title;
     private int qrWidth;
     private int qrHeight;
 
@@ -95,6 +99,9 @@ public class LinkActivity extends BaseActivity implements LinkAdapter.onItemClic
     private String tName;
     private String tPassword;
     private String tType;
+    private boolean isStartSearch;
+    private boolean isRestart;
+    private volatile boolean isScanLink;
 
 
     @Override
@@ -111,6 +118,9 @@ public class LinkActivity extends BaseActivity implements LinkAdapter.onItemClic
         wifiName = "";
         wifiPassWord = "";
         encodeType = "";
+        isRestart = false;
+        isScanLink = false;
+        isStartSearch = false;
         conManager = Manager.getManager();
         mDevList = new ArrayList<>();
         getDevDataFromMap();
@@ -119,23 +129,29 @@ public class LinkActivity extends BaseActivity implements LinkAdapter.onItemClic
         mRecycler.addItemDecoration(new LineItemDecoration(this, 0, 0, R.drawable.line_item_decoration));
         mRecycler.setAdapter(mAdapter);
 
-        if (mDevList.size() > 0) {
-            mLoadingView.stopAnim();
-            mLoadingLayout.setVisibility(View.GONE);
-        }
-
         mWifiManager = (WifiManager) getSystemService(Context.WIFI_SERVICE);
         qrHeight = DimenUtil.getRealHeight(this, 1280, 500);
         qrWidth = DimenUtil.getRealWidth(this, 768, 500);
         mTitle.setText(getString(R.string.device));
         mLoadingText.setText(getString(R.string.searching));
         mLoadingView.startAnim();
+
+        int state = WifiUtil.getWifiApState(mWifiManager);
+        if (state == 12 || state == 13) {
+            isCreate = true;
+            mImage.setImageResource(R.mipmap.icon_qrcode);
+        } else if ((mWifiManager.getWifiState() == WifiManager.WIFI_STATE_ENABLED ||
+                mWifiManager.getWifiState() == WifiManager.WIFI_STATE_ENABLING)) {
+            isCreate = false;
+            mImage.setImageResource(R.mipmap.icon_scan);
+        }
     }
 
     private void initEvents() {
         mAdapter.setOnItemClickListener(this);
         mBack.setOnClickListener(this);
         mImage.setOnClickListener(this);
+        mLinkSearch.setOnClickListener(this);
     }
 
     private void getDevDataFromMap() {
@@ -213,6 +229,15 @@ public class LinkActivity extends BaseActivity implements LinkAdapter.onItemClic
                     hideQrCode();
                 }
             });
+            title = new TextView(this);
+            title.setText(getString(R.string.wifi_ap_qrCode));
+            title.setTextColor(getResources().getColor(R.color.white));
+            title.setTextSize(20);
+            FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT,
+                    ViewGroup.LayoutParams.WRAP_CONTENT);
+            lp.gravity = Gravity.CENTER_HORIZONTAL;
+            lp.topMargin = DimenUtil.getRealHeight(this, 1280, 300);
+            title.setLayoutParams(lp);
             if (qrImage == null) {
                 qrImage = new ImageView(this);
                 FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(qrWidth, qrHeight);
@@ -220,6 +245,7 @@ public class LinkActivity extends BaseActivity implements LinkAdapter.onItemClic
                 qrImage.setLayoutParams(params);
             }
             background.addView(qrImage);
+            background.addView(title);
         }
 
         getWifiApInfo();
@@ -295,49 +321,6 @@ public class LinkActivity extends BaseActivity implements LinkAdapter.onItemClic
     @Override
     protected void onResume() {
         super.onResume();
-        Log.d(TAG, "onResume: ");
-        int state = WifiUtil.getWifiApState(mWifiManager);
-        if (state == 12 || state == 13) {
-            isCreate = true;
-            mImage.setImageResource(R.mipmap.icon_qrcode);
-            new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    while (WifiUtil.getWifiApState(mWifiManager) != 13) {
-                        try {
-                            Thread.sleep(500);
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                    conManager.searchDevice();
-                    conManager.setOnDevMapChangeListener(LinkActivity.this);
-                }
-            }).start();
-        } else if ((mWifiManager.getWifiState() == WifiManager.WIFI_STATE_ENABLED ||
-                mWifiManager.getWifiState() == WifiManager.WIFI_STATE_ENABLING)) {
-            isCreate = false;
-            mImage.setImageResource(R.mipmap.icon_scan);
-            cManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
-            new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    while (true) {
-                        NetworkInfo info = cManager.getActiveNetworkInfo();
-                        if (info != null && info.getType() == ConnectivityManager.TYPE_WIFI) {
-                            break;
-                        }
-                        try {
-                            Thread.sleep(500);
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                    conManager.searchDevice();
-                    conManager.setOnDevMapChangeListener(LinkActivity.this);
-                }
-            }).start();
-        }
     }
 
 
@@ -352,7 +335,7 @@ public class LinkActivity extends BaseActivity implements LinkAdapter.onItemClic
         super.onStop();
         Log.d(TAG, "onStop: ");
         conManager.stopSearchDevice();
-        conManager.setOnDevMapChangeListener(null);
+        isRestart = true;
     }
 
     private void showBreakLinkWindow(final Dev dev) {
@@ -408,8 +391,7 @@ public class LinkActivity extends BaseActivity implements LinkAdapter.onItemClic
                 @Override
                 public void run() {
                     if (mLoadingLayout.getVisibility() == View.VISIBLE) {
-                        mLoadingView.stopAnim();
-                        mLoadingLayout.setVisibility(View.GONE);
+                        hideLinking();
                     }
                     mAdapter.notifyDataSetChanged();
                 }
@@ -456,14 +438,24 @@ public class LinkActivity extends BaseActivity implements LinkAdapter.onItemClic
 
     @Override
     public void onNetWorkStateChange() {
-        Toast.makeText(LinkActivity.this, getString(R.string.check_your_network_setting), Toast.LENGTH_SHORT).show();
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                Toast.makeText(LinkActivity.this, getString(R.string.check_your_network_setting), Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     @Override
-    public void onCreateTransferFail(Dev dev) {
-        StringBuilder builder = new StringBuilder("与" + dev.getName());
-        builder.append(getString(R.string.create_transfer_fail));
-        Toast.makeText(LinkActivity.this, builder.toString(), Toast.LENGTH_SHORT).show();
+    public void onCreateTransferFail(final Dev dev) {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                StringBuilder builder = new StringBuilder("与" + dev.getName());
+                builder.append(getString(R.string.create_transfer_fail));
+                Toast.makeText(LinkActivity.this, builder.toString(), Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     @Override
@@ -481,6 +473,24 @@ public class LinkActivity extends BaseActivity implements LinkAdapter.onItemClic
                     startActivityForResult(intent, SCAN_QR_CODE_REQUEST);
                 }
                 break;
+            case R.id.link_act_search:
+                startOrStopSearch();
+                break;
+        }
+    }
+
+    private void startOrStopSearch() {
+        if (isStartSearch) {
+            isStartSearch = false;
+            mLinkSearch.setImageResource(R.mipmap.icon_refresh);
+            hideLinking();
+            conManager.stopSearchDevice();
+        } else {
+            isStartSearch = true;
+            conManager.searchDevice();
+            conManager.setOnDevMapChangeListener(LinkActivity.this);
+            showLinking();
+            mLinkSearch.setImageResource(R.mipmap.icon_refresh_stop);
         }
     }
 
@@ -498,9 +508,9 @@ public class LinkActivity extends BaseActivity implements LinkAdapter.onItemClic
                 String result = bundle.getString("result");
                 if (!TextUtils.isEmpty(result) && result.contains("WIFI") && result.contains("S:")
                         && result.contains("P")) {
-                    showLinking();
                     getWifiInfoFromQrCode(result);
                     linkWifi(wifiName, wifiPassWord, encodeType);
+                    isScanLink = true;
                 }
             }
         }
@@ -523,50 +533,49 @@ public class LinkActivity extends BaseActivity implements LinkAdapter.onItemClic
         if (!mWifiManager.isWifiEnabled()) {
             mWifiManager.setWifiEnabled(true);
         }
-        WifiConfiguration config = new WifiConfiguration();
-        config.allowedAuthAlgorithms.clear();
-        config.allowedGroupCiphers.clear();
-        config.allowedKeyManagement.clear();
-        config.allowedPairwiseCiphers.clear();
-        config.allowedProtocols.clear();
-        config.SSID = "\"" + ssid + "\"";
-        WifiConfiguration temp = isWifiExist(ssid);
-        if (temp != null) {
-            mWifiManager.removeNetwork(temp.networkId);
+        WifiConfiguration con = new WifiConfiguration();
+        con.allowedAuthAlgorithms.clear();
+        con.allowedGroupCiphers.clear();
+        con.allowedKeyManagement.clear();
+        con.allowedPairwiseCiphers.clear();
+        con.allowedProtocols.clear();
+        con.SSID = "\"" + ssid + "\"";
+        WifiConfiguration tempCon = isWifiExist(ssid);
+        if (tempCon != null) {
+            mWifiManager.removeNetwork(tempCon.networkId);
         }
         switch (type) {
             case "NONE":
-                config.allowedKeyManagement.set(WifiConfiguration.KeyMgmt.NONE);
+                con.allowedKeyManagement.set(WifiConfiguration.KeyMgmt.NONE);
                 break;
             case "IEEE8021XEAP":
-                break;
             case "WEP":
                 break;
             case "WPA":
-                config.preSharedKey = "\"" + password + "\"";
-                config.hiddenSSID = true;
-                config.allowedAuthAlgorithms.set(WifiConfiguration.AuthAlgorithm.OPEN);
-                config.allowedGroupCiphers.set(WifiConfiguration.GroupCipher.TKIP);
-                config.allowedKeyManagement.set(WifiConfiguration.KeyMgmt.WPA_PSK);
-                config.allowedPairwiseCiphers.set(WifiConfiguration.PairwiseCipher.TKIP);
-                config.allowedProtocols.set(WPA);
-                config.status = WifiConfiguration.Status.ENABLED;
+                con.preSharedKey = "\"" + password + "\"";
+                con.hiddenSSID = true;
+                con.allowedAuthAlgorithms.set(WifiConfiguration.AuthAlgorithm.OPEN);
+                con.allowedGroupCiphers.set(WifiConfiguration.GroupCipher.TKIP);
+                con.allowedKeyManagement.set(WifiConfiguration.KeyMgmt.WPA_PSK);
+                con.allowedPairwiseCiphers.set(WifiConfiguration.PairwiseCipher.TKIP);
+                con.allowedProtocols.set(WPA);
+                con.status = WifiConfiguration.Status.ENABLED;
                 break;
             case "WPA2":
-                config.preSharedKey = "\"" + password + "\"";
-                config.allowedAuthAlgorithms.set(WifiConfiguration.AuthAlgorithm.OPEN);
-                config.allowedGroupCiphers.set(WifiConfiguration.GroupCipher.TKIP);
-                config.allowedGroupCiphers.set(WifiConfiguration.GroupCipher.CCMP);
-                config.allowedKeyManagement.set(WifiConfiguration.KeyMgmt.WPA_PSK);
-                config.allowedPairwiseCiphers.set(WifiConfiguration.PairwiseCipher.TKIP);
-                config.allowedPairwiseCiphers.set(WifiConfiguration.PairwiseCipher.CCMP);
-                config.allowedProtocols.set(WifiConfiguration.Protocol.RSN);
-                config.status = WifiConfiguration.Status.ENABLED;
+                con.preSharedKey = "\"" + password + "\"";
+                con.allowedAuthAlgorithms.set(WifiConfiguration.AuthAlgorithm.OPEN);
+                con.allowedGroupCiphers.set(WifiConfiguration.GroupCipher.TKIP);
+                con.allowedGroupCiphers.set(WifiConfiguration.GroupCipher.CCMP);
+                con.allowedKeyManagement.set(WifiConfiguration.KeyMgmt.WPA_PSK);
+                con.allowedPairwiseCiphers.set(WifiConfiguration.PairwiseCipher.TKIP);
+                con.allowedPairwiseCiphers.set(WifiConfiguration.PairwiseCipher.CCMP);
+                con.allowedProtocols.set(WifiConfiguration.Protocol.RSN);
+                con.status = WifiConfiguration.Status.ENABLED;
                 break;
             default:
                 break;
         }
-        final int id = mWifiManager.addNetwork(config);
+        final int id = mWifiManager.addNetwork(con);
         if (id != -1) {
             boolean f = mWifiManager.enableNetwork(id, true);
             if (f) {
@@ -574,7 +583,7 @@ public class LinkActivity extends BaseActivity implements LinkAdapter.onItemClic
             } else {
                 Toast.makeText(this, getString(R.string.link_fail), Toast.LENGTH_SHORT).show();
             }
-            hideLinking();
+
         }
     }
 
@@ -590,7 +599,7 @@ public class LinkActivity extends BaseActivity implements LinkAdapter.onItemClic
     private void showLinking() {
         mLoadingLayout.setVisibility(View.VISIBLE);
         mLoadingView.startAnim();
-        mLoadingText.setText(getString(R.string.linking));
+        mLoadingText.setText(getString(R.string.searching));
     }
 
     private void hideLinking() {

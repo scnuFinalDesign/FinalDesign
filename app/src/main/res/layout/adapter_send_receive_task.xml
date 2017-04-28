@@ -2,6 +2,7 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
                 android:layout_width="match_parent"
                 android:layout_height="120px"
+                xmlns:tools="http://schemas.android.com/tools"
                 android:padding="10px">
 
     <ImageView
@@ -23,11 +24,13 @@
 
     <ImageView
         android:id="@+id/task_adapter_status"
-        android:layout_width="80px"
-        android:layout_height="80px"
+        android:layout_width="50px"
+        android:layout_height="50px"
         android:layout_centerVertical="true"
         android:layout_alignParentRight="true"
-        android:scaleType="centerInside"/>
+        android:padding="2dp"
+        tools:src="@mipmap/state_icon_stop"
+        android:scaleType="fitXY"/>
 
     <com.example.asus88.finaldesgin.myViews.DigitalProgressBar
         android:id="@+id/task_adapter_progressBar"

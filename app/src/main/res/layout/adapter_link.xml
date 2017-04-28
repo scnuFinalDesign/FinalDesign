@@ -18,6 +18,7 @@
         android:id="@+id/link_adapter_isLink"
         android:layout_width="wrap_content"
         android:layout_height="50px"
+        android:layout_marginRight="10px"
         android:layout_gravity="right|center_vertical"
         android:textSize="16sp"/>
 </FrameLayout>

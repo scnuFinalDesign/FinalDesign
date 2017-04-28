@@ -54,6 +54,7 @@ public class Manager {
     private volatile int disconnectedTransferCount = 0;
 
     public void onTransferDisconnected(Transfer t) {
+        Log.i("TAG","链接中断");
         mainPool.execute(new Runnable() {
             public void run() {
                 disconnectedTransferCount++;
@@ -110,6 +111,7 @@ public class Manager {
     }
 
     private void onUpdateDevTransfer(Dev dev, boolean isEnabled) {
+        Log.d(TAG, "onUpdateDevTransfer: "+isEnabled);
         if (mOnDevMapChangeListener != null) {
             mOnDevMapChangeListener.onTransferStateChange(dev, isEnabled);
         } else {
@@ -198,6 +200,7 @@ public class Manager {
 
     // 若返回false，应提示用户检查是否已经连上wifi或者开启了热点
     public boolean searchDevice() {
+        Log.d(TAG, "searchDevice: ");
         // 用与搜索可链接设备的探测器
         if (deviceDetector == null) {
             deviceDetector = new DeviceDetector();
@@ -210,11 +213,6 @@ public class Manager {
         if (deviceDetector != null) {
             deviceDetector.stop();
         }
-    }
-
-    public void resumeSearch() {
-        Log.d(TAG, "resumeSearch: ");
-        if (deviceDetector != null) deviceDetector.onResume();
     }
 
     // dev参数应从设备列表获取
@@ -571,7 +569,9 @@ public class Manager {
             if (t != null & t.isEnable() && t.getSendTaskList().size() > 0) {
                 ReceiverBean rBean = new ReceiverBean();
                 rBean.setDev(t.getRemoteDev());
-                rBean.setSendList(t.getSendTaskList());
+                rBean.setSendList(new ArrayList<Task>());
+                //   rBean.setSendList(t.getSendTaskList());
+                rBean.getSendList().addAll(t.getSendTaskList());
                 list.add(rBean);
             }
         }
